@@ -82,6 +82,16 @@ export function parseVerdict(text) {
   return { ok: false, reason, suggestion };
 }
 
+/** Geminiのエラー本文から、人が読めるメッセージだけを取り出す（キー等は含まれない） */
+function errorMessage(body) {
+  try {
+    const m = JSON.parse(body);
+    return String((m.error && m.error.message) || "").slice(0, 160).replace(/\s+/g, " ");
+  } catch (_) {
+    return body.slice(0, 80).replace(/\s+/g, " ");
+  }
+}
+
 async function askGemini(env, reading, english, doFetch) {
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
   const ctrl = new AbortController();
@@ -99,8 +109,9 @@ async function askGemini(env, reading, english, doFetch) {
     if (!res.ok) {
       // 400/403: キーやモデル名の設定ミス。429/5xx: 無料枠の上限や一時的な障害
       const cfg = res.status === 400 || res.status === 401 || res.status === 403 || res.status === 404;
-      console.error(`gemini ${res.status}`, (await res.text().catch(() => "")).slice(0, 300));
-      return { unavailable: cfg ? "config" : "unavailable" };
+      const body = (await res.text().catch(() => "")).slice(0, 300);
+      console.error(`gemini ${res.status}`, body);
+      return { unavailable: cfg ? "config" : "unavailable", detail: `gemini ${res.status}: ${errorMessage(body)}` };
     }
     const data = await res.json();
     const text = (data.candidates || [])
@@ -110,12 +121,12 @@ async function askGemini(env, reading, english, doFetch) {
     const verdict = parseVerdict(text);
     if (!verdict) {
       console.error("gemini unparsable:", text.slice(0, 200));
-      return { unavailable: "unavailable" };
+      return { unavailable: "unavailable", detail: "gemini unparsable: " + text.slice(0, 80).replace(/\s+/g, " ") };
     }
     return { verdict };
   } catch (e) {
     console.error("gemini error:", e && e.message);
-    return { unavailable: "unavailable" };
+    return { unavailable: "unavailable", detail: "fetch failed: " + ((e && e.name) || "error") };
   } finally {
     clearTimeout(timer);
   }
@@ -192,7 +203,9 @@ export async function handle(request, env, deps) {
   }
 
   const r = await askGemini(env, reading, english, doFetch);
-  if (r.unavailable) return json({ ok: null, reason: r.unavailable, suggestion: null }, 200, origin);
+  if (r.unavailable) {
+    return json({ ok: null, reason: r.unavailable, suggestion: null, detail: r.detail || null }, 200, origin);
+  }
 
   const body = { ok: r.verdict.ok, reason: r.verdict.reason, suggestion: r.verdict.suggestion };
   if (env.CACHE) {

@@ -117,10 +117,21 @@ test("無料枠の上限(429)・通信失敗・変な返答は ok:null で、保
   const env = baseEnv({ CACHE });
   const run = async (f) => (await W.handle(post({ reading: "ぬいぐるみ", english: "plush" }), env, { fetch: f })).json();
 
-  assert.deepEqual(await run(geminiReply("x", 429)), { ok: null, reason: "unavailable", suggestion: null });
-  assert.deepEqual(await run(geminiReply("x", 503)), { ok: null, reason: "unavailable", suggestion: null });
-  assert.deepEqual(await run(async () => { throw new Error("network"); }), { ok: null, reason: "unavailable", suggestion: null });
-  assert.deepEqual(await run(geminiReply("すみません、わかりません")), { ok: null, reason: "unavailable", suggestion: null });
+  let r = await run(geminiReply("x", 429));
+  assert.deepEqual([r.ok, r.reason, r.suggestion], [null, "unavailable", null]);
+  assert.match(r.detail, /^gemini 429/);
+  r = await run(geminiReply("x", 503));
+  assert.deepEqual([r.ok, r.reason], [null, "unavailable"]);
+  r = await run(async () => { throw new Error("network"); });
+  assert.deepEqual([r.ok, r.reason], [null, "unavailable"]);
+  assert.match(r.detail, /^fetch failed/);
+  r = await run(geminiReply("すみません、わかりません"));
+  assert.deepEqual([r.ok, r.reason], [null, "unavailable"]);
+  assert.match(r.detail, /^gemini unparsable/);
+
+  // Geminiのエラー本文のメッセージが detail に入る
+  r = await run(async () => new Response(JSON.stringify({ error: { code: 429, message: "Quota exceeded for model" } }), { status: 429 }));
+  assert.equal(r.detail, "gemini 429: Quota exceeded for model");
   assert.equal(CACHE.puts.length, 0);
 
   // キー/モデルの設定ミスは reason: config
