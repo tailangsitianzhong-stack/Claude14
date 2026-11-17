@@ -14,6 +14,7 @@
   const Core = root.ShiritoriGameCore;
   const Store = root.ShiritoriStore;
   const Remote = root.ShiritoriRemote;
+  const Online = root.ShiritoriOnline;
 
   const MAX = { reading: 12, english: 30 };
   const CPU_THINK_MS = [700, 1300];
@@ -73,6 +74,7 @@
           </label>
           <div class="menu-actions">
             <button type="button" class="btn btn-primary" id="btn-start">スタート！</button>
+            <button type="button" class="btn" id="btn-friends">👥 友達{ともだち}と遊{あそ}ぶ</button>
             <button type="button" class="btn" id="btn-review">復習{ふくしゅう}（${store.review.list().length}）</button>
           </div>
           <p class="note" id="shiri-note">辞書{じしょ}を読{よ}み込{こ}み中{ちゅう}…</p>
@@ -86,6 +88,7 @@
       view.querySelector("#opt-dakuten").addEventListener("change", (e) =>
         store.settings.set({ ignoreDakuten: e.target.checked }));
       view.querySelector("#btn-review").addEventListener("click", showReview);
+      view.querySelector("#btn-friends").addEventListener("click", () => getOnline().showFriends());
       const start = view.querySelector("#btn-start");
       start.addEventListener("click", startGame);
       start.disabled = !judge;
@@ -422,8 +425,27 @@
       view.querySelector("#btn-menu").addEventListener("click", showMenu);
     }
 
-    cleanup = () => { alive = false; stopPlay(); };
+    /* ============ 友達対戦(別ファイル online.js)。使う時に1回だけ作る ============ */
+    let online = null;
+    function getOnline() {
+      if (!online) {
+        online = Online.create({
+          view, store,
+          endpoint: (root.APP_CONFIG || {}).judgeEndpoint || "",
+          getJudge: () => (judge && dict ? { judge, dict } : null),
+          goMenu: showMenu,
+          setPlaying
+        });
+      }
+      return online;
+    }
+
+    cleanup = () => { alive = false; stopPlay(); if (online) online.destroy(); };
     showMenu();
+
+    // QRコード/リンク(?room=12345)から来た時は、その部屋にそのまま入る
+    const m = /[?&]room=(\d{5})(?:&|$)/.exec(location.search);
+    if (m) getOnline().enter(m[1]);
   }
 
   function unmount() {

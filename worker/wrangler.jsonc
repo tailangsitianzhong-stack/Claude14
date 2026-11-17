@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shiritori-judge",
-  "main": "index.mjs",
+  "main": "main.mjs",
   "compatibility_date": "2026-10-01",
 
   "vars": {
@@ -13,5 +13,9 @@
   },
 
   // 判定結果のキャッシュ(Workers KV)。idを書かなくても deploy 時に自動で作られる
-  "kv_namespaces": [{ "binding": "CACHE" }]
+  "kv_namespaces": [{ "binding": "CACHE" }],
+
+  // 友達対戦の「部屋」(Durable Object)。無料プランは SQLite 版だけ使える
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }]
 }

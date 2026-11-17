@@ -149,3 +149,34 @@ test("APIキー未設定は ok:null / reason:config、KVが壊れていても動
     baseEnv({ CACHE: brokenKV }), { fetch: geminiReply('{"ok":true,"reason":"none","suggestion":null}') })).json();
   assert.equal(r2.ok, true);
 });
+
+test("友達対戦: 部屋の作成(5桁)・使用済みコードの再試行・未対応環境", async () => {
+  const taken = new Set(["10000"]);
+  let tries = 0;
+  const ROOMS = {
+    idFromName: (n) => n,
+    get: (name) => ({ fetch: async () => { tries++; const ok = !taken.has(name) && tries > 1; if (ok) taken.add(name); return Response.json({ ok }); } })
+  };
+  const r = await W.handle(post({}, ORIGIN, "/room/new"), baseEnv({ ROOMS }));
+  assert.equal(r.status, 200);
+  const { code } = await r.json();
+  assert.match(code, /^[1-9]\d{4}$/);
+  assert.ok(tries >= 2);                                       // 1回目は使用済み扱い → 2回目で確保
+
+  const none = await W.handle(post({}, ORIGIN, "/room/new"), baseEnv());
+  assert.equal(none.status, 501);
+  const bad = await W.handle(post({}, "https://evil.example", "/room/new"), baseEnv({ ROOMS }));
+  assert.equal(bad.status, 403);                               // 許可されていないオリジンは作れない
+});
+
+test("友達対戦: WebSocketは部屋コード5桁のときだけ部屋へ中継する", async () => {
+  const seen = [];
+  const ROOMS = { idFromName: (n) => n, get: (name) => ({ fetch: async (req) => { seen.push([name, new URL(req.url).search]); return new Response("ok"); } }) };
+  const ws = (path, origin = ORIGIN) => new Request("https://w.example" + path, { headers: { origin, upgrade: "websocket" } });
+  assert.equal((await W.handle(ws("/room/12345?cid=abcdefgh"), baseEnv({ ROOMS }))).status, 200);
+  assert.deepEqual(seen, [["12345", "?cid=abcdefgh"]]);
+  assert.equal((await W.handle(ws("/room/1234"), baseEnv({ ROOMS }))).status, 404);        // 4桁は不可
+  assert.equal((await W.handle(ws("/room/abcde"), baseEnv({ ROOMS }))).status, 404);
+  assert.equal((await W.handle(ws("/room/12345", "https://evil.example"), baseEnv({ ROOMS }))).status, 403);
+  assert.equal((await W.handle(ws("/room/12345"), baseEnv())).status, 501);
+});

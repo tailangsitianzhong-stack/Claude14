@@ -7,6 +7,8 @@
  *   POST /judge   {"reading":"ぬいぐるみ","english":"plush"}
  *     → {"ok":true|false|null, "reason":"none|spelling|wrong_english|unavailable|config",
  *        "suggestion":"..."|null, "cached":true|false}
+ *   POST /room/new → {"code":"12345"}      友達対戦の部屋を作る(5桁)
+ *   GET  /room/12345?cid=…  (WebSocket)     部屋に入る。進行は room-do.mjs
  *   GET  /health  → {"ok":true,"keySet":true,"model":"...","kv":true}（Origin不要。設定の確認用）
  *
  * ok:null は「判定できなかった」（無料枠の上限・通信エラー等）。ブラウザ側は辞書の結果に戻す。
@@ -157,6 +159,18 @@ function json(body, status, origin) {
   });
 }
 
+/** 5桁の部屋コードを新しく作る（使われていないコードが見つかるまで数回試す） */
+async function newRoom(env, origin) {
+  if (!env.ROOMS) return json({ error: "rooms_unavailable" }, 501, origin);
+  for (let i = 0; i < 10; i++) {
+    const code = String(10000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 90000));
+    const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+    const res = await stub.fetch(`https://room/claim?code=${code}`, { method: "POST" });
+    if ((await res.json()).ok) return json({ code }, 200, origin);
+  }
+  return json({ error: "busy" }, 503, origin);
+}
+
 export async function handle(request, env, deps) {
   const doFetch = (deps && deps.fetch) || fetch;
   const url = new URL(request.url);
@@ -173,6 +187,14 @@ export async function handle(request, env, deps) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
+  // ---- 友達対戦の部屋 ----
+  if (request.method === "POST" && url.pathname === "/room/new") return newRoom(env, origin);
+  const roomMatch = url.pathname.match(/^\/room\/(\d{5})$/);
+  if (roomMatch && request.headers.get("Upgrade") === "websocket") {
+    if (!env.ROOMS) return json({ error: "rooms_unavailable" }, 501, origin);
+    return env.ROOMS.get(env.ROOMS.idFromName(roomMatch[1])).fetch(request);   // 部屋へつなぐ
+  }
+
   if (request.method !== "POST" || url.pathname !== "/judge") {
     return json({ error: "not_found" }, 404, origin);
   }
