@@ -113,3 +113,100 @@
   .kb { --gap: 3px; padding: 8px 5px 6px; }
   .kb-kana .kb-key { font-size: 1.1rem; }
 }
+
+/* ===== メニュー・けっか ===== */
+.menu-title { margin: 0 0 10px; text-align: center; font-size: 1.6rem; }
+.menu-sub { margin: 18px 0 8px; font-size: 1.05rem; }
+.howto { margin: 0 0 4px; padding-left: 1.3rem; line-height: 1.7; font-size: .98rem; }
+
+.diff-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.diff-btn {
+  display: flex; flex-direction: column; gap: 2px; align-items: center;
+  padding: 10px 4px; font: inherit; color: var(--ink);
+  background: #fff; border: 4px solid var(--ink-soft);
+  border-radius: 14px 18px 12px 20px / 18px 12px 20px 14px; cursor: pointer;
+}
+.diff-btn b { font-size: 1.1rem; }
+.diff-btn small { font-size: .72rem; color: var(--ink-soft); }
+.diff-btn.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 3px rgba(239, 91, 76, .25); }
+
+.setting.small { margin-top: 14px; font-size: .95rem; }
+.setting.small input { width: 22px; height: 22px; }
+
+.menu-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
+.btn-primary { background: var(--red); color: #fff; border-color: var(--ink); font-size: 1.2rem; padding: 12px 34px; }
+.btn[disabled] { opacity: .55; cursor: wait; }
+
+.shiri-result { text-align: center; }
+.result-icon { font-size: 3.6rem; line-height: 1.1; }
+.result-score { margin: 6px 0; font-size: 1.4rem; }
+.result-score b { font-size: 2.2rem; color: var(--red); }
+.badge-new {
+  display: inline-block; padding: 1px 10px; font-size: .9rem; color: #fff;
+  background: var(--green); border: 3px solid var(--ink); border-radius: 999px; transform: rotate(-4deg);
+}
+
+.review-list { list-style: none; margin: 8px 0 0; padding: 0; text-align: left; }
+.review-list li {
+  display: flex; align-items: baseline; gap: 10px; padding: 8px 4px;
+  border-bottom: 2px dashed rgba(122, 90, 30, .35);
+}
+.rv-read { min-width: 6em; font-size: 1.1rem; }
+.rv-correct { font-size: 1.25rem; color: var(--green); letter-spacing: .06em; }
+.rv-typed { flex: 1; font-size: .85rem; color: #c0392b; text-decoration: line-through; }
+.rv-del { padding: 2px 10px; }
+
+/* ===== プレイ中のHUD ===== */
+.shiri-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 1.25rem; }
+.hud-lives { color: var(--red); letter-spacing: .12em; font-size: 1.5rem; }
+.hud-score b { font-size: 1.6rem; }
+
+.shiri-timer {
+  position: relative; height: 22px; margin-bottom: 10px;
+  background: #fff; border: 3px solid var(--ink); border-radius: 999px; overflow: hidden;
+}
+.shiri-timer-bar { height: 100%; width: 100%; background: var(--green); transition: width .1s linear; }
+.shiri-timer-bar.is-low { background: var(--red); }
+.shiri-timer-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+}
+
+.shiri-bubble {
+  min-height: 2.4rem; margin-bottom: 8px; padding: 6px 14px;
+  background: #e8f1ff; border: 3px solid var(--ink); border-radius: 18px 18px 18px 4px;
+  font-size: 1.05rem;
+}
+.shiri-bubble:empty { display: none; }
+
+.shiri-message[data-kind="hint"] { color: var(--blue); }
+.shiri-actions { display: flex; justify-content: space-between; margin-bottom: 10px; }
+
+.shiri-history { list-style: none; margin: 16px 0 0; padding: 0; line-height: 1.9; }
+.shiri-history li { display: flex; gap: 8px; align-items: baseline; }
+.shiri-history li.cpu { color: var(--ink-soft); }
+.shiri-history em { color: var(--green); font-style: normal; font-size: .85rem; }
+.shiri-history .who { width: 1.6em; }
+
+/* ===== プレイ中: 画面を詰め、キーボードを下に固定 ===== */
+.shiri-playing .game-bar { display: none; }
+#app.shiri-playing { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: 8px; }
+#shiri-kb { position: sticky; bottom: 8px; z-index: 5; }
+
+@media (max-width: 600px) {
+  .shiri-hud { margin-bottom: 2px; font-size: 1.05rem; }
+  .hud-lives { font-size: 1.25rem; }
+  .hud-score b { font-size: 1.35rem; }
+  .shiri-timer { height: 18px; margin-bottom: 6px; }
+  .shiri-bubble { min-height: 0; margin-bottom: 6px; padding: 3px 12px; font-size: .95rem; }
+  .shiri-status { margin-bottom: 6px; padding: 3px 12px; font-size: 1rem; }
+  .shiri-fields { gap: 6px; margin-bottom: 4px; }
+  .shiri-field { min-height: 0; padding: 3px 12px 2px; }
+  .shiri-label { font-size: .7rem; }
+  .shiri-text { min-height: 1.9rem; font-size: 1.5rem; }
+  .shiri-message { min-height: 1.3rem; margin-bottom: 4px; font-size: .95rem; }
+  .shiri-actions { margin-bottom: 6px; }
+  .shiri-actions .btn-small { padding: 3px 14px; }
+  .kb-kana .kb-key { min-height: 40px; }
+  .kb-row .kb-key { min-height: 46px; }
+}
