@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffd23f">
-  <title>ミニゲームひろば</title>
+  <title>ミニゲーム広場</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
@@ -57,14 +57,14 @@
     <!-- ===== ホーム画面 ===== -->
     <section class="screen" id="screen-home" data-screen="home">
       <header class="home-header">
-        <p class="home-sub">えいごであそぼう！</p>
-        <h1 class="home-title">ミニゲーム<span>ひろば</span></h1>
+        <p class="home-sub">英語{えいご}で遊{あそ}ぼう！</p>
+        <h1 class="home-title">ミニゲーム<span>広場{ひろば}</span></h1>
       </header>
 
       <div id="game-list" class="game-list" role="list"></div>
 
       <footer class="home-footer">
-        <button class="btn btn-small" id="btn-settings" type="button">⚙ せってい</button>
+        <button class="btn btn-small" id="btn-settings" type="button">⚙ 設定{せってい}</button>
       </footer>
     </section>
 
@@ -81,26 +81,27 @@
     <section class="screen" id="screen-settings" data-screen="settings" hidden>
       <div class="game-bar">
         <button class="btn btn-small" data-goto="home" type="button">← ホームへ</button>
-        <h2 class="game-title">せってい</h2>
+        <h2 class="game-title">設定{せってい}</h2>
       </div>
       <div class="panel">
         <label class="setting">
           <input type="checkbox" id="opt-sound" checked>
-          <span>おと</span>
+          <span>音{おと}</span>
         </label>
-        <p class="note">※ 今後ここに設定を追加していきます</p>
+        <p class="note">※ 今後{こんご}ここに設定{せってい}を追加{ついか}していきます</p>
         <h3 class="credit-title">クレジット</h3>
         <p class="note">
-          えいたんご しりとりの じしょデータは
+          英単語{えいたんご}しりとりの辞書{じしょ}データは
           <a href="https://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener">JMdict</a>
           (© Electronic Dictionary Research and Development Group, CC BY-SA 4.0)
-          を もとに つくっています。えいごの つかわれやすさは SUBTLEX-US を さんこうにしています。
+          をもとに作{つく}っています。英語{えいご}の使{つか}われやすさは SUBTLEX-US を参考{さんこう}にしています。
         </p>
       </div>
     </section>
 
   </main>
 
+  <script src="js/ruby.js"></script>
   <script src="js/config.js"></script>
   <script src="js/games/shiritori/rules.js"></script>
   <script src="js/games/shiritori/input-logic.js"></script>

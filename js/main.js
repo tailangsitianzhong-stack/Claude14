@@ -27,13 +27,14 @@
       card.setAttribute("role", "listitem");
       card.disabled = !g.ready;
       card.innerHTML = `
-        <span class="badge">${g.ready ? "あそべる！" : "もうすぐ"}</span>
+        <span class="badge">${g.ready ? "遊{あそ}べる！" : "もうすぐ"}</span>
         <span class="icon">${g.icon}</span>
         <span class="name">${g.title}</span>
         <span class="desc">${g.desc}</span>`;
       if (g.ready) card.addEventListener("click", () => startGame(g.id));
       list.appendChild(card);
     });
+    Ruby.apply(list);
   }
 
   /* ---------- ゲーム起動・終了 ---------- */
@@ -41,7 +42,7 @@
     const game = window.GAMES.find((g) => g.id === id);
     if (!game || !game.ready) return;
     currentGame = game;
-    $("#game-title").textContent = game.title;
+    $("#game-title").innerHTML = Ruby.html(game.title);
     const root = $("#game-root");
     root.innerHTML = "";
     show("game");
@@ -83,4 +84,5 @@
   /* ---------- 起動 ---------- */
   renderGameList();
   show("home");
+  Ruby.apply(document.body);   // index.html にある「漢字{よみ}」をふりがな付きにする
 })();

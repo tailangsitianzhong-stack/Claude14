@@ -41,7 +41,7 @@
   };
   const FLICK_ROWS = [["あ", "か", "さ"], ["た", "な", "は"], ["ま", "や", "ら"]];
   const FLICK_THRESHOLD = 16; // px。これ以上動いたらフリックとみなす
-  const KANA_METHODS = [["romaji", "ローマ字"], ["flick", "フリック"], ["grid", "50おん"]];
+  const KANA_METHODS = [["romaji", "ローマ字{じ}"], ["flick", "フリック"], ["grid", "50音{おん}"]];
 
   const LAYOUT_KEY = "minigames.shiritori.enLayout";
   const METHOD_KEY = "minigames.shiritori.kanaMethod";
@@ -90,6 +90,7 @@
     /** ボタン生成。pointerdown で即反応、キーボード操作(Enter/Space)は click で拾う */
     function button(label, cls, run, aria) {
       const b = el("button", "kb-key " + (cls || ""), label);
+      if (label.indexOf("{") >= 0) b.innerHTML = root.Ruby.html(label);   // 「消{け}す」→ ふりがな付き
       b.type = "button";
       if (aria) b.setAttribute("aria-label", aria);
       b.addEventListener("pointerdown", (e) => {
@@ -108,8 +109,8 @@
     function controls(extra) {
       const row = el("div", "kb-controls");
       (extra || []).forEach((k) => row.appendChild(k));
-      row.appendChild(key("⌫ けす", "kb-wide kb-del", { type: "backspace" }, "ひとつけす"));
-      row.appendChild(key("けってい", "kb-wide kb-enter", { type: "submit" }, "けってい"));
+      row.appendChild(key("⌫ 消{け}す", "kb-wide kb-del", { type: "backspace" }, "ひとつ消す"));
+      row.appendChild(key("決定{けってい}", "kb-wide kb-enter", { type: "submit" }, "決定"));
       return row;
     }
 
@@ -150,9 +151,9 @@
       }
       wrap.appendChild(grid);
       wrap.appendChild(controls([
-        key("゛", "kb-mod", { type: "dakuten" }, "てんてん"),
-        key("゜", "kb-mod", { type: "handakuten" }, "まる"),
-        key("小", "kb-mod", { type: "small" }, "ちいさいもじ")
+        key("゛", "kb-mod", { type: "dakuten" }, "濁点"),
+        key("゜", "kb-mod", { type: "handakuten" }, "半濁点"),
+        key("小", "kb-mod", { type: "small" }, "小さい字")
       ]));
     }
 
@@ -167,7 +168,7 @@
         box.appendChild(row);
       });
       wrap.appendChild(box);
-      wrap.appendChild(controls([key("ー", "kb-mod", { type: "romaji", value: "-" }, "ながいおん")]));
+      wrap.appendChild(controls([key("ー", "kb-mod", { type: "romaji", value: "-" }, "長音")]));
     }
 
     /** フリック入力: タップで あ段、上下左右にスライドで い・う・え・お段 */
@@ -176,13 +177,13 @@
 
       FLICK_ROWS.forEach((row, ri) => {
         row.forEach((k) => grid.appendChild(flickKey(k)));
-        if (ri === 0) grid.appendChild(key("⌫", "kb-flick-ctl kb-del", { type: "backspace" }, "ひとつけす"));
-        if (ri === 1) grid.appendChild(key("けってい", "kb-flick-ctl kb-enter kb-tall", { type: "submit" }, "けってい"));
+        if (ri === 0) grid.appendChild(key("⌫", "kb-flick-ctl kb-del", { type: "backspace" }, "ひとつ消す"));
+        if (ri === 1) grid.appendChild(key("決定{けってい}", "kb-flick-ctl kb-enter kb-tall", { type: "submit" }, "決定"));
       });
-      grid.appendChild(key("゛゜小", "kb-mod kb-cycle", { type: "cycle" }, "てんてん・まる・ちいさいもじ"));
+      grid.appendChild(key("゛゜小", "kb-mod kb-cycle", { type: "cycle" }, "濁点・半濁点・小さい字"));
       grid.appendChild(flickKey("わ"));
       grid.appendChild(key("ん", "", { type: "char", value: "ん" }));
-      grid.appendChild(key("ー", "kb-flick-ctl", { type: "char", value: "ー" }, "ながいおん"));
+      grid.appendChild(key("ー", "kb-flick-ctl", { type: "char", value: "ー" }, "長音"));
       wrap.appendChild(grid);
     }
 
@@ -269,7 +270,7 @@
       wrap.appendChild(box);
 
       const toggle = button(
-        enLayout === "abc" ? "QWERTYにする" : "ABCじゅんにする",
+        enLayout === "abc" ? "QWERTYにする" : "ABC順{じゅん}にする",
         "kb-mod kb-layout",
         () => {
           enLayout = enLayout === "abc" ? "qwerty" : "abc";

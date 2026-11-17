@@ -7,25 +7,26 @@
  *   title     : 表示名
  *   icon      : カードの絵文字
  *   desc      : 一言説明
- *   ready     : false なら「じゅんびちゅう」でタップ不可
+ *   ready     : false なら「準備中」でタップ不可
+ *   title/desc: 漢字には「漢字{よみ}」と書くとふりがなが付く(js/ruby.js)
  *   mount(root, api) : ゲーム開始。root(DOM) の中に描画する
  *   unmount()        : ゲーム終了時の後始末（タイマー解除など）
  */
 window.GAMES = [
   {
     id: "shiritori",
-    title: "えいたんご しりとり",
+    title: "英単語{えいたんご}しりとり",
     icon: "🔤",
-    desc: "さいごの もじから つなげよう！",
+    desc: "最後{さいご}の文字{もじ}からつなげよう！",
     ready: true,
     mount(root) { window.ShiritoriGame.mount(root); },
     unmount() { window.ShiritoriGame.unmount(); }
   },
   {
     id: "coming-1",
-    title: "つぎのゲーム",
+    title: "次{つぎ}のゲーム",
     icon: "❓",
-    desc: "じゅんびちゅう…",
+    desc: "準備中{じゅんびちゅう}…",
     ready: false
   }
 ];

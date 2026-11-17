@@ -21,9 +21,9 @@
   "use strict";
 
   const DIFFICULTIES = {
-    easy:   { key: "easy",   label: "やさしい",   maxLevel: 1, lives: 5, seconds: 45, mult: 1 },
-    normal: { key: "normal", label: "ふつう",     maxLevel: 2, lives: 3, seconds: 30, mult: 1.5 },
-    hard:   { key: "hard",   label: "むずかしい", maxLevel: 3, lives: 3, seconds: 20, mult: 2 }
+    easy:   { key: "easy",   label: "易{やさ}しい",   maxLevel: 1, lives: 5, seconds: 45, mult: 1 },
+    normal: { key: "normal", label: "普通{ふつう}",     maxLevel: 2, lives: 3, seconds: 30, mult: 1.5 },
+    hard:   { key: "hard",   label: "難{むずか}しい", maxLevel: 3, lives: 3, seconds: 20, mult: 2 }
   };
   const START_KANA = "り";   // 「しりとり」の「り」から始める
   const HINT_COST = 5;

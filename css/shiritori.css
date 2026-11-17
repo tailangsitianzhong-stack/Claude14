@@ -265,7 +265,14 @@
 
 /* 背の低い画面(小さいスマホ)では、50音表のキーを少し低くしてスクロールなしで収める */
 @media (max-height: 720px) {
-  .kb-kana .kb-key { min-height: 34px; font-size: 1.05rem; }
+  .kb-kana .kb-key { min-height: 31px; font-size: 1rem; }
   .kb-controls { margin-top: 5px; }
   .kb-controls .kb-key { min-height: 38px; }
 }
+
+/* ふりがなを付けても、プレイ画面の高さが増えすぎないようにする */
+.kb-key rt { font-size: .45em; opacity: .8; }
+.kb-key ruby { line-height: 1; }
+.shiri-label { line-height: 1.5; }
+.shiri-actions .btn-small, .shiri-status, .shiri-message, .shiri-bubble { line-height: 1.4; }
+.diff-btn small { line-height: 1.6; }

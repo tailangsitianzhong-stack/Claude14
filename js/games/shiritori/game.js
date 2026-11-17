@@ -19,14 +19,14 @@
   const CPU_THINK_MS = [700, 1300];
 
   const FORMAT_MESSAGES = {
-    invalid_reading: "よみは ひらがな・カタカナで 2もじ いじょう いれてね",
-    invalid_english: "えいごは アルファベットだけ（2〜30もじ）で いれてね",
-    unknown_word: "じしょに のっていない ことばだよ。べつの ことばで ためしてね"
+    invalid_reading: "読{よ}みはひらがな・カタカナで2文字{もじ}以上{いじょう}入{い}れてね",
+    invalid_english: "英語{えいご}はアルファベットだけ（2〜30文字{もじ}）で入{い}れてね",
+    unknown_word: "辞書{じしょ}にのっていない言葉{ことば}だよ。別{べつ}の言葉{ことば}で試{ため}してね"
   };
   const RESULT_TEXT = {
-    win:        { icon: "🎉", title: "かち！", sub: "CPUが ことばに こまっちゃった！" },
-    lost_n:     { icon: "😵", title: "まけ…", sub: "「ん」で おわっちゃった！" },
-    lost_lives: { icon: "😢", title: "ゲームオーバー", sub: "ライフが なくなっちゃった" }
+    win:        { icon: "🎉", title: "勝{か}ち！", sub: "CPUが言葉{ことば}に困{こま}っちゃった！" },
+    lost_n:     { icon: "😵", title: "負{ま}け…", sub: "「ん」で終{お}わっちゃった！" },
+    lost_lives: { icon: "😢", title: "ゲームオーバー", sub: "ライフがなくなっちゃった" }
   };
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
@@ -51,32 +51,33 @@
       const diffs = Object.values(Core.DIFFICULTIES);
       view.innerHTML = `
         <div class="panel shiri-menu">
-          <h3 class="menu-title">しりとり × えいご</h3>
+          <h3 class="menu-title">しりとり × 英語{えいご}</h3>
           <ul class="howto">
-            <li>「り」から はじめて、さいごの もじで つなげよう！</li>
-            <li>にほんごの <b>よみ</b> と、その <b>えいごの つづり</b> を ぜんぶ ただしく いれてね</li>
-            <li>「ん」で おわったら まけ。おなじ えいごは つかえないよ</li>
+            <li>「り」から始{はじ}めて、最後{さいご}の文字{もじ}でつなげよう！</li>
+            <li>日本語{にほんご}の<b>読{よ}み</b>と、その<b>英語{えいご}のつづり</b>を全部{ぜんぶ}正{ただ}しく入{い}れてね</li>
+            <li>「ん」で終{お}わったら負{ま}け。同{おな}じ英語{えいご}は使{つか}えないよ</li>
           </ul>
-          <h4 class="menu-sub">むずかしさ</h4>
-          <div class="diff-row" role="radiogroup" aria-label="むずかしさ">
+          <h4 class="menu-sub">難{むずか}しさ</h4>
+          <div class="diff-row" role="radiogroup" aria-label="難しさ">
             ${diffs.map((d) => `
               <button type="button" class="diff-btn${d.key === st.difficulty ? " is-on" : ""}"
                       role="radio" aria-checked="${d.key === st.difficulty}" data-diff="${d.key}">
                 <b>${d.label}</b>
-                <small>${d.seconds}びょう ・ ♥${d.lives}</small>
+                <small>${d.seconds}秒{びょう} ・ ♥${d.lives}</small>
                 <small>ベスト ${store.best.get(d.key)}</small>
               </button>`).join("")}
           </div>
           <label class="setting small">
             <input type="checkbox" id="opt-dakuten" ${st.ignoreDakuten ? "checked" : ""}>
-            <span>てんてんを くべつしない（ご→こ でも OK）</span>
+            <span>「てんてん」を区別{くべつ}しない（ご→こ でもOK）</span>
           </label>
           <div class="menu-actions">
             <button type="button" class="btn btn-primary" id="btn-start">スタート！</button>
-            <button type="button" class="btn" id="btn-review">ふくしゅう（${store.review.list().length}）</button>
+            <button type="button" class="btn" id="btn-review">復習{ふくしゅう}（${store.review.list().length}）</button>
           </div>
-          <p class="note" id="shiri-note">じしょを よみこみ中…</p>
+          <p class="note" id="shiri-note">辞書{じしょ}を読{よ}み込{こ}み中{ちゅう}…</p>
         </div>`;
+      Ruby.apply(view);
 
       view.querySelectorAll(".diff-btn").forEach((b) => b.addEventListener("click", () => {
         store.settings.set({ difficulty: b.dataset.diff });
@@ -89,7 +90,7 @@
       start.addEventListener("click", startGame);
       start.disabled = !judge;
       const note = view.querySelector("#shiri-note");
-      note.textContent = judge ? "" : "じしょを よみこみ中…";
+      note.innerHTML = judge ? "" : Ruby.html("辞書{じしょ}を読{よ}み込{こ}み中{ちゅう}…");
       whenReady(() => { start.disabled = false; note.textContent = ""; });
     }
 
@@ -108,7 +109,7 @@
       cbs.forEach((fn) => fn());
     }).catch(() => {
       const note = view.querySelector("#shiri-note");
-      if (alive && note) note.textContent = "じしょを よみこめませんでした。ページを さいどくみこみ してね";
+      if (alive && note) note.innerHTML = Ruby.html("辞書{じしょ}を読{よ}み込{こ}めませんでした。ページを再読{さいよ}み込{こ}みしてね");
     });
 
     /* ============ ふくしゅう ============ */
@@ -116,9 +117,9 @@
       const list = store.review.list();
       view.innerHTML = `
         <div class="panel">
-          <h3 class="menu-title">ふくしゅう</h3>
+          <h3 class="menu-title">復習{ふくしゅう}</h3>
           ${list.length ? `
-            <p class="note">まちがえた ことばです。つづりを おぼえよう！</p>
+            <p class="note">間違{まちが}えた言葉{ことば}です。つづりを覚{おぼ}えよう！</p>
             <ul class="review-list">
               ${list.map((e) => `
                 <li>
@@ -126,18 +127,19 @@
                   <span class="rv-correct">${esc(e.correct)}</span>
                   <span class="rv-typed">（${esc(e.typed)}）</span>
                   <button type="button" class="btn btn-small rv-del" data-r="${esc(e.reading)}" data-c="${esc(e.correct)}"
-                          aria-label="${esc(e.reading)}を けす">✕</button>
+                          aria-label="${esc(e.reading)}を消す">✕</button>
                 </li>`).join("")}
-            </ul>` : '<p class="note">まだ ありません。まちがえた ことばが ここに たまるよ</p>'}
+            </ul>` : '<p class="note">まだありません。間違{まちが}えた言葉{ことば}がここにたまるよ</p>'}
           <div class="menu-actions">
-            <button type="button" class="btn" id="btn-back">もどる</button>
-            ${list.length ? '<button type="button" class="btn btn-small" id="btn-clear">ぜんぶ けす</button>' : ""}
+            <button type="button" class="btn" id="btn-back">戻{もど}る</button>
+            ${list.length ? '<button type="button" class="btn btn-small" id="btn-clear">全部{ぜんぶ}消{け}す</button>' : ""}
           </div>
         </div>`;
+      Ruby.apply(view);
       view.querySelector("#btn-back").addEventListener("click", showMenu);
       const clear = view.querySelector("#btn-clear");
       if (clear) clear.addEventListener("click", () => {
-        if (confirm("ふくしゅうリストを ぜんぶ けしますか？")) { store.review.clear(); showReview(); }
+        if (confirm("復習リストを全部消しますか？")) { store.review.clear(); showReview(); }
       });
       view.querySelectorAll(".rv-del").forEach((b) => b.addEventListener("click", () => {
         store.review.remove(b.dataset.r, b.dataset.c);
@@ -176,21 +178,22 @@
         <div class="shiri-status" id="status"></div>
         <div class="shiri-fields">
           <button type="button" class="shiri-field is-active" data-field="reading">
-            <span class="shiri-label">にほんご（よみ）</span>
+            <span class="shiri-label">日本語{にほんご}（読{よ}み）</span>
             <span class="shiri-text" data-text="reading"></span>
           </button>
           <button type="button" class="shiri-field" data-field="english">
-            <span class="shiri-label">えいご</span>
+            <span class="shiri-label">英語{えいご}</span>
             <span class="shiri-text shiri-en" data-text="english"></span>
           </button>
         </div>
         <div class="shiri-message" id="message" role="status" aria-live="polite"></div>
         <div class="shiri-actions">
-          <button type="button" class="btn btn-small" id="btn-hint">💡 ヒント（-5てん）</button>
+          <button type="button" class="btn btn-small" id="btn-hint">💡 ヒント（-5点{てん}）</button>
           <button type="button" class="btn btn-small" id="btn-quit">やめる</button>
         </div>
         <div id="shiri-kb"></div>
         <ol class="shiri-history" id="history" reversed></ol>`;
+      Ruby.apply(view);
 
       const $ = (s) => view.querySelector(s);
       // pending: ローマ字入力の途中(k など)。確定前なので text には入れない
@@ -226,14 +229,14 @@
       }
       function renderStatus() {
         const req = game.state().required;
-        $("#status").innerHTML = `つぎは 「<b>${esc(req)}</b>」から はじまる ことば！`;
+        $("#status").innerHTML = Ruby.html("次{つぎ}は「") + `<b>${esc(req)}</b>` + Ruby.html("」から始{はじ}まる言葉{ことば}！");
       }
       function say(msg, kind) {
         const m = $("#message");
-        m.textContent = msg || "";
+        m.innerHTML = Ruby.html(msg || "");
         m.dataset.kind = kind || "";
       }
-      function bubble(msg) { $("#bubble").textContent = msg || ""; }
+      function bubble(msg) { $("#bubble").innerHTML = Ruby.html(msg || ""); }
       function setActive(name) {
         state.active = name;
         kb.setMode(name === "reading" ? "kana" : "en");
@@ -273,18 +276,18 @@
 
       function handleMiss(r) {
         const MSG = {
-          timeout: "じかんぎれ！",
-          not_connected: `「${r.required}」から はじまって ないよ！`,
-          duplicate: "その えいごは もう つかったよ！",
-          spelling: `おしい！ つづりが ちがうよ。 せいかいは 「${r.correct}」`,
+          timeout: "時間{じかん}切{ぎ}れ！",
+          not_connected: `「${r.required}」から始{はじ}まってないよ！`,
+          duplicate: "その英語{えいご}はもう使{つか}ったよ！",
+          spelling: `おしい！ つづりが違{ちが}うよ。 正解{せいかい}は「${r.correct}」`,
           wrong_english: r.correct
-            ? `その よみと えいごは あってないよ。 たとえば 「${r.correct}」`
-            : "その よみと えいごは あってないよ。"
+            ? `その読{よ}みと英語{えいご}は合{あ}ってないよ。 例{たと}えば「${r.correct}」`
+            : "その読{よ}みと英語{えいご}は合{あ}ってないよ。"
         };
         if (r.review) store.review.add(r.review);
         renderHud();
         if (r.gameOver) { say(MSG[r.reason] || "", "ng"); return endGame(); }
-        say((MSG[r.reason] || "") + "  ♥が 1つ へったよ", "ng");
+        say((MSG[r.reason] || "") + "  ♥が1つ減{へ}ったよ", "ng");
         newTurn(false);
       }
 
@@ -309,7 +312,7 @@
         state.busy = true;
         const left = remaining();
         pauseTimer();
-        const slow = setTimeout(() => say("🔍 かくにん中…", "hint"), 400); // Geminiに聞く時だけ見える
+        const slow = setTimeout(() => say("🔍 確認中{かくにんちゅう}…", "hint"), 400); // Geminiに聞く時だけ見える
         const r = await game.submit(state.text.reading, state.text.english, left);
         clearTimeout(slow);
         if (!alive || !teardownPlay) return;
@@ -325,7 +328,7 @@
 
         // 成功
         renderHud(); renderHistory();
-        say(`OK！ +${r.points}てん`, "ok");
+        say(`OK！ +${r.points}点{てん}`, "ok");
         state.text = { reading: "", english: "" };
         state.pending = "";
         renderFields();
@@ -335,10 +338,10 @@
 
       function cpuTurn() {
         state.busy = true;
-        bubble("🤖 かんがえ中…");
+        bubble("🤖 考{かんが}え中{ちゅう}…");
         cpuTimer = setTimeout(() => {
           const r = game.cpuTurn();
-          if (r.kind === "cpu_stuck") { bubble("🤖 うーん… おもいつかない！"); return endGame(); }
+          if (r.kind === "cpu_stuck") { bubble("🤖 うーん… 思{おも}いつかない！"); return endGame(); }
           bubble(`🤖 「${r.reading}」 ＝ ${r.english}`);
           renderHistory();
           newTurn(true);
@@ -371,18 +374,18 @@
       $("#btn-hint").addEventListener("click", () => {
         if (state.busy) return;
         const h = game.hint();
-        if (!h) return say("ヒントが みつからなかったよ", "ng");
+        if (!h) return say("ヒントが見{み}つからなかったよ", "ng");
         renderHud();
-        say(`💡 「${h.reading}」 ＝ ${h.firstLetter.toUpperCase()}${" _".repeat(h.length - 1)}（${h.length}もじ） -${h.cost}てん`, "hint");
+        say(`💡 「${h.reading}」 ＝ ${h.firstLetter.toUpperCase()}${" _".repeat(h.length - 1)}（${h.length}文字{もじ}） -${h.cost}点{てん}`, "hint");
       });
       $("#btn-quit").addEventListener("click", () => {
-        if (confirm("ゲームを やめて メニューに もどりますか？")) showMenu();
+        if (confirm("ゲームをやめてメニューに戻りますか？")) showMenu();
       });
       view.querySelectorAll(".shiri-field").forEach((f) =>
         f.addEventListener("click", () => { if (!state.busy) setActive(f.dataset.field); }));
 
       newTurn(false);
-      bubble("🤖 「しりとり」！ きみは 「り」から だよ");
+      bubble("🤖 「しりとり」！ きみは「り」からだよ");
     }
 
     /* ============ けっか ============ */
@@ -395,10 +398,10 @@
           <div class="result-icon">${t.icon}</div>
           <h3 class="menu-title">${t.title}</h3>
           <p>${t.sub}</p>
-          <div class="result-score">スコア <b>${s.score}</b>${record ? ' <span class="badge-new">しんきろく！</span>' : ""}</div>
-          <p class="note">いえた ことば ${s.words}こ ・ ベスト ${store.best.get(diffKey)}</p>
+          <div class="result-score">スコア <b>${s.score}</b>${record ? ' <span class="badge-new">新記録{しんきろく}！</span>' : ""}</div>
+          <p class="note">言{い}えた言葉{ことば} ${s.words}個{こ} ・ ベスト ${store.best.get(diffKey)}</p>
           ${s.mistakes.length ? `
-            <h4 class="menu-sub">まちがえた ことば（ふくしゅうに ほぞんしたよ）</h4>
+            <h4 class="menu-sub">間違{まちが}えた言葉{ことば}（復習{ふくしゅう}に保存{ほぞん}したよ）</h4>
             <ul class="review-list">
               ${s.mistakes.map((m) => `
                 <li><span class="rv-read">${esc(m.reading)}</span>
@@ -406,10 +409,11 @@
                     <span class="rv-typed">（${esc(m.typed)}）</span></li>`).join("")}
             </ul>` : ""}
           <div class="menu-actions">
-            <button type="button" class="btn btn-primary" id="btn-again">もういちど</button>
+            <button type="button" class="btn btn-primary" id="btn-again">もう一度{いちど}</button>
             <button type="button" class="btn" id="btn-menu">メニューへ</button>
           </div>
         </div>`;
+      Ruby.apply(view);
       view.querySelector("#btn-again").addEventListener("click", startGame);
       view.querySelector("#btn-menu").addEventListener("click", showMenu);
     }

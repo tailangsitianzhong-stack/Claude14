@@ -191,3 +191,10 @@ body {
 
 .credit-title { margin: 22px 0 0; font-size: 1rem; }
 .note a { color: var(--blue); }
+
+/* ===== ふりがな(ルビ) ===== */
+ruby { ruby-position: over; ruby-align: center; }
+rt { font-size: .48em; font-weight: normal; letter-spacing: 0; line-height: 1; color: inherit; opacity: .85; }
+.home-title rt { font-size: .26em; text-shadow: none; letter-spacing: .05em; color: var(--ink); }
+.game-card .name { line-height: 1.7; }
+.game-card .desc, .note, .howto li { line-height: 1.75; }
