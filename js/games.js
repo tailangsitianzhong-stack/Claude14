@@ -18,16 +18,8 @@ window.GAMES = [
     icon: "🔤",
     desc: "さいごの もじから つなげよう！",
     ready: true,
-    mount(root) {
-      // TODO: しりとり本体をここに実装していく
-      root.innerHTML = `
-        <div class="panel placeholder">
-          <div class="big">🔤</div>
-          <h3>えいたんご しりとり</h3>
-          <p>ここにゲーム本体を作っていきます！</p>
-        </div>`;
-    },
-    unmount() {}
+    mount(root) { window.ShiritoriGame.mount(root); },
+    unmount() { window.ShiritoriGame.unmount(); }
   },
   {
     id: "coming-1",
