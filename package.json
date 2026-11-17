@@ -1,0 +1,5 @@
+{
+  "name": "minigame-hiroba",
+  "private": true,
+  "scripts": { "test": "node --test tests/*.test.js" }
+}
