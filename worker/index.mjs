@@ -7,7 +7,7 @@
  *   POST /judge   {"reading":"ぬいぐるみ","english":"plush"}
  *     → {"ok":true|false|null, "reason":"none|spelling|wrong_english|unavailable|config",
  *        "suggestion":"..."|null, "cached":true|false}
- *   GET  /health  → {"ok":true}
+ *   GET  /health  → {"ok":true,"keySet":true,"model":"...","kv":true}（Origin不要。設定の確認用）
  *
  * ok:null は「判定できなかった」（無料枠の上限・通信エラー等）。ブラウザ側は辞書の結果に戻す。
  *
@@ -151,14 +151,16 @@ export async function handle(request, env, deps) {
   const url = new URL(request.url);
   const origin = request.headers.get("origin");
 
+  // 動作確認用(ブラウザでURLを直接開ける)。キーの有無だけを返し、中身は返さない
+  if (request.method === "GET" && url.pathname === "/health") {
+    return json({ ok: true, keySet: !!env.GEMINI_API_KEY, model: env.GEMINI_MODEL || DEFAULT_MODEL, kv: !!env.CACHE }, 200, origin);
+  }
+
   if (!originAllowed(env, origin)) {
     return json({ ok: null, reason: "forbidden_origin" }, 403, null);
   }
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
-  }
-  if (request.method === "GET" && url.pathname === "/health") {
-    return json({ ok: true }, 200, origin);
   }
   if (request.method !== "POST" || url.pathname !== "/judge") {
     return json({ error: "not_found" }, 404, origin);

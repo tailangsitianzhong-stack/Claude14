@@ -75,8 +75,12 @@ test("不正な入力は400/404/413", async () => {
   assert.equal((await W.handle(post({ reading: "ぬいぐるみ", english: "two words" }), baseEnv(), f)).status, 400);
   assert.equal((await W.handle(post({}, ORIGIN, "/other"), baseEnv(), f)).status, 404);
   assert.equal((await W.handle(post("x".repeat(2000)), baseEnv(), f)).status, 413);
-  const health = await W.handle(new Request("https://w.example/health", { headers: { origin: ORIGIN } }), baseEnv());
-  assert.deepEqual(await health.json(), { ok: true });
+  // /health は Origin なしでも開ける(スマホのブラウザで確認するため)。キーの中身は返さない
+  const health = await W.handle(new Request("https://w.example/health"), baseEnv());
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { ok: true, keySet: true, model: "gemini-test", kv: false });
+  const noKey = await W.handle(new Request("https://w.example/health"), baseEnv({ GEMINI_API_KEY: undefined }));
+  assert.equal((await noKey.json()).keySet, false);
 });
 
 test("Geminiへのリクエスト: モデル名・APIキー・プロンプト", async () => {
