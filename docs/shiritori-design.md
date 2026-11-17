@@ -34,7 +34,7 @@
 2. 英語・かなキーボード ← 実装済み
 3. 辞書づくり（JMdict, CC BY-SA 4.0: クレジット表記が必要） ← 実装済み（data/words.js、tools/build-dict.mjs）
 4. 対CPU戦（ここでGeminiなしで遊べる） ← 実装済み
-5. Gemini中継（Cloudflare Workers）
+5. Gemini中継（Cloudflare Workers） ← コード実装済み。デプロイは docs/gemini-worker-setup.md の手順で
 6. 復習リスト・効果音・仕上げ
 
 ## 対CPU戦の仕様（段階4で実装）

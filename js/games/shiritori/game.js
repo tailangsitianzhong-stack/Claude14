@@ -12,6 +12,7 @@
   const Judge = root.ShiritoriJudge;
   const Core = root.ShiritoriGameCore;
   const Store = root.ShiritoriStore;
+  const Remote = root.ShiritoriRemote;
 
   const MAX = { reading: 12, english: 30 };
   const CPU_THINK_MS = [700, 1300];
@@ -97,7 +98,11 @@
     Dictionary.load().then((d) => {
       if (!alive) return;
       dict = d;
-      judge = Judge.create({ dict });
+      const cfg = root.APP_CONFIG || {};
+      let storage = null;
+      try { storage = localStorage; } catch (_) {}
+      // judgeEndpoint が空なら remote は null → 辞書だけで判定
+      judge = Judge.create({ dict, remote: Remote.create({ endpoint: cfg.judgeEndpoint, storage }) });
       const cbs = readyCallbacks; readyCallbacks = [];
       cbs.forEach((fn) => fn());
     }).catch(() => {
@@ -292,7 +297,9 @@
         state.busy = true;
         const left = remaining();
         pauseTimer();
+        const slow = setTimeout(() => say("🔍 かくにん中…", "hint"), 400); // Geminiに聞く時だけ見える
         const r = await game.submit(state.text.reading, state.text.english, left);
+        clearTimeout(slow);
         if (!alive || !teardownPlay) return;
 
         if (r.kind === "retry") {

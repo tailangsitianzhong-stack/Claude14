@@ -1,5 +1,5 @@
 /**
- * 判定パイプライン: ① ルール判定 → ② 辞書照合 → (③ 外部判定: 段階5でGeminiを接続)
+ * 判定パイプライン: ① ルール判定 → ② 辞書照合 → ③ 外部判定(remote: Gemini中継Worker。任意)
  *
  *   const judge = ShiritoriJudge.create({ dict, remote });   // remote は省略可
  *   const r = await judge.judge({ reading, english, requiredKana, usedEnglish }, opts);
@@ -30,6 +30,10 @@
       const hit = dict.lookup(rule.reading, rule.english);
       if (hit) return Object.assign({ ok: true, source: "dictionary", entry: hit }, base);
 
+      // 近いつづり(typo)が辞書で分かる場合は、Geminiに聞かず「つづりミス」にする（無料枠の節約）
+      const suggestion = dict.suggest(rule.reading, rule.english);
+      if (suggestion) return Object.assign({ ok: false, reason: "spelling", suggestion, source: "dictionary" }, base);
+
       if (remote) {
         try {
           const r = await remote({ reading: rule.reading, english: rule.english });
@@ -41,8 +45,6 @@
         } catch (_) { /* 通信失敗は辞書の結果にフォールバック */ }
       }
 
-      const suggestion = dict.suggest(rule.reading, rule.english);
-      if (suggestion) return Object.assign({ ok: false, reason: "spelling", suggestion, source: "dictionary" }, base);
       const known = dict.englishFor(rule.reading).length > 0;
       return Object.assign({ ok: false, reason: known ? "wrong_english" : "unknown_word",
                              suggestion: null, source: "dictionary" }, base);
