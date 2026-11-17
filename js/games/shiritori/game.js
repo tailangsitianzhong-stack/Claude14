@@ -124,8 +124,10 @@
               ${list.map((e) => `
                 <li>
                   <span class="rv-read">${esc(e.reading)}</span>
-                  <span class="rv-correct">${esc(e.correct)}</span>
-                  <span class="rv-typed">（${esc(e.typed)}）</span>
+                  <span class="rv-words">
+                    <span class="rv-correct">${esc(e.correct)}</span>
+                    <span class="rv-typed">（${esc(e.typed)}）</span>
+                  </span>
                   <button type="button" class="btn btn-small rv-del" data-r="${esc(e.reading)}" data-c="${esc(e.correct)}"
                           aria-label="${esc(e.reading)}を消す">✕</button>
                 </li>`).join("")}
@@ -405,8 +407,10 @@
             <ul class="review-list">
               ${s.mistakes.map((m) => `
                 <li><span class="rv-read">${esc(m.reading)}</span>
-                    <span class="rv-correct">${esc(m.correct)}</span>
-                    <span class="rv-typed">（${esc(m.typed)}）</span></li>`).join("")}
+                    <span class="rv-words">
+                      <span class="rv-correct">${esc(m.correct)}</span>
+                      <span class="rv-typed">（${esc(m.typed)}）</span>
+                    </span></li>`).join("")}
             </ul>` : ""}
           <div class="menu-actions">
             <button type="button" class="btn btn-primary" id="btn-again">もう一度{いちど}</button>
