@@ -3,7 +3,7 @@
   // ビルドコマンド: mkdir -p public && cp -r index.html css js data public/
   // デプロイコマンド: npx wrangler deploy
   // (判定用のWorkerは worker/wrangler.jsonc で別にデプロイ)
-  "name": "minigames",
+  "name": "minigame",
   "compatibility_date": "2026-10-01",
   "assets": { "directory": "./public" }
 }
