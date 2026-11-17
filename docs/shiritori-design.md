@@ -32,7 +32,7 @@
 ## 進行
 1. ルール判定とテスト ← 実装済み
 2. 英語・かなキーボード ← 実装済み
-3. 辞書づくり（JMdict, CC BY-SA 4.0: クレジット表記が必要）
+3. 辞書づくり（JMdict, CC BY-SA 4.0: クレジット表記が必要） ← 実装済み（data/words.js、tools/build-dict.mjs）
 4. 対CPU戦（ここでGeminiなしで遊べる）
 5. Gemini中継（Cloudflare Workers）
 6. 復習リスト・効果音・仕上げ

@@ -188,3 +188,6 @@ body {
   .screen { animation: none; }
   .game-card, .btn { transition: none; }
 }
+
+.credit-title { margin: 22px 0 0; font-size: 1rem; }
+.note a { color: var(--blue); }

@@ -7,13 +7,17 @@
   const Rules = root.ShiritoriRules;
   const Input = root.ShiritoriInput;
   const Keyboard = root.ShiritoriKeyboard;
+  const Dictionary = root.ShiritoriDictionary;
+  const Judge = root.ShiritoriJudge;
 
   const MAX = { reading: 12, english: 30 };
   const MESSAGES = {
     invalid_reading: "よみは ひらがな・カタカナで 2もじ いじょう いれてね",
     invalid_english: "えいごは アルファベットだけ（2〜30もじ）で いれてね",
     not_connected: "つながってないよ！",
-    duplicate: "その たんごは もう つかったよ！"
+    duplicate: "その たんごは もう つかったよ！",
+    wrong_english: "その よみと えいごは あってないみたい…",
+    unknown_word: "じしょに のっていない ことばだよ"
   };
 
   let cleanup = null;
@@ -35,7 +39,7 @@
         <div class="shiri-message" id="shiri-message" role="status" aria-live="polite"></div>
         <div id="shiri-kb"></div>
         <ol class="shiri-history" id="shiri-history"></ol>
-        <p class="note">※ 入力のテスト用の画面です。辞書でのスペル判定はこれから つなぎます。</p>
+        <p class="note" id="shiri-note">じしょを よみこみ中…</p>
       </div>`;
 
     const $ = (s) => rootEl.querySelector(s);
@@ -43,6 +47,16 @@
                     required: null, used: [], history: [] };
 
     const kb = Keyboard.create($("#shiri-kb"), { onAction });
+    let judge = null;
+    let alive = true;
+
+    Dictionary.load().then((dict) => {
+      if (!alive) return;
+      judge = Judge.create({ dict });
+      $("#shiri-note").textContent = "※ 画面のテスト中です（CPUたいせんは これから つくります）";
+    }).catch(() => {
+      if (alive) $("#shiri-note").textContent = "じしょを よみこめませんでした。ページを さいどくみこみ してね";
+    });
 
     function setActive(name) {
       state.active = name;
@@ -68,20 +82,25 @@
       m.dataset.kind = kind || "";
     }
 
-    function submit() {
+    async function submit() {
       if (state.active === "reading") {
         if (!Rules.normalizeReading(state.text.reading)) return say(MESSAGES.invalid_reading, "ng");
         say("");
         return setActive("english");
       }
-      const r = Rules.checkMove({
+      if (!judge) return say("じしょを よみこみ中… もうすこし まってね", "ng");
+      const r = await judge.judge({
         reading: state.text.reading,
         english: state.text.english,
         requiredKana: state.required,
         usedEnglish: state.used
       });
       if (!r.ok) {
-        say(MESSAGES[r.reason], "ng");
+        if (r.reason === "spelling") {
+          say(`おしい！ つづりが ちがうよ。 せいかいは 「${r.suggestion}」`, "ng");
+        } else {
+          say(MESSAGES[r.reason], "ng");
+        }
         if (r.reason === "not_connected") state.text = { reading: "", english: "" };
         if (r.reason === "not_connected" || r.reason === "invalid_reading") setActive("reading");
         render();
@@ -113,7 +132,7 @@
       f.addEventListener("click", () => setActive(f.dataset.field)));
 
     const detach = Keyboard.attachPhysicalKeys(() => kb.getMode(), onAction);
-    cleanup = () => { detach(); kb.destroy(); };
+    cleanup = () => { alive = false; detach(); kb.destroy(); };
     render();
   }
 
