@@ -1,7 +1,8 @@
 /**
  * 専用キーボードの入力ロジック（純粋関数）
  * action: {type:'char', value} | {type:'backspace'} | {type:'dakuten'}
- *         | {type:'handakuten'} | {type:'small'}
+ *         | {type:'handakuten'} | {type:'small'} | {type:'cycle'}
+ *   cycle = フリックキーボードの「゛゜小」: か→が→か / は→ば→ぱ→は / つ→っ→づ→つ / や→ゃ→や
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -36,6 +37,26 @@
     return SMALL_PAIRS[ch] || SMALL_BACK[ch] || ch;
   }
 
+  /** 1つの字の「ゆれ」の並び（゛゜小で順に切り替える）。base の次に 小・濁・半濁 の順 */
+  const CYCLES = [];
+  [..."あいうえおやゆよつわかきくけこさしすせそたちてとはひふへほ"].forEach((base) => {
+    const list = [base];
+    if (SMALL_PAIRS[base]) list.push(SMALL_PAIRS[base]);
+    [DAKUTEN, HANDAKUTEN].forEach((m) => {
+      const c = (base + m).normalize("NFC");
+      if (c.length === 1 && c !== base) list.push(c);
+    });
+    if (list.length > 1) CYCLES.push(list);
+  });
+  const CYCLE_OF = {};
+  CYCLES.forEach((list) => list.forEach((ch) => { CYCLE_OF[ch] = list; }));
+  // 並びは「つ→っ→づ」「う→ぅ→ゔ」のように、小さい字が濁点より先になる
+
+  function cycleChar(ch) {
+    const list = CYCLE_OF[ch];
+    return list ? list[(list.indexOf(ch) + 1) % list.length] : ch;
+  }
+
   function applyAction(text, action, opts) {
     const max = (opts && opts.maxLength) || Infinity;
     const last = text.slice(-1);
@@ -48,6 +69,8 @@
         return last ? text.slice(0, -1) + toggleMark(last, DAKUTEN) : text;
       case "handakuten":
         return last ? text.slice(0, -1) + toggleMark(last, HANDAKUTEN) : text;
+      case "cycle":
+        return last ? text.slice(0, -1) + cycleChar(last) : text;
       case "small":
         return last ? text.slice(0, -1) + toggleSmall(last) : text;
       default:

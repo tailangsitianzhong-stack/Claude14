@@ -210,3 +210,62 @@
   .kb-kana .kb-key { min-height: 40px; }
   .kb-row .kb-key { min-height: 46px; }
 }
+
+/* ===== かな入力方式のタブ ===== */
+.kb-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.kb-tab {
+  flex: 1; padding: 4px 0; font: inherit; font-size: .9rem; color: var(--ink-soft);
+  background: rgba(255, 255, 255, .6); border: 3px solid var(--ink-soft);
+  border-radius: 10px 12px 9px 13px / 12px 9px 13px 10px; cursor: pointer; touch-action: manipulation;
+}
+.kb-tab.is-on { color: var(--ink); background: #ffe9a3; border-color: var(--red); font-weight: bold; }
+
+/* よみ欄の「入力途中のローマ字」 */
+.shiri-text .pending { color: var(--ink-soft); text-decoration: underline dotted; letter-spacing: .04em; }
+
+/* ===== フリックキーボード ===== */
+.kb-flick { display: grid; grid-template-columns: repeat(3, 1fr) 1.1fr; gap: var(--gap); }
+.kb-flick .kb-key { min-height: 52px; font-size: 1.3rem; }
+.kb-flick-key { position: relative; touch-action: none; -webkit-user-select: none; user-select: none; }
+.kb-flick-main { font-size: 1.5rem; pointer-events: none; }
+.kb-hint {
+  position: absolute; font-size: .62rem; line-height: 1; color: rgba(74, 52, 16, .45); pointer-events: none;
+}
+.kb-hint-l { left: 5px; top: 50%; transform: translateY(-50%); }
+.kb-hint-r { right: 5px; top: 50%; transform: translateY(-50%); }
+.kb-hint-u { top: 3px; left: 50%; transform: translateX(-50%); }
+.kb-hint-d { bottom: 3px; left: 50%; transform: translateX(-50%); }
+.kb-flick-ctl { font-size: 1rem !important; }
+.kb-tall { grid-row: span 2; min-height: 0 !important; }
+.kb-cycle { font-size: 1rem !important; }
+
+/* フリック中に出る十字の候補 */
+.kb-flick-pop { position: fixed; z-index: 50; width: 0; height: 0; pointer-events: none; }
+.kb-flick-cell {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  width: var(--w); height: var(--h); font-size: 1.7rem; color: var(--ink);
+  background: #fff; border: 3px solid var(--ink); border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(74, 52, 16, .4);
+}
+.kb-flick-cell.is-on { background: var(--red); color: #fff; }
+.kb-flick-c { left: calc(var(--w) / -2); top: calc(var(--h) / -2); }
+.kb-flick-l { left: calc(var(--w) * -1.5); top: calc(var(--h) / -2); }
+.kb-flick-r { left: calc(var(--w) / 2); top: calc(var(--h) / -2); }
+.kb-flick-u { left: calc(var(--w) / -2); top: calc(var(--h) * -1.5); }
+.kb-flick-d { left: calc(var(--w) / -2); top: calc(var(--h) / 2); }
+
+/* ローマ字キーボード */
+.kb-romaji .kb-key { font-size: 1.25rem; }
+
+@media (max-width: 600px) {
+  .kb-tabs { margin-bottom: 5px; }
+  .kb-tab { padding: 2px 0; font-size: .8rem; }
+  .kb-flick .kb-key { min-height: 44px; }
+}
+
+/* 背の低い画面(小さいスマホ)では、50音表のキーを少し低くしてスクロールなしで収める */
+@media (max-height: 720px) {
+  .kb-kana .kb-key { min-height: 34px; font-size: 1.05rem; }
+  .kb-controls { margin-top: 5px; }
+  .kb-controls .kb-key { min-height: 38px; }
+}

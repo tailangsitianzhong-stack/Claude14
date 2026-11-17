@@ -7,6 +7,7 @@
 
   const Rules = root.ShiritoriRules;
   const Input = root.ShiritoriInput;
+  const Romaji = root.ShiritoriRomaji;
   const Keyboard = root.ShiritoriKeyboard;
   const Dictionary = root.ShiritoriDictionary;
   const Judge = root.ShiritoriJudge;
@@ -192,11 +193,12 @@
         <ol class="shiri-history" id="history" reversed></ol>`;
 
       const $ = (s) => view.querySelector(s);
-      const state = { active: "reading", text: { reading: "", english: "" }, busy: true };
+      // pending: ローマ字入力の途中(k など)。確定前なので text には入れない
+      const state = { active: "reading", text: { reading: "", english: "" }, pending: "", busy: true };
       let deadline = 0, pausedAt = 0, timerId = null, cpuTimer = null, lastShown = -1;
 
       const kb = Keyboard.create($("#shiri-kb"), { onAction });
-      const detachKeys = Keyboard.attachPhysicalKeys(() => kb.getMode(), onAction);
+      const detachKeys = Keyboard.attachPhysicalKeys(() => kb.getMode(), onAction, () => kb.getKanaMethod());
 
       teardownPlay = () => {
         clearInterval(timerId); clearTimeout(cpuTimer);
@@ -210,7 +212,12 @@
         $("#hud-score").textContent = s.score;
       }
       function renderFields() {
-        view.querySelectorAll("[data-text]").forEach((t) => { t.textContent = state.text[t.dataset.text]; });
+        view.querySelectorAll("[data-text]").forEach((t) => {
+          const name = t.dataset.text;
+          // よみ欄は、入力途中のローマ字を薄く下線つきで続けて表示する
+          t.innerHTML = esc(state.text[name]) +
+            (name === "reading" && state.pending ? `<span class="pending">${esc(state.pending)}</span>` : "");
+        });
       }
       function renderHistory() {
         $("#history").innerHTML = game.state().history.slice().reverse().map((h) =>
@@ -257,6 +264,7 @@
       /* ---- ターン ---- */
       function newTurn(keepFields) {
         if (!keepFields) state.text = { reading: "", english: "" };
+        state.pending = "";
         state.busy = false;
         renderFields(); renderStatus(); renderHud();
         setActive("reading");
@@ -290,6 +298,10 @@
       async function submit() {
         if (state.busy) return;
         if (state.active === "reading") {
+          // 入力途中の n を「ん」に確定してから調べる
+          const fixed = Romaji.flush({ text: state.text.reading, pending: state.pending });
+          state.text.reading = fixed.text; state.pending = "";
+          renderFields();
           if (!Rules.normalizeReading(state.text.reading)) return say(FORMAT_MESSAGES.invalid_reading, "ng");
           say("");
           return setActive("english");
@@ -315,6 +327,7 @@
         renderHud(); renderHistory();
         say(`OK！ +${r.points}てん`, "ok");
         state.text = { reading: "", english: "" };
+        state.pending = "";
         renderFields();
         if (r.gameOver) return endGame();
         cpuTurn();
@@ -336,7 +349,12 @@
         if (state.busy) return;
         if (action.type === "submit") return submit();
         const f = state.active;
-        state.text[f] = Input.applyAction(state.text[f], action, { maxLength: MAX[f] });
+        if (f === "reading") {
+          const r = Romaji.applyReading({ text: state.text.reading, pending: state.pending }, action, { maxLength: MAX.reading });
+          state.text.reading = r.text; state.pending = r.pending;
+        } else {
+          state.text[f] = Input.applyAction(state.text[f], action, { maxLength: MAX[f] });
+        }
         renderFields();
         $("#message").dataset.kind === "ng" && say("");
       }

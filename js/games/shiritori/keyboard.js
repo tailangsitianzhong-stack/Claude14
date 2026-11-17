@@ -32,7 +32,19 @@
     qwerty: ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
   };
 
+  // フリックキー: [タップ(あ段), 左(い段), 上(う段), 右(え段), 下(お段)]。null はその向きが無い
+  const FLICK_KEYS = {
+    "あ": ["あ", "い", "う", "え", "お"], "か": ["か", "き", "く", "け", "こ"], "さ": ["さ", "し", "す", "せ", "そ"],
+    "た": ["た", "ち", "つ", "て", "と"], "な": ["な", "に", "ぬ", "ね", "の"], "は": ["は", "ひ", "ふ", "へ", "ほ"],
+    "ま": ["ま", "み", "む", "め", "も"], "や": ["や", null, "ゆ", null, "よ"], "ら": ["ら", "り", "る", "れ", "ろ"],
+    "わ": ["わ", "を", "ん", "ー", null]
+  };
+  const FLICK_ROWS = [["あ", "か", "さ"], ["た", "な", "は"], ["ま", "や", "ら"]];
+  const FLICK_THRESHOLD = 16; // px。これ以上動いたらフリックとみなす
+  const KANA_METHODS = [["romaji", "ローマ字"], ["flick", "フリック"], ["grid", "50おん"]];
+
   const LAYOUT_KEY = "minigames.shiritori.enLayout";
+  const METHOD_KEY = "minigames.shiritori.kanaMethod";
 
   function loadLayout() {
     try {
@@ -42,6 +54,16 @@
   }
   function saveLayout(v) {
     try { localStorage.setItem(LAYOUT_KEY, v); } catch (_) {}
+  }
+
+  function loadMethod() {
+    try {
+      const v = localStorage.getItem(METHOD_KEY);
+      return KANA_METHODS.some((m) => m[0] === v) ? v : "romaji";
+    } catch (_) { return "romaji"; }
+  }
+  function saveMethod(v) {
+    try { localStorage.setItem(METHOD_KEY, v); } catch (_) {}
   }
 
   function el(tag, cls, text) {
@@ -55,6 +77,7 @@
     const onAction = handlers.onAction;
     let mode = "kana";
     let enLayout = loadLayout();
+    let kanaMethod = loadMethod();
 
     const wrap = el("div", "kb");
     wrap.setAttribute("role", "group");
@@ -90,7 +113,32 @@
       return row;
     }
 
+    /** かな入力の方式タブ（ローマ字 / フリック / 50おん） */
+    function methodTabs() {
+      const row = el("div", "kb-tabs");
+      row.setAttribute("role", "tablist");
+      KANA_METHODS.forEach(([id, label]) => {
+        const b = button(label, "kb-tab" + (id === kanaMethod ? " is-on" : ""), () => {
+          kanaMethod = id;
+          saveMethod(id);
+          render();
+        });
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-selected", String(id === kanaMethod));
+        row.appendChild(b);
+      });
+      return row;
+    }
+
     function renderKana() {
+      wrap.appendChild(methodTabs());
+      if (kanaMethod === "flick") return renderFlick();
+      if (kanaMethod === "romaji") return renderRomaji();
+      return renderKanaGrid();
+    }
+
+    /** 50音の表（右端があ行） */
+    function renderKanaGrid() {
       const grid = el("div", "kb-kana");
       for (let r = 0; r < 5; r++) {
         KANA_COLUMNS.forEach((col) => {
@@ -106,6 +154,107 @@
         key("゜", "kb-mod", { type: "handakuten" }, "まる"),
         key("小", "kb-mod", { type: "small" }, "ちいさいもじ")
       ]));
+    }
+
+    /** ローマ字打ち: アルファベットを打つとかなになる（k+a→か） */
+    function renderRomaji() {
+      const box = el("div", "kb-en kb-romaji");
+      EN_LAYOUTS.qwerty.forEach((letters) => {
+        const row = el("div", "kb-row");
+        letters.split("").forEach((c) => {
+          row.appendChild(key(c.toUpperCase(), "", { type: "romaji", value: c }, c));
+        });
+        box.appendChild(row);
+      });
+      wrap.appendChild(box);
+      wrap.appendChild(controls([key("ー", "kb-mod", { type: "romaji", value: "-" }, "ながいおん")]));
+    }
+
+    /** フリック入力: タップで あ段、上下左右にスライドで い・う・え・お段 */
+    function renderFlick() {
+      const grid = el("div", "kb-flick");
+
+      FLICK_ROWS.forEach((row, ri) => {
+        row.forEach((k) => grid.appendChild(flickKey(k)));
+        if (ri === 0) grid.appendChild(key("⌫", "kb-flick-ctl kb-del", { type: "backspace" }, "ひとつけす"));
+        if (ri === 1) grid.appendChild(key("けってい", "kb-flick-ctl kb-enter kb-tall", { type: "submit" }, "けってい"));
+      });
+      grid.appendChild(key("゛゜小", "kb-mod kb-cycle", { type: "cycle" }, "てんてん・まる・ちいさいもじ"));
+      grid.appendChild(flickKey("わ"));
+      grid.appendChild(key("ん", "", { type: "char", value: "ん" }));
+      grid.appendChild(key("ー", "kb-flick-ctl", { type: "char", value: "ー" }, "ながいおん"));
+      wrap.appendChild(grid);
+    }
+
+    /** 1つのフリックキー（押すと十字の候補が出る） */
+    function flickKey(label) {
+      const chars = FLICK_KEYS[label];
+      const b = el("button", "kb-key kb-flick-key", null);
+      b.type = "button";
+      b.setAttribute("aria-label", chars.filter(Boolean).join("・"));
+      b.appendChild(el("span", "kb-flick-main", label));
+      // 方向のヒント（ちいさく表示）: 左・上・右・下
+      ["l", "u", "r", "d"].forEach((pos, i) => {
+        if (chars[i + 1]) b.appendChild(el("span", "kb-hint kb-hint-" + pos, chars[i + 1]));
+      });
+
+      let start = null, popup = null, cells = null, chosen = 0;
+
+      function direction(dx, dy) {
+        if (Math.hypot(dx, dy) < FLICK_THRESHOLD) return 0;
+        const d = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 4);
+        return chars[d] ? d : 0;                 // その向きに字が無ければ、まん中(タップ)扱い
+      }
+      function highlight(idx) {
+        chosen = idx;
+        if (cells) cells.forEach((c, i) => c && c.classList.toggle("is-on", i === idx));
+      }
+      function showPopup() {
+        const r = b.getBoundingClientRect();
+        const w = r.width, h = r.height;
+        popup = el("div", "kb-flick-pop");
+        // 画面の左右にはみ出さないように、十字の中心を内側へ寄せる
+        const cx = Math.min(Math.max(r.left + w / 2, w * 1.5 + 4), window.innerWidth - w * 1.5 - 4);
+        const cy = Math.max(r.top + h / 2, h * 1.5 + 4);
+        popup.style.cssText = `left:${cx}px;top:${cy}px;--w:${w}px;--h:${h}px`;
+        const pos = ["c", "l", "u", "r", "d"];
+        cells = chars.map((ch, i) => {
+          if (!ch) return null;
+          const c = el("div", "kb-flick-cell kb-flick-" + pos[i], ch);
+          popup.appendChild(c);
+          return c;
+        });
+        wrap.appendChild(popup);
+        highlight(0);
+      }
+      function hidePopup() {
+        if (popup) popup.remove();
+        popup = cells = null;
+      }
+
+      b.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        try { b.setPointerCapture(e.pointerId); } catch (_) {}
+        start = { x: e.clientX, y: e.clientY };
+        showPopup();
+      });
+      b.addEventListener("pointermove", (e) => {
+        if (!start) return;
+        highlight(direction(e.clientX - start.x, e.clientY - start.y));
+      });
+      b.addEventListener("pointerup", (e) => {
+        if (!start) return;
+        const idx = direction(e.clientX - start.x, e.clientY - start.y);
+        start = null;
+        hidePopup();
+        onAction({ type: "char", value: chars[idx] });
+      });
+      b.addEventListener("pointercancel", () => { start = null; hidePopup(); });
+      b.addEventListener("contextmenu", (e) => e.preventDefault());
+      b.addEventListener("click", (e) => {
+        if (e.detail === 0) onAction({ type: "char", value: chars[0] }); // キーボード(Enter/Space)からはタップ扱い
+      });
+      return b;
     }
 
     function renderEn() {
@@ -142,6 +291,7 @@
     return {
       setMode(m) { if (m !== mode) { mode = m; render(); } },
       getMode() { return mode; },
+      getKanaMethod() { return kanaMethod; },
       destroy() { wrap.remove(); }
     };
   }
@@ -150,7 +300,7 @@
    * パソコンの物理キーボード対応（英語モードは英字のみ、かなモードは操作キーのみ）
    * 戻り値の関数を呼ぶと解除される。
    */
-  function attachPhysicalKeys(getMode, onAction) {
+  function attachPhysicalKeys(getMode, onAction, getKanaMethod) {
     function onKeyDown(e) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
       if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
@@ -162,6 +312,10 @@
       else if (getMode() === "en" && /^[a-zA-Z]$/.test(e.key)) {
         e.preventDefault();
         onAction({ type: "char", value: e.key.toLowerCase() });
+      }
+      else if (getMode() === "kana" && getKanaMethod && getKanaMethod() === "romaji" && /^[a-zA-Z-]$/.test(e.key)) {
+        e.preventDefault();                         // ローマ字方式なら物理キーでも k+a → か
+        onAction({ type: "romaji", value: e.key.toLowerCase() });
       }
     }
     document.addEventListener("keydown", onKeyDown);
