@@ -1,0 +1,9 @@
+{
+  // ゲーム本体(静的ファイル)の公開用。Cloudflare の「Workers Builds」で使う。
+  // ビルドコマンド: mkdir -p public && cp -r index.html css js data public/
+  // デプロイコマンド: npx wrangler deploy
+  // (判定用のWorkerは worker/wrangler.jsonc で別にデプロイ)
+  "name": "minigames",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public" }
+}
