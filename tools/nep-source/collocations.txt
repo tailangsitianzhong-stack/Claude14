@@ -1,74 +1,74 @@
-# 熟語の穴うめ(1つのお題に答えがたくさん)。形式: レベル(1=やさしい 2=むずかしい)|文(___が穴)|答え(半角スペース区切り・1語・原形)
-1|ice ___|cream cube age box hockey skating pack tea storm cap
-1|___ cream|ice sour whipped sun face hand shaving cold
-1|a piece of ___|cake paper bread advice news music pie chalk furniture information luck candy fruit land
-1|a cup of ___|tea coffee water milk cocoa juice sugar flour rice
-1|a glass of ___|water milk juice wine beer lemonade soda
-1|take a ___|bath break nap walk shower picture photo look seat rest bus chance trip test bite shot taxi train
-1|make a ___|cake wish mistake decision noise call plan friend speech bed list promise sandwich difference face mess deal choice
-1|have a ___|break bath drink party look rest snack cold headache dream picnic nap meal holiday shower seat chat try
-1|go ___|home shopping swimming fishing camping skiing abroad outside upstairs away back out ahead downstairs inside
-1|play ___|soccer tennis piano guitar baseball games cards chess golf music outside basketball hockey football volleyball
-1|in the ___|morning afternoon evening box car kitchen garden park sky sea water house room school world dark rain sun
-1|on the ___|table floor wall desk bus train phone road roof beach top bed grass left right way
-1|at the ___|station airport park market door zoo beach table library office shop end top bottom front back
-1|good ___|morning night luck idea boy girl job friend news time day afternoon evening
-1|happy ___|birthday ending hour face holiday time day family meal
-1|___ ball|foot base basket snow tennis golf volley eye fire meat hand rugby cannon beach moth
-1|___ board|black white key skate surf snow card dash cup chess sign bill head notice clip
-1|___ room|bed bath class living dining waiting locker changing dark show store school
-1|___ book|note text story picture cook comic work guide address phone hand pocket scrap copy
-1|___ box|lunch mail post toy gift shoe match tool jewelry letter ice phone sand juke
-1|___ fish|gold star jelly cat sword shell sun flying cuttle
-1|___ fly|butter dragon fire house horse fruit green
-1|___ man|snow super bat spider post fire police milk sand gentle business iron
-1|___ house|green light dog tree farm ware school glass hot
-1|___ ache|head tooth stomach back ear heart
-1|___ time|bed lunch night day play spring summer free tea any some over half
-1|___ shop|book coffee flower pet toy gift barber
-1|___ store|department convenience book drug grocery toy shoe
-1|___ light|sun moon star flash day traffic head spot candle flood
-1|___ water|fresh salt rain sea drinking tap hot cold mineral under
-1|___ side|sea river out in up down bed road country back hill lake
-1|___ phone|smart cell head ear mega tele micro mobile pay
-1|___ bag|hand school sleeping shopping tea bean air plastic paper
-1|___ cake|birthday pan cup cheese fruit sponge wedding carrot rice
-1|___ ring|wedding diamond key ear bell boxing finger onion
-1|a ___ of paper|piece sheet pile stack roll
-1|a ___ of bread|loaf slice piece bit
-1|school ___|bag bus yard lunch day trip uniform book teacher time
-1|birth___|day place mark
-1|home___|work page town sick made
-1|sun___|light shine set rise flower glasses burn screen day
-1|rain___|bow coat drop fall storm forest
-1|snow___|man ball flake storm board fall
-1|tooth___|brush paste ache pick fairy
-1|air___|port plane line craft bag mail
-1|water___|melon fall proof color park bottle
-2|___ line|air time dead head life tele hot clothes finish starting
-2|___ work|home house team art net fire school paper
-2|___ mark|book post bench land trade question birth check
-2|___ power|will horse man sun water super wind nuclear
-2|___ ship|friend relation scholar member champion leader
-2|___ proof|water fire bullet sound rust child
-2|___ bird|black blue humming song sea jail early
-2|a ___ of luck|piece stroke bit lot streak
-2|a ___ of cards|deck pack game hand
-2|a ___ of flowers|bunch bouquet bed field
-2|break the ___|ice law rules silence record news
-2|catch a ___|cold ball bus train fish thief
-2|keep a ___|promise secret diary pet
-2|pay ___|attention money bill respect visit
-2|set the ___|table alarm record stage tone
-2|lose ___|weight track time face hope money
-2|feel ___|good sad happy sick better free
-2|big ___|bang deal city brother sister apple foot
-2|hot ___|dog spring line potato chocolate air
-2|black ___|board bird hole mail list belt
-2|red ___|carpet cross tape flag wine
-2|green ___|house tea light bean peace card
-2|blue ___|bird whale sky print berry jeans
+# 熟語の穴うめ(1つのお題に答えがたくさん)。形式: レベル(1=やさしい 2=むずかしい)|文(___が穴)|答え(半角スペース区切り・1語・原形)|日本語の意味(ルビ記法OK)
+1|ice ___|cream cube age box hockey skating pack tea storm cap|氷{こおり}・アイスのつく言葉{ことば}
+1|___ cream|ice sour whipped sun face hand shaving cold|「〜クリーム」という言葉{ことば}
+1|a piece of ___|cake paper bread advice news music pie chalk furniture information luck candy fruit land|ひとつの〜（ものを数{かぞ}える言{い}い方{かた}）
+1|a cup of ___|tea coffee water milk cocoa juice sugar flour rice|カップ1杯{ぱい}の〜
+1|a glass of ___|water milk juice wine beer lemonade soda|グラス1杯{ぱい}の〜
+1|take a ___|bath break nap walk shower picture photo look seat rest bus chance trip test bite shot taxi train|〜をとる・〜をする（おふろに入{はい}る・休{やす}むなど）
+1|make a ___|cake wish mistake decision noise call plan friend speech bed list promise sandwich difference face mess deal choice|〜を作{つく}る・〜をする
+1|have a ___|break bath drink party look rest snack cold headache dream picnic nap meal holiday shower seat chat try|〜をする・〜を食{た}べる・飲{の}む
+1|go ___|home shopping swimming fishing camping skiing abroad outside upstairs away back out ahead downstairs inside|〜しに行{い}く・〜へ行{い}く
+1|play ___|soccer tennis piano guitar baseball games cards chess golf music outside basketball hockey football volleyball|〜をして遊{あそ}ぶ（スポーツ・楽器{がっき}・ゲーム）
+1|in the ___|morning afternoon evening box car kitchen garden park sky sea water house room school world dark rain sun|〜の中{なか}で（時間{じかん}や場所{ばしょ}）
+1|on the ___|table floor wall desk bus train phone road roof beach top bed grass left right way|〜の上{うえ}に
+1|at the ___|station airport park market door zoo beach table library office shop end top bottom front back|〜で（場所{ばしょ}）
+1|good ___|morning night luck idea boy girl job friend news time day afternoon evening|よい〜（あいさつ・ものごと）
+1|happy ___|birthday ending hour face holiday time day family meal|楽{たの}しい・うれしい〜
+1|___ ball|foot base basket snow tennis golf volley eye fire meat hand rugby cannon beach moth|「〜ボール」（球{たま}）
+1|___ board|black white key skate surf snow card dash cup chess sign bill head notice clip|「〜ボード」（板{いた}）
+1|___ room|bed bath class living dining waiting locker changing dark show store school|「〜の部屋{へや}」
+1|___ book|note text story picture cook comic work guide address phone hand pocket scrap copy|「〜ブック」（本{ほん}・ノート）
+1|___ box|lunch mail post toy gift shoe match tool jewelry letter ice phone sand juke|「〜ばこ」（箱{はこ}）
+1|___ fish|gold star jelly cat sword shell sun flying cuttle|「〜フィッシュ」（魚{さかな}の仲間{なかま}）
+1|___ fly|butter dragon fire house horse fruit green|「〜フライ」（飛{と}ぶ虫{むし}）
+1|___ man|snow super bat spider post fire police milk sand gentle business iron|「〜マン」（〜の人{ひと}）
+1|___ house|green light dog tree farm ware school glass hot|「〜ハウス」（家{いえ}・建物{たてもの}）
+1|___ ache|head tooth stomach back ear heart|からだの〜が痛{いた}い
+1|___ time|bed lunch night day play spring summer free tea any some over half|〜の時間{じかん}
+1|___ shop|book coffee flower pet toy gift barber|〜屋{や}さん
+1|___ store|department convenience book drug grocery toy shoe|〜のお店{みせ}
+1|___ light|sun moon star flash day traffic head spot candle flood|〜の光{ひかり}・あかり
+1|___ water|fresh salt rain sea drinking tap hot cold mineral under|〜の水{みず}
+1|___ side|sea river out in up down bed road country back hill lake|〜のそば・〜がわ
+1|___ phone|smart cell head ear mega tele micro mobile pay|「〜フォン」（電話{でんわ}・音{おと}を出{だ}す機械{きかい}）
+1|___ bag|hand school sleeping shopping tea bean air plastic paper|「〜バッグ」（ふくろ・かばん）
+1|___ cake|birthday pan cup cheese fruit sponge wedding carrot rice|「〜ケーキ」（おかし）
+1|___ ring|wedding diamond key ear bell boxing finger onion|「〜リング」（輪{わ}・指輪{ゆびわ}）
+1|a ___ of paper|piece sheet pile stack roll|紙{かみ}の数{かぞ}え方{かた}
+1|a ___ of bread|loaf slice piece bit|パンの数{かぞ}え方{かた}
+1|school ___|bag bus yard lunch day trip uniform book teacher time|学校{がっこう}の〜
+1|birth___|day place mark|誕生{たんじょう}の〜
+1|home___|work page town sick made|家{いえ}・ふるさとの〜
+1|sun___|light shine set rise flower glasses burn screen day|太陽{たいよう}の〜
+1|rain___|bow coat drop fall storm forest|雨{あめ}の〜
+1|snow___|man ball flake storm board fall|雪{ゆき}の〜
+1|tooth___|brush paste ache pick fairy|歯{は}の〜
+1|air___|port plane line craft bag mail|空気{くうき}・空{そら}の〜
+1|water___|melon fall proof color park bottle|水{みず}の〜
+2|___ line|air time dead head life tele hot clothes finish starting|〜線{せん}・〜ライン
+2|___ work|home house team art net fire school paper|〜の仕事{しごと}・作業{さぎょう}
+2|___ mark|book post bench land trade question birth check|〜のしるし・印{しるし}
+2|___ power|will horse man sun water super wind nuclear|〜の力{ちから}
+2|___ ship|friend relation scholar member champion leader|〜の関係{かんけい}・状態{じょうたい}（友情{ゆうじょう}など）
+2|___ proof|water fire bullet sound rust child|〜を通{とお}さない・〜に強{つよ}い
+2|___ bird|black blue humming song sea jail early|〜という鳥{とり}
+2|a ___ of luck|piece stroke bit lot streak|運{うん}の〜
+2|a ___ of cards|deck pack game hand|トランプなどの数{かぞ}え方{かた}
+2|a ___ of flowers|bunch bouquet bed field|花{はな}の数{かぞ}え方{かた}
+2|break the ___|ice law rules silence record news|〜をこわす・やぶる
+2|catch a ___|cold ball bus train fish thief|〜をつかまえる・〜に間{ま}に合{あ}う
+2|keep a ___|promise secret diary pet|〜を守{まも}る・〜をつけつづける
+2|pay ___|attention money bill respect visit|〜をはらう・〜を向{む}ける
+2|set the ___|table alarm record stage tone|〜を用意{ようい}する・〜をセットする
+2|lose ___|weight track time face hope money|〜を失{うしな}う・へらす
+2|feel ___|good sad happy sick better free|〜という気分{きぶん}になる
+2|big ___|bang deal city brother sister apple foot|大{おお}きな〜
+2|hot ___|dog spring line potato chocolate air|熱{あつ}い〜・人気{にんき}の〜
+2|black ___|board bird hole mail list belt|黒{くろ}い〜
+2|red ___|carpet cross tape flag wine|赤{あか}い〜
+2|green ___|house tea light bean peace card|緑{みどり}の〜
+2|blue ___|bird whale sky print berry jeans|青{あお}い〜
 
-2|___ stone|mile gem key tomb lime grave mill
-2|___ land|main wonder home play green ice farm
-2|___ bell|door blue cow church bar
+2|___ stone|mile gem key tomb lime grave mill|〜石{いし}
+2|___ land|main wonder home play green ice farm|〜の土地{とち}・国{くに}
+2|___ bell|door blue cow church bar|〜のベル・鐘{かね}

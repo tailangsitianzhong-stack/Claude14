@@ -8,7 +8,7 @@
  *   T.candidates(topic, count, last, used)       // CPUが選べる答えの一覧(知名度順)
  *
  * お題の種類(12): letter(○で始まる) length(○文字) endletter(○で終わる) category(カテゴリ)
- *   collocation(穴うめ・答えが多い) phrase(慣用句・1つ答えるたびに別の文) translate(日本語→英語)
+ *   collocation(穴うめ・答えが多い) phrase(慣用句・1つ答えるたびに別の文) ※どちらも日本語の意味(ja)を問題に添える translate(日本語→英語)
  *   antonym(反対語) past(過去形) anagram(並べかえ) atoz(ABC順) chain(英語しりとり)
  *
  * 形:
@@ -82,10 +82,10 @@
       collocation(o) {
         const pool = data.collocations.filter((e) => (o.difficulty === "easy" ? e.level === 1 : true) && e.answers.length >= 5);
         const e = choice(pool, o.rng);
-        return { kind: "collocation", key: "collocation:" + e.prompt, need: Math.max(3, Math.min(o.need, e.answers.length - 2)), prompt: e.prompt, answers: e.answers };
+        return { kind: "collocation", key: "collocation:" + e.prompt, need: Math.max(3, Math.min(o.need, e.answers.length - 2)), prompt: e.prompt, answers: e.answers, ja: e.ja || "" };
       },
       phrase(o) {
-        const steps = shuffle(data.phrases, o.rng).slice(0, o.need).map((p) => ({ prompt: p.prompt, answers: p.answers }));
+        const steps = shuffle(data.phrases, o.rng).slice(0, o.need).map((p) => ({ prompt: p.prompt, answers: p.answers, ja: p.ja || "" }));
         return { kind: "phrase", key: "phrase:" + steps[0].prompt, need: steps.length, steps };
       },
       translate(o) {
@@ -164,6 +164,9 @@
       return FREE_END.includes(e) ? "" : e; // "" = 何でもOK
     };
 
+    /** 熟語・慣用句の日本語の意味(ヒント)。ルビ記法つき */
+    const meaning = (ja) => (ja ? "意味{いみ}：" + ja : "");
+
     function prompt(topic, count, last) {
       const t = topic;
       switch (t.kind) {
@@ -174,8 +177,8 @@
           const c = catById.get(t.id);
           return { kind: t.kind, title: c.emoji + " " + c.name + "の英単語{えいたんご}", big: c.emoji, sub: "" };
         }
-        case "collocation": return { kind: t.kind, title: "＿＿に入{はい}る英単語{えいたんご}", big: t.prompt, sub: "" };
-        case "phrase": return { kind: t.kind, title: "言葉{ことば}のつづきは？", big: stepOf(t, count).prompt, sub: "" };
+        case "collocation": return { kind: t.kind, title: "＿＿に入{はい}る英単語{えいたんご}", big: t.prompt, sub: meaning(t.ja) };
+        case "phrase": return { kind: t.kind, title: "言葉{ことば}のつづきは？", big: stepOf(t, count).prompt, sub: meaning(stepOf(t, count).ja) };
         case "translate": return { kind: t.kind, title: "英語{えいご}にすると？", big: stepOf(t, count).reading, sub: "" };
         case "antonym": return { kind: t.kind, title: "反対{はんたい}の意味{いみ}の英単語{えいたんご}", big: stepOf(t, count).word, sub: "" };
         case "past": return { kind: t.kind, title: "過去形{かこけい}にしよう", big: stepOf(t, count).word, sub: "" };

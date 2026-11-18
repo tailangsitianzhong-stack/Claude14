@@ -1,89 +1,89 @@
-# 熟語・ことわざの穴うめ(1問ごとに別の文)。形式: 文(___が穴)|答え(半角スペース区切り・複数OK)
-salt and ___|pepper
-black and ___|white
-ladies and ___|gentlemen
-bread and ___|butter jam
-fish and ___|chips
-rock and ___|roll
-up and ___|down
-in and ___|out
-day and ___|night
-rise and ___|shine
-trick or ___|treat
-ups and ___|downs
-again and ___|again
-life and ___|death
-back and ___|forth
-more or ___|less
-sooner or ___|later
-now or ___|never
-boys and ___|girls
-young and ___|old
-rain or ___|shine
-yes or ___|no
-heads or ___|tails
-hide and ___|seek
-cat and ___|mouse
-bow and ___|arrow
-knife and ___|fork
-pen and ___|paper pencil
-Mr and ___|Mrs
-It is raining cats and ___|dogs
-Break a ___|leg
-It is a piece of ___|cake
-The sky is the ___|limit
-Once upon a ___|time
-Time is ___|money
-Better late than ___|never
-Practice makes ___|perfect
-Easy come, easy ___|go
-Look before you ___|leap
-No pain, no ___|gain
-Two heads are better than ___|one
-An apple a day keeps the ___|doctor
-A friend in need is a friend ___|indeed
-Actions speak louder than ___|words
-The early bird catches the ___|worm
-Every cloud has a silver ___|lining
-The more the ___|merrier
-Out of sight, out of ___|mind
-Birds of a feather flock ___|together
-All that glitters is not ___|gold
-Haste makes ___|waste
-The pen is mightier than the ___|sword
-Kill two birds with one ___|stone
-A picture is worth a thousand ___|words
-Rome was not built in a ___|day
-Where there is a will, there is a ___|way
-Home sweet ___|home
-Happy birthday to ___|you
-Good morning, good ___|night afternoon evening
-Merry ___|Christmas
-Happy New ___|Year
-Thank you very ___|much
-See you ___|later tomorrow soon
-Nice to meet ___|you
-How are ___|you
-What time is ___|it
-Have a nice ___|day weekend trip time
-Ready, set, ___|go
-One, two, ___|three
-Monday, Tuesday, ___|Wednesday
-January, February, ___|March
-Spring, summer, ___|autumn fall
-Red, yellow, ___|blue green
-Thumbs ___|up
-Piece of ___|cake
-Cross your ___|fingers
-It costs an arm and a ___|leg
-Bite the ___|bullet
-Under the ___|weather
-Hit the ___|road books hay sack
-Spill the ___|beans
-Let the cat out of the ___|bag
-Once in a blue ___|moon
-Cry over spilled ___|milk
-Don not judge a book by its ___|cover
-Burn the midnight ___|oil
-Add fuel to the ___|fire
+# 熟語・ことわざの穴うめ(1問ごとに別の文)。形式: 文(___が穴)|答え(半角スペース区切り・複数OK)|日本語の意味(ルビ記法OK)
+salt and ___|pepper|塩{しお}とこしょう
+black and ___|white|白黒{しろくろ}
+ladies and ___|gentlemen|みなさま（女{じょ}の人{ひと}と男{おとこ}の人{ひと}へのよびかけ）
+bread and ___|butter jam|パンとバター
+fish and ___|chips|魚{さかな}のフライとポテト（イギリスの料理{りょうり}）
+rock and ___|roll|ロックンロール（音楽{おんがく}）
+up and ___|down|上{うえ}へ下{した}へ
+in and ___|out|中{なか}へ外{そと}へ
+day and ___|night|昼{ひる}も夜{よる}も
+rise and ___|shine|起{お}きて、かがやこう！（朝{あさ}のあいさつ）
+trick or ___|treat|お菓子{かし}をくれなきゃいたずらするぞ（ハロウィン）
+ups and ___|downs|浮{う}き沈{しず}み（いいときと悪{わる}いとき）
+again and ___|again|何度{なんど}も何度{なんど}も
+life and ___|death|生{せい}と死{し}
+back and ___|forth|行{い}ったり来{き}たり
+more or ___|less|だいたい・多{おお}かれ少{すく}なかれ
+sooner or ___|later|遅{おそ}かれ早{はや}かれ
+now or ___|never|今{いま}しかない
+boys and ___|girls|男{おとこ}の子{こ}と女{おんな}の子{こ}
+young and ___|old|若{わか}い人{ひと}も年{とし}よりも
+rain or ___|shine|雨{あめ}でも晴{は}れでも
+yes or ___|no|はいか、いいえか
+heads or ___|tails|表{おもて}か裏{うら}か（コイン投{な}げ）
+hide and ___|seek|かくれんぼ
+cat and ___|mouse|ねこ(猫{ねこ})とねずみ（追{お}いかけっこ）
+bow and ___|arrow|弓{ゆみ}と矢{や}
+knife and ___|fork|ナイフとフォーク
+pen and ___|paper pencil|ペンと紙{かみ}
+Mr and ___|Mrs|〜さん夫妻{ふさい}
+It is raining cats and ___|dogs|どしゃ降{ぶ}りの雨{あめ}
+Break a ___|leg|がんばって！（成功{せいこう}をいのる言葉{ことば}）
+It is a piece of ___|cake|朝飯前{あさめしまえ}（とても簡単{かんたん}）
+The sky is the ___|limit|可能性{かのうせい}は無限{むげん}
+Once upon a ___|time|むかしむかし
+Time is ___|money|時間{じかん}はお金{かね}と同{おな}じ（時間{じかん}は大切{たいせつ}）
+Better late than ___|never|遅{おく}れてもやらないよりまし
+Practice makes ___|perfect|練習{れんしゅう}すれば完璧{かんぺき}になる
+Easy come, easy ___|go|簡単{かんたん}に手{て}に入{はい}るものは、簡単{かんたん}になくなる
+Look before you ___|leap|とぶ前{まえ}によく見{み}よ（石橋{いしばし}をたたいて渡{わた}れ）
+No pain, no ___|gain|苦労{くろう}なくして成果{せいか}なし
+Two heads are better than ___|one|三人寄{さんにんよ}れば文殊{もんじゅ}の知恵{ちえ}（2人{ふたり}の方{ほう}がよい）
+An apple a day keeps the ___|doctor|1日{にち}1個{こ}のりんごで医者{いしゃ}いらず
+A friend in need is a friend ___|indeed|まさかの時{とき}の友{とも}こそ真{しん}の友{とも}
+Actions speak louder than ___|words|言葉{ことば}より行動{こうどう}
+The early bird catches the ___|worm|早起{はやお}きは三文{さんもん}の得{とく}
+Every cloud has a silver ___|lining|どんな困{こま}りごとにも良{よ}い面{めん}がある
+The more the ___|merrier|多{おお}いほど楽{たの}しい
+Out of sight, out of ___|mind|見{み}えなくなると忘{わす}れる
+Birds of a feather flock ___|together|類{るい}は友{とも}を呼{よ}ぶ（似{に}た者{もの}は集{あつ}まる）
+All that glitters is not ___|gold|光{ひか}るものがすべて金{きん}とは限{かぎ}らない
+Haste makes ___|waste|急{いそ}がば回{まわ}れ（あわてるとむだになる）
+The pen is mightier than the ___|sword|ペンは剣{けん}よりも強{つよ}し
+Kill two birds with one ___|stone|一石二鳥{いっせきにちょう}
+A picture is worth a thousand ___|words|百聞{ひゃくぶん}は一見{いっけん}にしかず
+Rome was not built in a ___|day|ローマは一日{いちにち}にして成{な}らず
+Where there is a will, there is a ___|way|意志{いし}あるところに道{みち}は開{ひら}ける
+Home sweet ___|home|わが家{や}が一番{いちばん}
+Happy birthday to ___|you|お誕生日{たんじょうび}おめでとう
+Good morning, good ___|night afternoon evening|あいさつ（おはよう・こんにちは・こんばんは・おやすみ）
+Merry ___|Christmas|メリークリスマス！
+Happy New ___|Year|新年{しんねん}おめでとう
+Thank you very ___|much|どうもありがとう
+See you ___|later tomorrow soon|またね
+Nice to meet ___|you|はじめまして
+How are ___|you|お元気{げんき}ですか？
+What time is ___|it|今{いま}、何時{なんじ}ですか？
+Have a nice ___|day weekend trip time|よい（一日{いちにち}・週末{しゅうまつ}・旅{たび}）を！
+Ready, set, ___|go|よーい、ドン！
+One, two, ___|three|1、2、3
+Monday, Tuesday, ___|Wednesday|月曜日{げつようび}、火曜日{かようび}、水曜日{すいようび}
+January, February, ___|March|1月{がつ}、2月{がつ}、3月{がつ}
+Spring, summer, ___|autumn fall|春{はる}、夏{なつ}、秋{あき}
+Red, yellow, ___|blue green|赤{あか}、黄{き}、青{あお}（信号{しんごう}・三原色{さんげんしょく}のよう）
+Thumbs ___|up|いいね！（親指{おやゆび}を立{た}てる）
+Piece of ___|cake|とても簡単{かんたん}なこと
+Cross your ___|fingers|幸運{こううん}をいのる（指{ゆび}をクロスさせる）
+It costs an arm and a ___|leg|ものすごく高{たか}い
+Bite the ___|bullet|つらいことをがまんしてやる
+Under the ___|weather|体調{たいちょう}が悪{わる}い
+Hit the ___|road books hay sack|出発{しゅっぱつ}する・勉強{べんきょう}する・ねる（のどれか）
+Spill the ___|beans|秘密{ひみつ}をうっかり話{はな}す
+Let the cat out of the ___|bag|秘密{ひみつ}をうっかり話{はな}す
+Once in a blue ___|moon|めったにない
+Cry over spilled ___|milk|終{お}わったことをくよくよ悔{く}やむ
+Do not judge a book by its ___|cover|見{み}た目{め}で人{ひと}を判断{はんだん}してはいけない
+Burn the midnight ___|oil|夜{よる}おそくまで勉強{べんきょう}や仕事{しごと}をする
+Add fuel to the ___|fire|火{ひ}に油{あぶら}をそそぐ
 

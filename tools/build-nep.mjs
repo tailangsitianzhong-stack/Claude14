@@ -113,17 +113,19 @@ const categories = lines("categories.txt").map((l) => {
 });
 
 const collocations = lines("collocations.txt").map((l) => {
-  const [level, prompt, rest] = l.split("|");
+  const [level, prompt, rest, ja] = l.split("|");
   const answers = checkWords(`collocations/${prompt}`, words(rest || ""));
   if (!/___/.test(prompt)) warn.push(`collocations: ___ がない "${prompt}"`);
   if (answers.length < 3) warn.push(`collocations/${prompt}: 答えが少ない(${answers.length})`);
-  return { level: Number(level), prompt, answers };
+  if (!ja) warn.push(`collocations/${prompt}: 日本語の意味がない`);
+  return { level: Number(level), prompt, answers, ja: ja || "" };
 });
 
 const phrases = lines("phrases.txt").map((l) => {
-  const [prompt, rest] = l.split("|");
+  const [prompt, rest, ja] = l.split("|");
   if (!/___/.test(prompt)) warn.push(`phrases: ___ がない "${prompt}"`);
-  return { prompt, answers: checkWords(`phrases/${prompt}`, words(rest || "")) };
+  if (!ja) warn.push(`phrases/${prompt}: 日本語の意味がない`);
+  return { prompt, answers: checkWords(`phrases/${prompt}`, words(rest || "")), ja: ja || "" };
 });
 
 const pairMap = (name) => {

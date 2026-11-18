@@ -76,8 +76,8 @@ test("データ: 手書きのお題が正しい形(1語・英字・十分な数)
   }
   assert.ok(D.categories.length >= 20 && D.collocations.length >= 50 && D.phrases.length >= 60);
   assert.ok(Object.keys(D.antonyms).length >= 100 && Object.keys(D.pasts).length >= 80 && D.translate.length >= 200);
-  for (const e of D.collocations) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 3, e.prompt); }
-  for (const e of D.phrases) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 1, e.prompt); }
+  for (const e of D.collocations) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 3, e.prompt); assert.ok(e.ja, "意味なし: " + e.prompt); }
+  for (const e of D.phrases) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 1, e.prompt); assert.ok(e.ja, "意味なし: " + e.prompt); }
   assert.deepEqual(D.pasts.go, ["went"]);
   assert.ok(D.translate.some(([r, a]) => r === "いぬ" && a.includes("dog")));
 });
@@ -410,4 +410,21 @@ test("CPU 対戦のシミュレーション: ゲームが必ず終わる(2〜4�
       assert.ok(st.round >= 1 && st.round <= C.MAX_ROUNDS);
     }
   }
+});
+
+test("熟語・慣用句のお題には、日本語の意味が添えられる", () => {
+  const rng = seeded(21);
+  for (const kind of ["phrase", "collocation"]) {
+    for (let i = 0; i < 10; i++) {
+      const t = T.make(kind, { rng, need: 4, difficulty: "normal" });
+      const p = T.prompt(t, 0, null);
+      assert.match(p.sub, /^意味\{いみ\}：.+/, kind);
+    }
+  }
+  const ph = T.make("phrase", { rng, need: 3, difficulty: "normal" });
+  const p0 = T.prompt(ph, 0, null), p1 = T.prompt(ph, 1, "x");
+  assert.equal(p0.sub, "意味{いみ}：" + ph.steps[0].ja);
+  assert.equal(p1.sub, "意味{いみ}：" + ph.steps[1].ja);
+  // ほかのお題には付かない(しりとりは前の言葉の表示に使う)
+  for (const kind of ["letter", "category", "antonym", "past", "atoz"]) assert.equal(T.prompt(T.make(kind, { rng, need: 4 }), 0, null).sub, "", kind);
 });

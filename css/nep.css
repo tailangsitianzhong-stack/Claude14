@@ -24,7 +24,7 @@
 .nep-title { font-size: .95rem; line-height: 1.9; color: var(--ink-soft); }
 .nep-dots { min-height: 1.1em; font-size: .95rem; letter-spacing: .12em; color: var(--red); line-height: 1.2; }
 .nep-big { margin: 2px 0; font-size: clamp(1.9rem, 9vw, 3rem); line-height: 1.25; letter-spacing: .06em; word-break: break-word; }
-.nep-sub { min-height: 1em; font-size: .85rem; color: var(--ink-soft); line-height: 1.7; }
+.nep-sub { min-height: 1em; font-size: .9rem; color: var(--ink); line-height: 1.8; }
 
 /* 導火線 */
 .nep-fuse { margin-bottom: 6px; }

@@ -182,3 +182,14 @@ test("入室: ゲーム中の途中参加は断るが、再接続はできる", 
   assert.ok(N.join(st, id, T0 + 3).ok);
   assert.equal(st.players.find((p) => p.id === id).connected, true);
 });
+
+test("publicState: 熟語の意味(prompt.sub)は送るが、答えの一覧は送らない", () => {
+  const st = playing(2);
+  N.timeout(st, st.g.nextAt, seeded(2));
+  st.g.topic = { kind: "phrase", key: "p", need: 2, steps: [{ prompt: "salt and ___", answers: ["pepper"], ja: "塩{しお}とこしょう" }, { prompt: "Break a ___", answers: ["leg"], ja: "がんばって！" }] };
+  st.g.need = 2; st.g.count = 0; st.g.used = []; st.g.last = null;
+  st.g.prompt = { kind: "phrase", title: "t", big: "salt and ___", sub: "意味{いみ}：塩{しお}とこしょう" };
+  const json = JSON.stringify(N.publicState(st));
+  assert.ok(json.includes("塩{しお}とこしょう"));
+  assert.equal(json.includes("pepper"), false);
+});

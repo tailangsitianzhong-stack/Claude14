@@ -38,12 +38,15 @@
 | category | 🐶 動物（25カテゴリ） | 手で作った一覧 `categories.txt` |
 | collocation | `ice ___`（cream / cube / age…） | 答えが何個もある穴うめ `collocations.txt` |
 | phrase | `salt and ___` → pepper | 1つ答えるたびに別の慣用句 `phrases.txt` |
+
 | translate | 「いぬ」→ dog | しりとり辞書の「子ども向けの語」(`data/words.js` の flag 4) |
 | antonym | hot → cold | `antonyms.txt` |
 | past | go → went | `pasts.txt`（不規則動詞） |
 | anagram | `G A T S N` → angst | 同じ文字でできた単語 |
 | atoz | A→F の順（Aで始まる語、次はBで始まる語…） | 順番の頭文字が合う |
 | chain | 英語しりとり（前の語の最後の文字から） | x z q j で終わったら次は何でもOK |
+
+熟語の穴うめ(collocation)と慣用句(phrase)には、**日本語の意味**を「意味：塩とこしょう」の形で問題に添える（ヒント。ふりがな付き）。意味は `collocations.txt` `phrases.txt` の最後の欄で、ないと生成時に警告が出る。
 
 やさしいでは past / anagram / chain / endletter を出さない。直前と同じ種類・使ったお題は避ける。
 
