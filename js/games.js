@@ -32,6 +32,15 @@ window.GAMES = [
     unmount() { window.KankenGame.unmount(); }
   },
   {
+    id: "nep",
+    title: "ミニネプリーグ（英語{えいご}）",
+    icon: "💣",
+    desc: "爆弾{ばくだん}をまわして英単語{えいたんご}を答{こた}えよう！",
+    ready: true,
+    mount(root) { window.NepGame.mount(root); },
+    unmount() { window.NepGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",

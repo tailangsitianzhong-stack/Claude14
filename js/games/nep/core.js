@@ -115,7 +115,9 @@
       const h = byId(st, st.holder);
       h.lives -= 1;
       if (h.lives <= 0) h.alive = false;
-      st.outcome = { type: "explode", pid: h.id, lives: h.lives, out: !h.alive, count: st.count, need: st.need };
+      // 学べるように、本当は何が答えだったか(例)をいっしょに見せる
+      const examples = T.candidates(st.topic, st.count, st.last, st.used).slice(0, 4);
+      st.outcome = { type: "explode", pid: h.id, lives: h.lives, out: !h.alive, count: st.count, need: st.need, examples };
       const ev = [{ type: "explode", pid: h.id, lives: h.lives, out: !h.alive }];
       st.starterId = nextAlive(st, idxOf(st, h.id)).id;
       st.phase = "between";

@@ -7,7 +7,7 @@
  *   online.teardown();
  *
  * ctx: { view, endpoint, store, getJudge(), goMenu(), setPlaying(bool) }
- *   game  : "shiritori"(既定) | "kanken"。部屋を作る時にサーバーへ伝える
+ *   game  : "shiritori"(既定) | "kanken" | "nep"。部屋を作る時にサーバーへ伝える
  *   hooks : 他のゲーム(漢字検定)が、ロビーの設定欄・対戦画面・結果画面を差し替えるための関数(js/games/kanken/online.js)
  *   help  : 入口画面の説明文(「漢字{よみ}」の書き方で、ふりがな付き)
  * 判定(辞書/Gemini)は「答える人の端末」で行い、通った手だけを部屋(サーバー)へ送る。
@@ -565,6 +565,7 @@
       render,
       send: (o) => (net ? net.send(o) : false),
       remainingMs: () => (net ? net.remainingMs(state) : 0),
+      serverNow: () => (net ? net.serverNow() : Date.now()),
       setPlaying: (on) => ctx.setPlaying(on),
       isHost: () => isHost(),
       player: (id) => player(id),

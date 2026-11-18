@@ -5,7 +5,7 @@
  *   Sfx.attach(document)     … ボタンを押した時の音を、画面全体に付ける + 最初のタップで音を使えるようにする
  *   Sfx.get() / Sfx.set({sound, volume, vibrate})
  *
- * 音の名前: tap key ok ng tick turn start pop heart win lose end
+ * 音の名前: tap key ok ng tick turn start pop heart win lose end boom defuse
  * 設定は localStorage の "minigames.settings"（音のON/OFF・音量・バイブ）に保存する。
  * スマホ(iOS)は、ユーザーが画面を触るまで音を出せないので、最初のタップで準備する。
  *
@@ -120,9 +120,11 @@
         tone(0.62, N.E6, 0.45, { type: "sine", vol: 0.14 });
       },
       lose:  () => { tone(0, 392, 0.25, { type: "triangle", vol: 0.25 }); tone(0.22, 330, 0.25, { type: "triangle", vol: 0.25 }); tone(0.44, 262, 0.5, { type: "triangle", vol: 0.25, slideTo: 220 }); },
+      boom:  () => { tone(0, 150, 0.5, { type: "sawtooth", vol: 0.32, slideTo: 38 }); tone(0.03, 90, 0.45, { type: "square", vol: 0.2, slideTo: 30 }); tone(0.08, 300, 0.25, { type: "sawtooth", vol: 0.14, slideTo: 60 }); },
+      defuse: () => { [N.C5, N.E5, N.G5].forEach((f, i) => tone(i * 0.07, f, 0.14, { type: "triangle", vol: 0.28 })); tone(0.24, N.C6, 0.35, { type: "triangle", vol: 0.3 }); },
       end:   () => { tone(0, N.E5, 0.16, { type: "triangle", vol: 0.25 }); tone(0.15, N.G5, 0.16, { type: "triangle", vol: 0.25 }); tone(0.3, N.E5, 0.3, { type: "triangle", vol: 0.25 }); }
     };
-    const VIBRATE = { ng: [60], heart: [80], lose: [90, 50, 90], win: [40, 40, 80] };
+    const VIBRATE = { ng: [60], heart: [80], lose: [90, 50, 90], win: [40, 40, 80], boom: [120, 40, 160] };
     const NAMES = Object.keys(SOUNDS);
 
     function vibrate(name) {

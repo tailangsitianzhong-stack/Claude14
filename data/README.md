@@ -27,6 +27,12 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 不適切語リストと、`nazi` `hitler` などは入れません。
 - **入らない語**: 複数語の英語(`ice cream` `South Korea`)・ハイフンやアポストロフィを含む語・動詞や形容詞(名詞のみのルール)。
 
+## nep.js（ミニネプリーグ）
+`tools/build-nep.mjs` が生成します（直接編集しないでください。お題の元は `tools/nep-source/`）。
+- 単語リストは SUBTLEX-US の頻度表の上位30,000語（小文字の原形のみ）。変化形・短縮形のかけら・略語・不適切語は除いています。頻度表そのものは含めていません。
+- カテゴリ・穴うめ・慣用句・反対語・過去形は手作りです。「日本語→英語」のお題は `words.js`（JMdict 由来・CC BY-SA 4.0）の子ども向けの語を使っています。
+- 詳しくは `docs/nep.md`。
+
 ## kanji.js（ミニ漢字検定）
 `tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
 
