@@ -71,3 +71,8 @@
 .kk-level:nth-child(n+6) { border-color: #7a5aa0; }
 .kk-level:nth-child(n+6) b { color: #7a5aa0; }
 .kk-level:nth-child(n+6).is-on { border-color: var(--red); }
+
+/* 結果画面の「最後の問題の答え」 */
+.kk-lastq { margin: 8px 0 0; padding: 6px 10px; text-align: center; font-size: .95rem; line-height: 1.8; background: #fff; border: 3px dashed var(--ink-soft); border-radius: 12px; }
+.kk-lastq.ok { border-color: #2e8b3e; }
+.kk-lastq.ng { border-color: #c0392b; }

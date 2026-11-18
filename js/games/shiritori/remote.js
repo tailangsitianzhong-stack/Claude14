@@ -13,7 +13,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const STORAGE_KEY = "minigames.shiritori.remoteCache";
+  const STORAGE_KEY = "minigames.shiritori.remoteCache.v2";   // 版を上げて、古い判定(固有名詞を不可としていた頃)を捨てる
   const MAX_ENTRIES = 300;
   const TIMEOUT_MS = 6000;
 

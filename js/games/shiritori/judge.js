@@ -6,7 +6,7 @@
  *
  * 結果: { ok, reason?, reading, english, tail, endsWithN, source, suggestion? }
  *   reason: invalid_reading | invalid_english | not_connected | duplicate  (ルール)
- *           spelling      … 読みは辞書にあり、英語が近いつづり違い（suggestion に正解）
+ *           spelling      … 読みは辞書にあり、英語が辞書にない近いつづり違い＝打ち間違い（suggestion に正解）
  *           wrong_english … 読みは辞書にあるが、その英語は対応していない
  *           unknown_word  … 辞書に載っていない（remote があればそちらで再判定）
  *   source: rules | dictionary | remote
@@ -30,9 +30,11 @@
       const hit = dict.lookup(rule.reading, rule.english);
       if (hit) return Object.assign({ ok: true, source: "dictionary", entry: hit }, base);
 
-      // 近いつづり(typo)が辞書で分かる場合は、Geminiに聞かず「つづりミス」にする（無料枠の節約）
+      // 近いつづりが辞書にあって、入力が辞書にも無い綴り(=打ち間違い)なら、Geminiに聞かず「つづりミス」にする（無料枠の節約）。
+      // 入力が実在する英単語(centre / center のような別の綴りや、別の意味の語)なら、つづりミスと決めつけず判定に回す
       const suggestion = dict.suggest(rule.reading, rule.english);
-      if (suggestion) return Object.assign({ ok: false, reason: "spelling", suggestion, source: "dictionary" }, base);
+      const realWord = dict.knowsEnglish(rule.english);
+      if (suggestion && !realWord) return Object.assign({ ok: false, reason: "spelling", suggestion, source: "dictionary" }, base);
 
       if (remote) {
         try {
@@ -46,7 +48,7 @@
       }
 
       const known = dict.englishFor(rule.reading).length > 0;
-      return Object.assign({ ok: false, reason: known ? "wrong_english" : "unknown_word",
+      return Object.assign({ ok: false, reason: known || realWord ? "wrong_english" : "unknown_word",
                              suggestion: null, source: "dictionary" }, base);
     }
 

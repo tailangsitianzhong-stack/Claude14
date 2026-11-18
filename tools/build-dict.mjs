@@ -44,26 +44,32 @@ const POS_OK = new Set([
   "noun (common) (futsuumeishi)",
   "nouns which may take the genitive case particle 'no'"
 ]);
-// 子ども向けに避けたい・古い/特殊な意味
+// 辞書に入れない語: 不適切な語・古すぎる/めずらしい語・名詞として答えにくい語
 const MISC_NG = new Set([
   "derogatory", "vulgar expression or word", "slang", "sensitive", "archaism",
-  "obscure term", "obsolete term", "rare term", "Internet slang", "historical term",
-  "dated term", "jocular, humorous term", "familiar language", "children's language",
-  "female term or language", "male term or language", "yojijukugo",
+  "obscure term", "obsolete term", "rare term", "Internet slang", "yojijukugo",
   "onomatopoeic or mimetic word", "proverb", "idiomatic expression",
   "rude or X-rated term (not displayed in educational software)"
-  // 略語(abbreviation)・丁寧語・謙譲語は名詞としては普通なので除外しない（でんわ=phone, おちゃ=tea）
+  // 次は除外しない(プレイヤーが答えとして言う、ふつうの日本語): 略語・丁寧語・謙譲語・くだけた語・古めの語・子ども語・男女の言い方・歴史用語
+  //   (でんわ=phone, おちゃ=tea, ママ=mama, おやじ=dad など)。CPUは手選びの語しか使わないので、答えの受け入れは広くしてよい
 ]);
 const KANA_NG = new Set([
   "out-dated or obsolete kana usage", "word containing irregular kana usage",
   "gikun (meaning as reading) or jukujikun (special kanji reading)"
 ]);
 const MAX_SENSES = 3;
+// 使われやすさの印(優先度タグ)が無い日本語の語は、英語がとても有名な語だけ入れる(それ以外はGeminiが判定する)
+const UNTAGGED_RANK = 3000;
+// 固有名詞(Paris, India, April…)は、辞書に載っていても大文字で始まるため以前は弾かれていた。
+// 印が無い固有名詞(あまり有名でない地名など)は、英語の頻度がある程度高いものだけ入れる
+const PROPER_UNTAGGED_RANK = 25000;
 // 英語側の念のためのNGワード（JMdictの注意タグで落ちなかった場合の保険）
 const BAD_WORDS = new Set([
   "fuck", "shit", "bitch", "bastard", "slut", "whore", "dick", "cock", "pussy",
   "cunt", "nigger", "retard", "rape", "porn", "sex", "penis", "vagina", "anus",
-  "semen", "orgasm", "masturbation", "prostitute", "genitals", "breast", "nipple"
+  "semen", "orgasm", "masturbation", "prostitute", "genitals", "breast", "nipple",
+  // 固有名詞を入れるようになったので、子ども向けのゲームにふさわしくない語を追加で除く
+  "nazi", "nazis", "hitler", "swastika", "kkk"
 ]);
 
 if (profanityPath) {
@@ -74,7 +80,7 @@ if (profanityPath) {
 }
 
 /* 英単語の頻度順位（大文字小文字をまとめて数える）。表にない綴りは「実在しない」とみなして除外 */
-const RANK_LIMIT = 40000;
+const RANK_LIMIT = 70000;
 const englishRank = (() => {
   const counts = new Map();
   for (const { word, count } of JSON.parse(readFileSync(freqPath, "utf8"))) {
@@ -170,7 +176,7 @@ const best = new Map(); // "reading|english" -> [reading, english, level, primar
 let carriedPos = null;
 for (const [idseq, list] of senses) {
   const tags = prio.get(idseq);
-  if (freqTier(tags) === 3) continue;            // 優先度タグのない語は入れない
+  const untagged = freqTier(tags) === 3;
   const kanas = (kanaOf.get(idseq) || []).filter((k) => !k.ng);
   if (!kanas.length) continue;
 
@@ -183,15 +189,20 @@ for (const [idseq, list] of senses) {
 
     const readings = kanas.filter((k) => !s.stagr.length || s.stagr.includes(k.text));
     s.glosses.forEach((raw, gi) => {
-      const g = cleanGloss(raw);
-      if (!/^[a-z]{2,20}$/.test(g) || BAD_WORDS.has(g) || !englishRank.has(g)) return;
+      const word = cleanGloss(raw);
+      if (!/^[A-Za-z]{2,20}$/.test(word)) return;
+      const g = word.toLowerCase();                        // ゲームの英語は小文字で受け付ける(Paris → paris)
+      const proper = /^[A-Z]/.test(word);                  // 固有名詞(地名・月・曜日・言語名など)
+      if (BAD_WORDS.has(g) || !englishRank.has(g)) return;
+      if (untagged && englishRank.get(g) > (proper ? PROPER_UNTAGGED_RANK : UNTAGGED_RANK)) return;
       for (const k of readings) {
         const reading = Rules.normalizeReading(k.text);
         if (!reading) continue;
         const key = reading + "|" + g;
         const primary = si === 0 && gi <= 1 ? 1 : 0;   // 第1義の先頭2訳だけCPUが使う
-        const flags = primary | (cpuOk(tags, g, primary) ? 2 : 0);
-        const rec = [reading, g, levelOf(tags, g), flags];
+        // CPUが出すのは、固有名詞ではない日常語だけ(固有名詞は手選びリストで選んだものだけ)
+        const flags = primary | (!proper && cpuOk(tags, g, primary) ? 2 : 0);
+        const rec = [reading, g, untagged ? 3 : levelOf(tags, g), flags];
         const old = best.get(key);
         if (!old || rec[3] > old[3] || (rec[3] === old[3] && rec[2] < old[2])) best.set(key, rec);
       }

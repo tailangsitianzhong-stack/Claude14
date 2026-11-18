@@ -144,6 +144,10 @@ KV の書き込みは1日1,000回までなので、**新しい単語の判定が
   対策を強めたい場合は、Cloudflare ダッシュボードの「Security → WAF → Rate limiting rules」で IP ごとの回数制限を足す。
 - Worker は「かな2〜12文字 / 英小文字2〜30文字」以外を受け付けず、Gemini への指示は固定文＋検証済みの2語だけなので、プロンプトインジェクションの余地はほぼありません。
 
+## 判定のしかたを変えたとき（キャッシュの版）
+判定結果は KV に保存されます（約半年）。**指示文（プロンプト）や判定のルールを変えたら、`worker/index.mjs` の保存キーの版（`v2:`）を上げて**ください。古い判定が使われなくなります（ブラウザ側の保存は `js/games/shiritori/remote.js` の `STORAGE_KEY`）。
+`v2` は、固有名詞（Paris・India など）を不可としていた頃の判定を捨てるために上げたものです。
+
 ## 友達対戦について
 同じ Worker が、友達対戦の「部屋」（Durable Object）も担当します。追加の設定は要りません（`wrangler.jsonc` の `durable_objects` / `migrations` は設定済みで、デプロイ時に自動で作られます）。
 `ALLOWED_ORIGINS` に入れたゲームの公開URLは、部屋への接続（WebSocket）の許可にも使われます。詳細は `docs/multiplayer.md`。

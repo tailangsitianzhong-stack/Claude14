@@ -52,9 +52,13 @@ export function buildPrompt(reading, english) {
     `Typed English: ${english}`,
     "",
     "Accept the answer (ok = true) only if the typed English is a correctly spelled, standard English",
-    "(US or UK spelling) common noun that is a natural translation of a Japanese word read as the reading above.",
-    "Do NOT accept: proper nouns, plurals or other inflected forms, abbreviations, slang, offensive words,",
-    "or words that merely sound similar.",
+    "(US or UK spelling) noun that is a natural translation of a Japanese word read as the reading above.",
+    "ACCEPT these too: names of countries, cities, regions, continents, oceans and other famous places;",
+    "months, days of the week, languages and nationalities (for example paris for ぱり, india for いんど,",
+    "april for しがつ, english for えいご); nouns that are normally plural (scissors, glasses, pants);",
+    "and very well-known abbreviations (tv, dvd, usa). Capitalization does not matter.",
+    "Do NOT accept: names of ordinary people, company or brand names, ordinary plurals or other inflected forms,",
+    "verbs and adjectives, slang, offensive words, or words that merely sound similar.",
     "",
     "If you reject it:",
     '- reason "spelling": the typed English is a misspelling of the English word that matches the reading.',
@@ -214,7 +218,7 @@ export async function handle(request, env, deps) {
   const english = cleanEnglish(payload && payload.english);
   if (!reading || !english) return json({ error: "invalid_input" }, 400, origin);
 
-  const key = `v1:${reading}|${english}`;
+  const key = `v2:${reading}|${english}`;   // 版を上げると、古い判定(固有名詞を不可としていた頃の結果など)は使われなくなる
   if (env.CACHE) {
     try {
       const hit = await env.CACHE.get(key, "json");

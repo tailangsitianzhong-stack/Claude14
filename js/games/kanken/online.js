@@ -23,6 +23,11 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  /** 答えの表示。読み問題: 教える→おし / 書き取り: 検（検定） */
+  function answerText(ev) {
+    return ev.type === "write" ? `${ev.answer}（${ev.word}）` : `${ev.word}→${ev.answer}`;
+  }
+
   function create(ctx) {
     let ui = null;                       // 対戦画面の部品
 
@@ -141,9 +146,10 @@
       function eventText(ev, st) {
         const who = shell.nameOf(ev.playerId);
         if (ev.kind === "answered") {
-          const ans = ev.type === "write" ? `${ev.answer}（${ev.word}）` : ev.answer;
-          return ev.correct ? { t: `${who} ⭕ 正解{せいかい}！ +${ev.points}点{てん}`, k: "ok" }
-            : { t: `${who} ${ev.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌"} 正解{せいかい}は「${ans}」`, k: "ng" };
+          // 正解でも不正解でも、全員に答えを見せる(みんなで覚えられるように)
+          const ans = answerText(ev);
+          return ev.correct ? { t: `${who} ⭕ 正解{せいかい}！ +${ev.points}点{てん}　答{こた}え：${ans}`, k: "ok" }
+            : { t: `${who} ${ev.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌"}　答{こた}え：${ans}`, k: "ng" };
         }
         if (ev.kind === "out") return { t: `${who} は脱落{だつらく}…`, k: "ng" };
         return null;
@@ -229,6 +235,7 @@
               <span>${p.id === shell.cid ? "あなた" : ""}</span><span class="sc">${p.score}点{てん}</span>
               <span class="wd">${p.words}問{もん}正解{せいかい}</span></li>`).join("")}
           </ol>
+          ${st.last ? `<p class="kk-lastq ${st.last.correct ? "ok" : "ng"}">最後{さいご}の問題{もんだい}：${shell.nameOf(st.last.playerId)} ${st.last.correct ? "⭕" : st.last.timeout ? "⏰" : "❌"}　答{こた}え：${esc(answerText(st.last))}</p>` : ""}
           <div class="menu-actions">
             ${shell.isHost() ? '<button type="button" class="btn btn-primary" id="mp-again">もう一度{いちど}</button>'
               : '<p class="note">ホストが「もう一度{いちど}」を押{お}すのを待{ま}ってね</p>'}

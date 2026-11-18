@@ -422,3 +422,35 @@
 ぬの cloth
 ゆびわ ring
 ゆめ dream
+
+# --- ちめい・くに・つき・ようび（固有名詞。辞書に載っていれば印を付け、無ければ直接追加する） ---
+にほん japan
+あめりか america
+ふらんす france
+いんど india
+ぱり paris
+ろんどん london
+ろーま rome
+とうきょう tokyo
+ちゅうごく china
+かなだ canada
+えじぷと egypt
+いたりあ italy
+どいつ germany
+すぺいん spain
+ぶらじる brazil
+おーすとらりあ australia
+ろしあ russia
+ぎりしゃ greece
+めきしこ mexico
+あじあ asia
+ようろっぱ europe
+あふりか africa
+はわい hawaii
+にちようび sunday
+げつようび monday
+かようび tuesday
+すいようび wednesday
+もくようび thursday
+きんようび friday
+どようび saturday

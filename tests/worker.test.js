@@ -104,7 +104,7 @@ test("判定結果はKVに保存され、2回目はGeminiを呼ばない", async
   let r = await (await W.handle(post({ reading: "ぬいぐるみ", english: "plsh" }), env, { fetch: f })).json();
   assert.deepEqual(r, { ok: false, reason: "spelling", suggestion: "plush", cached: false });
   assert.equal(CACHE.puts.length, 1);
-  assert.equal(CACHE.puts[0][0], "v1:ぬいぐるみ|plsh");
+  assert.equal(CACHE.puts[0][0], "v2:ぬいぐるみ|plsh");
 
   r = await (await W.handle(post({ reading: "ぬいぐるみ", english: "plsh" }), env, { fetch: f })).json();
   assert.equal(r.cached, true);
@@ -189,4 +189,14 @@ test("友達対戦: 部屋を作る時に game(しりとり/漢字検定)を部�
   assert.equal((await mk("?game=kanken")).status, 200);
   assert.equal((await mk("?game=hack")).status, 200);
   assert.deepEqual(seen, ["shiritori", "kanken", "shiritori"]);
+});
+
+test("Geminiへの指示: 地名・月・曜日などは正解にし、人名・ブランド名・ふつうの複数形は不可", () => {
+  const p = W.buildPrompt("ぱり", "paris");
+  assert.ok(p.includes("ぱり") && p.includes("paris"));
+  assert.match(p, /ACCEPT these too: names of countries, cities/);
+  assert.match(p, /months, days of the week/);
+  assert.match(p, /scissors/);                                    // 複数形でしか使わない名詞は可
+  assert.match(p, /Do NOT accept: names of ordinary people, company or brand names/);
+  assert.ok(!/Do NOT accept: proper nouns/.test(p));              // 以前の「固有名詞は全部不可」ではなくなった
 });

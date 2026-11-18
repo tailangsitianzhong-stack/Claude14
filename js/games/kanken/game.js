@@ -243,10 +243,10 @@
         if (r.ignored) { if (g.state().phase === "over") return finish(); p.busy = false; return; }
         drawHud();
         const q = r.question;
-        const ans = q.type === "read" ? q.answer : `${q.answer}（${q.full}）`;
+        const ans = q.type === "read" ? `${q.text}→${q.answer}` : `${q.answer}（${q.full}）`;
         if (r.skipped) feedback(Ruby.html("パス"), "");
-        else if (r.correct) feedback(Ruby.html(`⭕ 正解{せいかい}！ +${r.points}点{てん}`), "ok");
-        else feedback(Ruby.html(`${r.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌ "}正解{せいかい}は「${ans}」`), "ng");
+        else if (r.correct) feedback(Ruby.html(`⭕ 正解{せいかい}！ +${r.points}点{てん}　答{こた}え：${ans}`), "ok");
+        else feedback(Ruby.html(`${r.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌ "}答{こた}え：${ans}`), "ng");
         $("#kk-stage").classList.toggle("is-ng", !r.correct && !r.skipped);
         if (r.correct) { Sfx.play("ok"); Fx.floatText($("#hud-score"), "+" + r.points); Fx.pop($("#hud-score")); }
         else if (!r.skipped) { Sfx.play("ng"); Fx.shake($("#kk-stage")); if (g.state().lives !== null) Fx.shake($("#hud-lives")); }

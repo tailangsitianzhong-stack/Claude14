@@ -43,7 +43,9 @@ test("不適切語は入っていない", () => {
 
 test("editDistance", () => {
   assert.equal(Dict.editDistance("apple", "apple", 2), 0);
-  assert.equal(Dict.editDistance("appel", "apple", 2), 2);
+  assert.equal(Dict.editDistance("appel", "apple", 2), 1);               // 隣り合う2文字の入れかえは1回
+  assert.equal(Dict.editDistance("cta", "cat", 1), 1);
+  assert.equal(Dict.editDistance("abcd", "badc", 2), 2);
   assert.equal(Dict.editDistance("aple", "apple", 2), 1);
   assert.equal(Dict.editDistance("abcdef", "xyz", 2), 3);
 });
@@ -147,4 +149,61 @@ test("judge: 辞書にない語は remote に聞く（失敗したら辞書の�
   r = await remoteDown.judge({ reading: "ぬいぐるみ", english: "plushie", usedEnglish: [] });
   assert.equal(r.ok, false);
   assert.equal(r.source, "dictionary");
+});
+
+test("固有名詞(国・都市・月・曜日)が引ける: paris / India など。大文字小文字は問わない", () => {
+  const pairs = [["ぱり", "paris"], ["いんど", "india"], ["ふらんす", "france"], ["あめりか", "america"], ["ろんどん", "london"],
+    ["にほん", "japan"], ["ちゅうごく", "china"], ["とうきょう", "tokyo"], ["ろーま", "rome"], ["かなだ", "canada"],
+    ["えじぷと", "egypt"], ["あじあ", "asia"], ["しがつ", "april"], ["にちようび", "sunday"], ["どいつ", "germany"]];
+  for (const [r, e] of pairs) assert.ok(dict.lookup(r, e), `${r}=${e}`);
+  assert.ok(dict.lookup("パリ", "Paris"));
+  assert.ok(dict.lookup("インド", "INDIA"));
+  assert.equal(dict.lookup("ぱり", "india"), null);                       // 読みと合わない組は不可
+});
+
+test("使われやすさの印が無い日本語でも、英語が有名な語は引ける。ふつうの子ども語・くだけた語も受け入れる", () => {
+  for (const [r, e] of [["つーりすと", "tourist"], ["まま", "mama"], ["いぬ", "dog"], ["ほん", "book"]]) assert.ok(dict.lookup(r, e), `${r}=${e}`);
+});
+
+test("不適切な語は入っていない(固有名詞の取り込み後も)", () => {
+  const bad = new Set(["fuck", "shit", "bitch", "penis", "vagina", "sex", "porn", "rape", "nazi", "hitler"]);
+  assert.equal(DATA.pairs.filter((p) => bad.has(p[1])).length, 0);
+});
+
+test("CPUは固有名詞を勝手に出さない(手選びの地名・月・曜日だけ)。地名の手選びは出せる", () => {
+  const person = new Set(["emma", "victoria", "mary", "john", "george", "peter", "anna", "maria"]);
+  assert.equal(DATA.pairs.filter((p) => (p[3] & 2) && person.has(p[1])).length, 0);
+  const rng = seeded(21);
+  const seen = new Set();
+  for (let i = 0; i < 4000; i++) {
+    const w = dict.pickCpu({ requiredKana: null, maxLevel: 3, rng });
+    if (w) seen.add(w.english);
+  }
+  assert.ok(seen.has("japan") || seen.has("paris") || seen.has("sunday") || seen.has("france"), "手選びの地名・曜日が出る");
+});
+
+test("knowsEnglish: 辞書にある英単語か(実在する綴りかの目安)", () => {
+  assert.equal(dict.knowsEnglish("apple"), true);
+  assert.equal(dict.knowsEnglish("Paris"), true);
+  assert.equal(dict.knowsEnglish("appel"), false);
+  assert.equal(dict.knowsEnglish("x"), false);
+});
+
+test("judge: 打ち間違いは「つづりミス」、実在する別の英単語は Gemini に聞く(つづりミスと決めつけない)", async () => {
+  const asked = [];
+  const remote = async (p) => { asked.push(p.english); return { ok: true }; };
+  const judge = Judge.create({ dict, remote });
+  const j = (r, e) => judge.judge({ reading: r, english: e, usedEnglish: [] });
+
+  let r = await j("ねこ", "cta");                                        // 辞書に無い綴り(打ち間違い。cat の入れかえ)
+  assert.deepEqual([r.ok, r.reason, r.suggestion], [false, "spelling", "cat"]);
+  assert.deepEqual(asked, []);
+
+  r = await j("ねこ", "cap");                                            // cat に近いが、実在する別の英単語 → 判定に回す
+  assert.deepEqual([r.ok, r.source], [true, "remote"]);
+  assert.deepEqual(asked, ["cap"]);
+
+  const offline = Judge.create({ dict, remote: async () => null });      // Geminiが使えない時は、つづりミスではなく「合っていない」
+  r = await offline.judge({ reading: "ねこ", english: "cap", usedEnglish: [] });
+  assert.deepEqual([r.ok, r.reason], [false, "wrong_english"]);
 });

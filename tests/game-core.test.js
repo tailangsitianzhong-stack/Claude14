@@ -133,7 +133,9 @@ test("むずかしさ設定: ライフ・時間・CPUのレベル", async () => 
   await g.submit("りんご", "apple", 30);
   for (let i = 0; i < 20; i++) {
     const h = mk({ difficulty: "easy", rng: seeded(i + 1) }).hint();
-    assert.ok(dict.lookup(h.reading, window.SHIRITORI_WORDS.pairs.find((p) => p[0] === h.reading && p[1][0] === h.firstLetter && p[1].length === h.length)[1]).level === 1);
+    // ヒントの語は、レベル1・CPUが使ってよい語の中にある(同じ読み・頭文字・文字数の語が複数あっても、どれかが該当する)
+    const candidates = window.SHIRITORI_WORDS.pairs.filter((p) => p[0] === h.reading && p[1][0] === h.firstLetter && p[1].length === h.length);
+    assert.ok(candidates.some((p) => p[2] === 1 && (p[3] & 2)), `${h.reading} ${h.firstLetter} ${h.length}`);
   }
 });
 

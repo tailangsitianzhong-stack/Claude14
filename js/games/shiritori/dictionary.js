@@ -18,22 +18,25 @@
   const root = typeof self !== "undefined" ? self : globalThis;
   const F_PRIMARY = 1, F_CPU = 2, F_CURATED = 4;
 
-  /** 2語の編集距離。上限(max)を超えたら max+1 を返して打ち切る */
+  /**
+   * 2語の編集距離(1文字の挿入・削除・置きかえ・隣り合う2文字の入れかえ を1回と数える)。
+   * 上限(max)を超えたら max+1 を返して打ち切る。例: appel と apple は 1（入れかえ）
+   */
   function editDistance(a, b, max) {
     if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev2 = null;
     let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
     for (let i = 1; i <= a.length; i++) {
       const cur = [i];
       let rowMin = i;
       for (let j = 1; j <= b.length; j++) {
-        const v = Math.min(
-          prev[j] + 1, cur[j - 1] + 1,
-          prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-        );
+        let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (prev2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, prev2[j - 2] + 1);
         cur[j] = v;
         if (v < rowMin) rowMin = v;
       }
-      if (rowMin > max) return max + 1;
+      if (rowMin > max && (!prev2 || Math.min(...prev) > max)) return max + 1;
+      prev2 = prev;
       prev = cur;
     }
     return prev[b.length];
@@ -42,6 +45,7 @@
   function create(data) {
     const byPair = new Map();       // "reading|english" -> entry
     const byReading = new Map();    // reading -> [entry]
+    const englishWords = new Set(); // 辞書にある英語の単語すべて(実在する英単語かどうかの目安)
     const cpuByHead = { strict: new Map(), loose: new Map() }; // 濁点を区別する/しない
     const headCount = { strict: new Map(), loose: new Map() }; // CPU語が各文字から何語あるか
 
@@ -51,6 +55,7 @@
         primary: !!(flags & F_PRIMARY), cpu: !!(flags & F_CPU), curated: !!(flags & F_CURATED)
       };
       byPair.set(reading + "|" + english, entry);
+      englishWords.add(english);
       if (!byReading.has(reading)) byReading.set(reading, []);
       byReading.get(reading).push(entry);
 
@@ -135,7 +140,13 @@
       return { reading: pick.reading, english: pick.english, level: pick.level };
     }
 
-    return { lookup, englishFor, suggest, pickCpu, size: byPair.size };
+    /** 辞書にある英単語か(つづりミスではなく、実在する別の英単語かを見分けるのに使う) */
+    function knowsEnglish(english) {
+      const e = Rules.normalizeEnglish(english);
+      return !!e && englishWords.has(e);
+    }
+
+    return { lookup, englishFor, suggest, pickCpu, knowsEnglish, size: byPair.size };
   }
 
   /** ブラウザ用: data/words.js を一度だけ読み込み、辞書を返す */

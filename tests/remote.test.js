@@ -52,12 +52,12 @@ test("ok:null・HTTPエラー・通信失敗・壊れた応答は null で、保
     const remote = Remote.create({ endpoint: "https://w.example", fetch: fetchFn, storage });
     assert.equal(await remote({ reading: "ぬいぐるみ", english: "plush" }), null);
   }
-  assert.equal(storage.getItem("minigames.shiritori.remoteCache"), null);
+  assert.equal(storage.getItem("minigames.shiritori.remoteCache.v2"), null);
 });
 
 test("保存データが壊れていても動く", async () => {
   const storage = memStorage();
-  storage.setItem("minigames.shiritori.remoteCache", "{broken");
+  storage.setItem("minigames.shiritori.remoteCache.v2", "{broken");
   const remote = Remote.create({ endpoint: "https://w.example", storage, fetch: reply({ ok: true }) });
   assert.deepEqual(await remote({ reading: "ぬいぐるみ", english: "plush" }), { ok: true });
 });
