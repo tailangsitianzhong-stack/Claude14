@@ -74,6 +74,7 @@
     function scheduleSuspend() {
       clearTimeout(idleTimer);
       idleTimer = setTimeout(suspendNow, idleMs);
+      if (idleTimer && typeof idleTimer.unref === "function") idleTimer.unref();   // Node(テスト)では、このタイマーのためにプロセスを待たせない
     }
     function suspendNow() {
       clearTimeout(idleTimer);

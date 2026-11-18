@@ -128,6 +128,12 @@
           board.update(asView(), r.events);
           if (st.phase === "over") finish();
         },
+        onHint() {
+          const r = E.hint(st, "me", Date.now());
+          if (!r.ok) return board.rejected(r);
+          board.update(asView(), r.events);
+        },
+        hintCost: Core.HINT_COST,
         onQuit: showMenu
       });
       let plan = null, hiddenAt = 0, done = false;

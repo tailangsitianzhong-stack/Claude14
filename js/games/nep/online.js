@@ -43,6 +43,8 @@
           nameOf: (id) => shell.nameOf(id), avatarOf: (id) => shell.avatarOf(id),
           serverNow: () => shell.serverNow(),
           onSubmit: (word) => { if (!shell.send({ t: "answer", word })) board.rejected({ reason: "send" }); },
+          onHint: () => { if (!shell.send({ t: "hint" })) board.rejected({ reason: "send" }); },
+          hintCost: 5,
           onQuit: () => shell.exit()
         });
         shell.onTeardown(() => { if (board) board.destroy(); board = null; });

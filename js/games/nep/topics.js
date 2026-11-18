@@ -8,7 +8,7 @@
  *   T.candidates(topic, count, last, used)       // CPUが選べる答えの一覧(知名度順)
  *
  * お題の種類(12): letter(○で始まる) length(○文字) endletter(○で終わる) category(カテゴリ)
- *   collocation(穴うめ・答えが多い) phrase(慣用句・1つ答えるたびに別の文) ※どちらも日本語の意味(ja)を問題に添える translate(日本語→英語)
+ *   collocation(穴うめ・答えが多い) phrase(慣用句・1つ答えるたびに別の文) ※どちらも日本語の意味(ja)を問題に添える translate(日本語→英語。同音異義語が分かるよう漢字＋ふりがなで出す)
  *   antonym(反対語) past(過去形) anagram(並べかえ) atoz(ABC順) chain(英語しりとり)
  *
  * 形:
@@ -90,8 +90,8 @@
       },
       translate(o) {
         const lim = RANK_LIMIT[o.difficulty];
-        const pool = data.translate.filter(([, ans]) => ans.some((a) => { const r = W.rank(a); return r === 0 || r <= lim; }));
-        const steps = shuffle(pool, o.rng).slice(0, o.need).map(([reading, answers]) => ({ reading, answers }));
+        const pool = data.translate.filter(([, , ans]) => ans.some((a) => { const r = W.rank(a); return r === 0 || r <= lim; }));
+        const steps = shuffle(pool, o.rng).slice(0, o.need).map(([text, reading, answers]) => ({ text, reading, answers }));
         return { kind: "translate", key: "translate:" + steps[0].reading, need: steps.length, steps };
       },
       antonym(o) {
@@ -179,7 +179,7 @@
         }
         case "collocation": return { kind: t.kind, title: "＿＿に入{はい}る英単語{えいたんご}", big: t.prompt, sub: meaning(t.ja) };
         case "phrase": return { kind: t.kind, title: "言葉{ことば}のつづきは？", big: stepOf(t, count).prompt, sub: meaning(stepOf(t, count).ja) };
-        case "translate": return { kind: t.kind, title: "英語{えいご}にすると？", big: stepOf(t, count).reading, sub: "" };
+        case "translate": return { kind: t.kind, title: "英語{えいご}にすると？", big: stepOf(t, count).text, sub: "" };   // 漢字{よみ}の形(同音異義語を見分けられるように)
         case "antonym": return { kind: t.kind, title: "反対{はんたい}の意味{いみ}の英単語{えいたんご}", big: stepOf(t, count).word, sub: "" };
         case "past": return { kind: t.kind, title: "過去形{かこけい}にしよう", big: stepOf(t, count).word, sub: "" };
         case "anagram": return { kind: t.kind, title: "並{なら}べかえて英単語{えいたんご}に", big: up(stepOf(t, count).letters).split("").join(" "), sub: "" };

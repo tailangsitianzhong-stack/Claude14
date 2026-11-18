@@ -39,7 +39,7 @@
 | collocation | `ice ___`（cream / cube / age…） | 答えが何個もある穴うめ `collocations.txt` |
 | phrase | `salt and ___` → pepper | 1つ答えるたびに別の慣用句 `phrases.txt` |
 
-| translate | 「いぬ」→ dog | しりとり辞書の「子ども向けの語」(`data/words.js` の flag 4) |
+| translate | 「犬{いぬ}」→ dog | しりとり辞書の「子ども向けの語」(`data/words.js` の flag 4)。**同音異義語を見分けられるよう、漢字＋ふりがなで出す**（橋{はし}=bridge / 箸{はし}=chopsticks）。下の「日本語→英語の表記」参照 |
 | antonym | hot → cold | `antonyms.txt` |
 | past | go → went | `pasts.txt`（不規則動詞） |
 | anagram | `G A T S N` → angst | 同じ文字でできた単語 |
@@ -49,6 +49,21 @@
 熟語の穴うめ(collocation)と慣用句(phrase)には、**日本語の意味**を「意味：塩とこしょう」の形で問題に添える（ヒント。ふりがな付き）。意味は `collocations.txt` `phrases.txt` の最後の欄で、ないと生成時に警告が出る。
 
 やさしいでは past / anagram / chain / endletter を出さない。直前と同じ種類・使ったお題は避ける。
+
+## 日本語→英語の表記
+同音異義語（はし・くも・はな…）は、読みだけでは何のことか分からないので、問題は漢字で出してふりがなを付ける。表記は `tools/build-nep.mjs` が JMdict から引いて作る（`--jmdict` に `jamdict.db` を渡す）。
+- 「食べ物」→ `食{た}べ物{もの}`（送りがなは外に出す。`Ruby.html` の書き方）。
+- 辞書の「ふだんはかなで書く」語（苺・烏賊・兎など、難しい漢字）は、同じ読みの別の語がなければ**かな**のまま出す。同音異義語があるとき（雲/蜘蛛）は漢字で区別する。
+- カタカナ語（コップ・ギター）はカタカナのまま。
+- 辞書で見つからない語や、表記を手で決めたい語は `tools/nep-source/kanji-overrides.txt`（読み|表記）。
+- 同じ表記の語は、答えをまとめる（1つの問題に答えが複数でもOK）。
+
+## ヒント
+自分の番に「💡ヒント（-5点）」を押すと、**正解の1つの頭文字と文字数**（例: `P _ _ _ _ _（6文字）`）が**全員の画面**に出る。
+- 1人につき1ラウンドに1回。持っている人だけ押せる。点数が足りなければ0まで引く（`HINT_COST` = 5）。
+- 答えて爆弾が次の人に渡ると、ヒントは消える（次の人は自分のヒントを使える）。
+- ヒントの語は、知られている語（知名度の高い順の上位）から選ぶ。カテゴリ・慣用句など手作りの一覧は全部から選ぶ。
+- 友達対戦では `{t:"hint"}` を部屋に送る。ヒントの内容は頭文字と文字数だけで、答えそのものは送らない。
 
 ## CPU（ひとり用）
 知っている語の広さ・考える時間・まちがい率を難しさで変える（`js/games/nep/cpu.js`）。
@@ -65,7 +80,7 @@
 | ファイル | 役割 |
 |---|---|
 | `tools/nep-source/*.txt` | 手で作るお題（カテゴリ・穴うめ・慣用句・反対語・過去形・変化形の表・残す語）。編集して下の手順で再生成 |
-| `tools/build-nep.mjs` | `data/nep.js` を作る（頻度表の上位30,000語から、変化形・短縮形のかけら・略語・不適切語を除く） |
+| `tools/build-nep.mjs` | `data/nep.js` を作る（頻度表の上位30,000語から、変化形・短縮形のかけら・略語・不適切語を除く。JMdictから日→英の漢字表記も引く） |
 | `data/nep.js` | 生成物（約300KB）。ひとり用を始める時に読み込む。Worker も同じファイルを使う |
 | `js/games/nep/words.js` | 単語リスト・原形判定（`baseOf`）・頭文字/長さ/アナグラムの索引 |
 | `js/games/nep/topics.js` | お題づくり・今の問題(prompt)・答え合わせ(judge)・候補一覧 |
@@ -80,7 +95,8 @@
 
 ## データの作り直し
 ```sh
-node tools/build-nep.mjs --freq <subtlex の index.json> --profanity <google-profanity-words の data/en.txt> --stats
+node tools/build-nep.mjs --freq <subtlex の index.json> --profanity <google-profanity-words の data/en.txt> \
+     --jmdict <jamdict.db> --stats
 ```
 警告（使えない形の語・答えが少ないお題）が出たら `tools/nep-source/` を直す。出典は `data/README.md`。
 

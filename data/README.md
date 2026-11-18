@@ -30,7 +30,7 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 ## nep.js（ミニネプリーグ）
 `tools/build-nep.mjs` が生成します（直接編集しないでください。お題の元は `tools/nep-source/`）。
 - 単語リストは SUBTLEX-US の頻度表の上位30,000語（小文字の原形のみ）。変化形・短縮形のかけら・略語・不適切語は除いています。頻度表そのものは含めていません。
-- カテゴリ・穴うめ・慣用句・反対語・過去形は手作りです。「日本語→英語」のお題は `words.js`（JMdict 由来・CC BY-SA 4.0）の子ども向けの語を使っています。
+- カテゴリ・穴うめ・慣用句・反対語・過去形は手作りです。「日本語→英語」のお題は `words.js` の子ども向けの語で、漢字の表記は JMdict から引いています（どちらも JMdict 由来・CC BY-SA 4.0）。
 - 詳しくは `docs/nep.md`。
 
 ## kanji.js（ミニ漢字検定）

@@ -9,7 +9,7 @@
  *               しりとり: {t:"move",reading,english} {t:"miss",reason,correct} {t:"hint"}
  *                         {t:"judging"}(Geminiで確認中=時間を止める) {t:"resume"}(確認が終わった)
  *               漢字検定: {t:"answer",reading} / {t:"answer",choice}（部屋が出題・採点する。答えは端末に送らない）
- *               ミニネプリーグ: {t:"answer",word}（お題・導火線・採点は部屋が持つ。答えの一覧は端末に送らない）
+ *               ミニネプリーグ: {t:"answer",word} {t:"hint"}（お題・導火線・採点は部屋が持つ。答えの一覧は端末に送らない）
  * 部屋 → 端末:  {t:"state",state,events,now}   {t:"rejected",for,error,reason}   {t:"error",error}
  */
 import { DurableObject } from "cloudflare:workers";
@@ -96,6 +96,7 @@ export class Room extends DurableObject {
         case "settings": res = N.setSettings(st, id, m.settings, now); break;
         case "start":    res = N.start(st, id, now); break;
         case "answer":   res = N.answer(st, id, m, now); break;
+        case "hint":     res = N.hint(st, id, now); break;
         case "rematch":  res = N.rematch(st, id, now); break;
         default: return;
       }

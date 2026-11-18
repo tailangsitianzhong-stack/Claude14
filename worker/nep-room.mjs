@@ -74,6 +74,15 @@ export function answer(st, id, m, now, rng) {
   return { ok: true, events: sync(st, r.events) };
 }
 
+/** ヒント(持っている人だけ・1ラウンドに1回・-5点)。頭文字と文字数が全員の画面に出る */
+export function hint(st, id, now, rng) {
+  if (st.phase !== "playing" || !st.g) return { ok: false, error: "bad_phase", events: [] };
+  const r = E().hint(st.g, id, now, rng || Math.random);
+  if (!r.ok) return { ok: false, error: r.reason, reason: r.reason, events: [] };
+  st.updatedAt = now;
+  return { ok: true, events: sync(st, r.events) };
+}
+
 /** アラームから: 導火線が切れた / 次のラウンドの時間。まだなら ok:false */
 export function timeout(st, now, rng) {
   if (st.phase !== "playing" || !st.g) return { ok: false, events: [] };

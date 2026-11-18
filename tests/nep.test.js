@@ -79,7 +79,13 @@ test("データ: 手書きのお題が正しい形(1語・英字・十分な数)
   for (const e of D.collocations) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 3, e.prompt); assert.ok(e.ja, "意味なし: " + e.prompt); }
   for (const e of D.phrases) { assert.match(e.prompt, /___/); assert.ok(e.answers.length >= 1, e.prompt); assert.ok(e.ja, "意味なし: " + e.prompt); }
   assert.deepEqual(D.pasts.go, ["went"]);
-  assert.ok(D.translate.some(([r, a]) => r === "いぬ" && a.includes("dog")));
+  assert.ok(D.translate.some(([t, r, a]) => r === "いぬ" && a.includes("dog") && t === "犬{いぬ}"));
+  // 同音異義語は、漢字で見分けられる(別々の問題になる)
+  const hashi = D.translate.filter(([, r]) => r === "はし");
+  assert.deepEqual(hashi.map((x) => x[0]).sort(), ["橋{はし}", "箸{はし}"].sort());
+  assert.ok(hashi.find((x) => x[0] === "箸{はし}")[2].includes("chopsticks") && hashi.find((x) => x[0] === "橋{はし}")[2].includes("bridge"));
+  // 表記は「漢字{よみ}」(送りがなは外)か、かな・カタカナ。読みも持つ
+  for (const [t, r, a] of D.translate) { assert.match(t, /^(?:[一-龠々〆ヶ]+\{[ぁ-んー]+\}|[ぁ-んァ-ヶー])[ぁ-んァ-ヶー{}一-龠々〆ヶ]*$/, t); assert.match(r, /^[ぁ-んー]+$/); assert.ok(a.length >= 1); }
 });
 
 // ---------- お題 ----------
@@ -154,7 +160,8 @@ test("判定: カテゴリ・穴うめ・慣用句・反対語・翻訳・アナ
   assert.equal(T.judge(ph, 1, "pepper", ["pepper"], "leg").ok, true);
   const an = { kind: "antonym", key: "a", need: 1, steps: [{ word: "hot", answers: ["cold", "cool"] }] };
   assert.equal(T.judge(an, 0, null, [], "cool").ok, true);
-  const tr = { kind: "translate", key: "t", need: 1, steps: [{ reading: "いぬ", answers: ["dog"] }] };
+  const tr = { kind: "translate", key: "t", need: 1, steps: [{ text: "犬{いぬ}", reading: "いぬ", answers: ["dog"] }] };
+  assert.equal(T.prompt(tr, 0, null).big, "犬{いぬ}");
   assert.equal(T.judge(tr, 0, null, [], "dog").ok, true);
   assert.equal(T.judge(tr, 0, null, [], "cat").reason, "wrong");
   const ag = T.make("anagram", { rng: seeded(2), need: 3, difficulty: "normal" });
@@ -427,4 +434,59 @@ test("熟語・慣用句のお題には、日本語の意味が添えられる",
   assert.equal(p1.sub, "意味{いみ}：" + ph.steps[1].ja);
   // ほかのお題には付かない(しりとりは前の言葉の表示に使う)
   for (const kind of ["letter", "category", "antonym", "past", "atoz"]) assert.equal(T.prompt(T.make(kind, { rng, need: 4 }), 0, null).sub, "", kind);
+});
+
+// ---------- ヒント ----------
+test("ヒント: 持っている人だけ・1ラウンドに1回・-5点。正解の頭文字と文字数が全員に見える", () => {
+  const { st, rng } = game(3);
+  E.tick(st, T0 + C.START_MS, rng);
+  const now = T0 + C.START_MS + 3000;
+  assert.equal(E.hint(st, "p2", now, rng).reason, "not_your_turn");
+  st.players[0].score = 12;
+  const r = E.hint(st, "p1", now, rng);
+  assert.ok(r.ok);
+  assert.equal(r.events[0].type, "hint");
+  assert.equal(st.players[0].score, 7);
+  assert.equal(st.hint.pid, "p1");
+  assert.equal(st.hint.round, st.round);
+  assert.equal(st.hint.count, 0);
+  // ヒントの形: 頭文字 + " _" × (文字数-1)。同じ頭文字・同じ文字数の正解が本当にある
+  const cands = T.candidates(st.topic, 0, null, []);
+  assert.ok(cands.some((w) => w[0].toUpperCase() === st.hint.first && w.length === st.hint.len), "ヒントの語は正解の1つ");
+  assert.equal(st.hint.text, st.hint.first + " _".repeat(st.hint.len - 1));
+  // 同じラウンドでは、同じ人は2回使えない
+  assert.equal(E.hint(st, "p1", now + 100, rng).reason, "hint_used");
+  assert.equal(st.players[0].score, 7);
+  // 答えて次の人へ渡ると、ヒントは消える。次の人は自分のヒントを使える
+  assert.ok(E.answer(st, "p1", goodWord(st), now + 200, rng).ok);
+  assert.equal(st.hint, null);
+  assert.ok(E.hint(st, "p2", now + 300, rng).ok);
+  assert.equal(st.players[1].score, 0, "点が足りなければ0まで");
+  assert.deepEqual(st.hintUsed.sort(), ["p1", "p2"]);
+});
+
+test("ヒント: 次のラウンドで使い直せる。爆発後や時間切れ後は使えない", () => {
+  const { st, rng } = game(2);
+  E.tick(st, T0 + C.START_MS, rng);
+  assert.ok(E.hint(st, "p1", T0 + C.START_MS + 1000, rng).ok);
+  assert.equal(E.hint(st, "p1", st.fuseEndsAt + C.GRACE_MS + 1, rng).reason, "timeout");
+  E.tick(st, st.fuseEndsAt + C.GRACE_MS + 5, rng);          // 爆発
+  assert.equal(E.hint(st, "p1", st.nextAt - 100, rng).reason, "not_playing");
+  E.tick(st, st.nextAt, rng);
+  assert.equal(st.hint, null);
+  assert.deepEqual(st.hintUsed, []);
+  assert.ok(E.hint(st, st.holder, st.nextAt + 500, rng).ok);
+});
+
+test("ヒント: 全種類のお題で出せる(文字数・頭文字が正解と合う)", () => {
+  for (const kind of T.KINDS) {
+    const { st, rng } = game(2, "hard", 5);
+    E.tick(st, T0 + C.START_MS, rng);
+    st.topic = T.make(kind, { rng, need: 5, difficulty: "hard" });
+    st.need = st.topic.need; st.count = 0; st.used = []; st.last = null;
+    st.prompt = T.prompt(st.topic, 0, null);
+    const r = E.hint(st, st.holder, T0 + 5000, rng);
+    assert.ok(r.ok, kind);
+    assert.ok(T.candidates(st.topic, 0, null, []).some((w) => w[0].toUpperCase() === st.hint.first && w.length === st.hint.len), kind);
+  }
 });

@@ -15,6 +15,7 @@
  *   ・届かず導火線が切れたら爆発。爆弾を持っていた人だけライフ-1(はじめ3)。0で脱落
  *   ・最後の1人が勝ち。ラウンドが上限(15)に達したら、ライフ→得点の順で決める
  *   ・導火線が切れた直後 GRACE_MS の間は、通信の遅れを考えて答えを受け付ける
+ *   ・ヒント: 持っている人が使える(1ラウンドに1人1回・-5点)。正解の1つの頭文字と文字数を全員に見せる
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -30,6 +31,7 @@
   const MAX_ROUNDS = 15;
   const POINT = 10;
   const BONUS = 20;
+  const HINT_COST = 5;       // ヒント1回の点数(足りなければ0まで)
   /** 目標の数(生きている人数 → 何個で解除) 。30秒で答えられる量を考えて決めている */
   const NEED = {
     easy: { 2: 3, 3: 4, 4: 5 },
@@ -69,6 +71,8 @@
         starterId: null,
         topic: null, count: 0, need: 0, used: [], last: null, prompt: null,
         holder: null, fuseEndsAt: 0, fuseMs: FUSE_MS,
+        hint: null,               // 今の問題のヒント { pid, round, count, first, len, text }
+        hintUsed: [],             // このラウンドでヒントを使った人
         outcome: null,            // 直前のラウンドの結果 { type:"defuse"|"explode", pid, ... }
         usedKeys: [], lastKind: null,
         startedAt: now, endedAt: 0, result: null
@@ -97,6 +101,8 @@
       st.fuseEndsAt = now + FUSE_MS;
       st.phase = "play";
       st.outcome = null;
+      st.hint = null;
+      st.hintUsed = [];
       setPrompt(st);
       return [{ type: "round", round: st.round, topicKind: topic.kind, need: st.need, holder: st.holder }];
     }
@@ -144,6 +150,7 @@
         return { ok: false, reason: j.reason, base: j.base, word: j.word, events: [{ type: "reject", pid, reason: j.reason, base: j.base, word: j.word }] };
       }
       const p = byId(st, pid);
+      st.hint = null;                       // ヒントは「今の問題」のもの
       st.used.push(j.word);
       st.last = j.word;
       st.count += 1;
@@ -166,6 +173,24 @@
       return { ok: true, word: j.word, events: [{ type: "accept", pid, word: j.word, count: st.count, need: st.need, next: nxt.id }] };
     }
 
+    /** ヒント: 今の問題の正解を1つ選び、頭文字と文字数を見せる。持っている人だけ・1ラウンドに1人1回・-5点 */
+    function hint(st, pid, now, rng = Math.random) {
+      if (st.phase !== "play") return { ok: false, reason: "not_playing", events: [] };
+      if (pid !== st.holder) return { ok: false, reason: "not_your_turn", events: [] };
+      if (now > st.fuseEndsAt + GRACE_MS) return { ok: false, reason: "timeout", events: [] };
+      if (st.hintUsed.includes(pid)) return { ok: false, reason: "hint_used", events: [] };
+      const list = T.candidates(st.topic, st.count, st.last, st.used);
+      if (!list.length) return { ok: false, reason: "no_hint", events: [] };
+      // 知られている語(知名度の高い順の上位)から選ぶ。手作りの一覧は全部から
+      const word = list[Math.floor(rng() * Math.min(list.length, 40))];
+      const p = byId(st, pid);
+      p.score = Math.max(0, p.score - HINT_COST);
+      st.hintUsed.push(pid);
+      const first = word[0].toUpperCase();
+      st.hint = { pid, round: st.round, count: st.count, first, len: word.length, text: first + " _".repeat(word.length - 1) };
+      return { ok: true, events: [{ type: "hint", pid, cost: HINT_COST, len: word.length }] };
+    }
+
     /** 次に tick が必要な時刻(なければ 0)。部屋(サーバー)のアラームに使う */
     function nextDeadline(st) {
       if (st.phase === "play") return st.fuseEndsAt + GRACE_MS + 1;
@@ -185,8 +210,8 @@
       return rest;
     }
 
-    return { newGame, tick, answer, nextDeadline, shift, view, needFor, alive, byId };
+    return { newGame, tick, answer, hint, nextDeadline, shift, view, needFor, alive, byId };
   }
 
-  return { FUSE_MS, GRACE_MS, BETWEEN_MS, START_MS, LIVES, MAX_ROUNDS, POINT, BONUS, NEED, DIFFICULTIES, needFor, create };
+  return { FUSE_MS, GRACE_MS, BETWEEN_MS, START_MS, LIVES, MAX_ROUNDS, POINT, BONUS, HINT_COST, NEED, DIFFICULTIES, needFor, create };
 });

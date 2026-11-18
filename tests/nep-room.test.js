@@ -193,3 +193,21 @@ test("publicState: 熟語の意味(prompt.sub)は送るが、答えの一覧は�
   assert.ok(json.includes("塩{しお}とこしょう"));
   assert.equal(json.includes("pepper"), false);
 });
+
+test("ヒント: 部屋でも持っている人だけ・1回・全員の画面に出る。答えそのものは送らない", () => {
+  const st = playing(3);
+  N.timeout(st, st.g.nextAt, seeded(2));
+  const holder = st.g.holder;
+  const other = ids(st).find((i) => i !== holder);
+  assert.equal(N.hint(st, other, st.g.nextAt + 1000).error, "not_your_turn");
+  const r = N.hint(st, holder, st.g.nextAt + 1000);
+  assert.ok(r.ok);
+  assert.equal(r.events[0].kind, "hint");
+  const pub = N.publicState(st);
+  assert.equal(pub.g.hint.pid, holder);
+  assert.match(pub.g.hint.text, /^[A-Z]( _)*$/);
+  assert.deepEqual(pub.g.hintUsed, [holder]);
+  assert.equal(JSON.stringify(pub).includes('"answers"'), false);
+  assert.equal(N.hint(st, holder, st.g.nextAt + 2000).error, "hint_used");
+  assert.equal(N.hint(lobby(2), "x", T0).error, "bad_phase");
+});

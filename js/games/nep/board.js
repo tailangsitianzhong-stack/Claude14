@@ -1,7 +1,7 @@
 /**
  * ミニネプリーグ(英語)の対戦画面の部品。ひとり用(CPU対戦)も友達対戦も、これを共通で使う。
  *
- *   const board = NepBoard.create({ el, myId, nameOf, avatarOf, serverNow, onSubmit(word), onQuit() });
+ *   const board = NepBoard.create({ el, myId, nameOf, avatarOf, serverNow, onSubmit(word), onHint(), onQuit() });
  *   board.update({ players, g }, events)   // 状態(core.js の state / 部屋の publicState)と、起きたこと
  *   board.rejected({ reason, base, word }) // 自分の答えが断られた
  *   board.destroy()
@@ -33,6 +33,8 @@
       case "unknown": return "単語{たんご}リストにないよ";
       case "not_your_turn": return "今{いま}はあなたの番{ばん}じゃないよ";
       case "timeout": return "間{ま}に合{あ}わなかった…";
+      case "hint_used": return "ヒントは、このラウンドではもう使{つか}ったよ";
+      case "no_hint": return "ヒントが出{だ}せなかったよ";
       default: return "うまくいかなかったよ";
     }
   }
@@ -58,10 +60,11 @@
           <span class="shiri-timer-num" id="nep-num"></span>
         </div>
         <div class="shiri-status nep-status" id="nep-status"></div>
+        <div class="nep-hint" id="nep-hint" aria-live="polite" hidden></div>
         <div class="nep-used" id="nep-used" aria-label="出た答え"></div>
         <div class="shiri-field is-active nep-field" id="nep-field" hidden><span class="shiri-text shiri-en" id="nep-text"></span></div>
         <div class="kk-feedback nep-feedback" id="nep-feedback" role="status" aria-live="polite"></div>
-        <div class="shiri-actions"><span></span><button type="button" class="btn btn-small" id="nep-quit">やめる</button></div>
+        <div class="shiri-actions"><button type="button" class="btn btn-small nep-hint-btn" id="nep-hint-btn" hidden></button><button type="button" class="btn btn-small" id="nep-quit">やめる</button></div>
         <div id="shiri-kb"></div>
       </div>`;
     const $ = (s) => el.querySelector(s);
@@ -126,7 +129,7 @@
       }
       const key = g.round + ":" + g.count + ":" + g.prompt.big;
       $("#nep-title").innerHTML = Ruby.html(g.prompt.title);
-      $("#nep-big").textContent = g.prompt.big;
+      $("#nep-big").innerHTML = Ruby.html(g.prompt.big);   // 日本語→英語は「橋{はし}」の形(ふりがな付き)
       $("#nep-sub").innerHTML = Ruby.html(esc(g.prompt.sub || ""));
       $("#nep-dots").textContent = "●".repeat(g.count) + "○".repeat(Math.max(0, g.need - g.count));
       if (key !== u.promptKey) {
@@ -188,7 +191,26 @@
           Sfx.play("defuse"); Fx.pop($("#nep-card"));
         } else if (k === "round") {
           Sfx.play("start");
+        } else if (k === "hint") {
+          Sfx.play("turn"); Fx.pop($("#nep-hint"));
         }
+      }
+    }
+
+    /** ヒント: 出ているヒントは全員に見せる。ボタンは自分の番だけ(1ラウンドに1回) */
+    function hintView(v, mine) {
+      const g = v.g;
+      const h = g.phase === "play" && g.hint && g.hint.round === g.round && g.hint.count === g.count ? g.hint : null;
+      const box = $("#nep-hint");
+      box.hidden = !h;
+      if (h) box.innerHTML = Ruby.html(`💡 ${esc(avatarOf(h.pid))}のヒント：`) + ` <b class="nep-hint-text">${esc(h.text)}</b> ` + Ruby.html(`（${h.len}文字{もじ}）`);
+      const btn = $("#nep-hint-btn");
+      const can = mine && g.phase === "play";
+      btn.hidden = !can;
+      if (can) {
+        const used = (g.hintUsed || []).includes(myId);
+        btn.disabled = used;
+        btn.innerHTML = Ruby.html(used ? "💡 ヒント使用済{しようず}み" : `💡 ヒント（-${opts.hintCost || 5}点{てん}）`);
       }
     }
 
@@ -201,6 +223,8 @@
       used(v);
       feedbackFromEvents(events);
       sounds(v, events);
+
+      hintView(v, mine);
 
       // 自分の番の入力欄
       const show = mine && g.phase === "play";
@@ -232,12 +256,21 @@
       if (shown > 0 && shown <= 5 && shown !== u.lastTick) { u.lastTick = shown; Sfx.play("tick"); }
     }, 250);
 
+    $("#nep-hint-btn").addEventListener("click", () => {
+      const v = u.view;
+      if (!v || v.g.phase !== "play" || v.g.holder !== myId || (v.g.hintUsed || []).includes(myId)) return;
+      $("#nep-hint-btn").disabled = true;              // 返事が来るまで二重に押せない
+      if (opts.onHint) opts.onHint();
+    });
     $("#nep-quit").addEventListener("click", () => { if (confirm("ゲームをやめますか？")) opts.onQuit(); });
 
     return {
       update,
       say,
-      rejected(r) { setBusy(false); say(rejectText(r), "ng"); Fx.shake($("#nep-field")); Sfx.play("ng"); },
+      rejected(r) {
+        setBusy(false); say(rejectText(r), "ng"); Fx.shake($("#nep-field")); Sfx.play("ng");
+        if (u.view) hintView(u.view, u.view.g.holder === myId);       // 押せなくしていたヒントボタンを戻す
+      },
       unbusy() { if (u.view && u.view.g.holder === myId) setBusy(false); },
       destroy() { clearInterval(u.timerId); clearTimeout(u.busyTimer); detach(); kb.destroy(); }
     };
