@@ -49,3 +49,7 @@
 
 /* hidden 属性で隠す要素(.shiri-field などの display に負けないように) */
 .nep-field[hidden], .nep [hidden] { display: none !important; }
+
+/* 4人でも♥が切れないように小さめに */
+.nep-players .mp-chip .lv { font-size: .68rem; letter-spacing: 0; }
+.nep-players .mp-chip { padding: 1px 4px; column-gap: 3px; }

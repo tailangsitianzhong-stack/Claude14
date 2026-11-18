@@ -174,8 +174,8 @@
           const c = catById.get(t.id);
           return { kind: t.kind, title: c.emoji + " " + c.name + "の英単語{えいたんご}", big: c.emoji, sub: "" };
         }
-        case "collocation": return { kind: t.kind, title: "＿＿に入{はい}る英単語{えいたんご}", big: t.prompt.replace("___", "＿＿＿"), sub: "" };
-        case "phrase": return { kind: t.kind, title: "言葉{ことば}のつづきは？", big: stepOf(t, count).prompt.replace("___", "＿＿＿"), sub: "" };
+        case "collocation": return { kind: t.kind, title: "＿＿に入{はい}る英単語{えいたんご}", big: t.prompt, sub: "" };
+        case "phrase": return { kind: t.kind, title: "言葉{ことば}のつづきは？", big: stepOf(t, count).prompt, sub: "" };
         case "translate": return { kind: t.kind, title: "英語{えいご}にすると？", big: stepOf(t, count).reading, sub: "" };
         case "antonym": return { kind: t.kind, title: "反対{はんたい}の意味{いみ}の英単語{えいたんご}", big: stepOf(t, count).word, sub: "" };
         case "past": return { kind: t.kind, title: "過去形{かこけい}にしよう", big: stepOf(t, count).word, sub: "" };
