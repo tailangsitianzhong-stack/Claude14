@@ -107,3 +107,18 @@ test("自分で閉じたら再接続しない", async () => {
   await new Promise((r) => setTimeout(r, 900));
   assert.equal(all.length, 1);
 });
+
+test("確認中(pausedAt)は、残り時間が止まった時点のまま動かない", () => {
+  const { FakeWS, all } = fakeWS();
+  const net = Net.create({ endpoint: "https://w.example", code: "12345", cid: "cid-12345", WebSocketImpl: FakeWS });
+  all[0].open();
+  const now = Date.now();
+  all[0].recv({ t: "state", state: { turnEndsAt: now + 20_000 }, events: [], now });
+  const running = net.remainingMs({ turnEndsAt: now + 20_000 });
+  const frozen = net.remainingMs({ turnEndsAt: now + 20_000, pausedAt: now + 0 });
+  assert.ok(running <= 20_000 - Net.GRACE_MS && running > 17_000);
+  assert.equal(frozen, 20_000 - Net.GRACE_MS);                              // 止まった時刻(now)を基準にするので減らない
+  const later = net.remainingMs({ turnEndsAt: now + 20_000, pausedAt: now });
+  assert.equal(later, frozen);
+  net.close();
+});

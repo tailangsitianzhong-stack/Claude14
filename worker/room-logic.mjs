@@ -14,6 +14,7 @@ export const MIN_PLAYERS = 2;
 export const AVATARS = ["🐶", "🐱", "🐰", "🐻"];
 export const GRACE_MS = 1500;          // 通信のおくれを見こした、制限時間の「おまけ」
 export const HINT_COST = Core.HINT_COST;
+export const PAUSE_MAX_MS = 10000;      // Geminiで確認している間の「時間ストップ」の上限(1つの番につき1回)
 
 const DIFFS = Core.DIFFICULTIES;
 
@@ -101,6 +102,38 @@ export function start(st, id, now, rng) {
 function setTurn(st, id, now) {
   st.turnId = id;
   st.turnEndsAt = now + st.seconds * 1000 + GRACE_MS;
+  st.pausedAt = null;                   // 確認中の時間ストップは、番が変わったら解除
+  st.pausedOnce = false;
+}
+
+/** 確認中の時間ストップを解く。止めていた分だけ、制限時間を延ばす */
+function unpause(st, now) {
+  if (st.pausedAt) {
+    st.turnEndsAt += Math.max(0, now - st.pausedAt);
+    st.pausedAt = null;
+  }
+}
+
+/**
+ * 答える人が、辞書にない語をGeminiに確認し始めた。確認が終わるまで時間を止める(全員の画面で止まる)。
+ * 1つの番につき1回・最大 PAUSE_MAX_MS まで。手(move/miss)が届くか resume で再開する
+ */
+export function judging(st, id, now) {
+  if (st.phase !== "playing" || id !== st.turnId) return { ok: false, error: "not_your_turn", events: [] };
+  if (st.pausedAt || st.pausedOnce) return { ok: false, error: "already_paused", events: [] };
+  st.pausedAt = now;
+  st.pausedOnce = true;
+  st.updatedAt = now;
+  return { ok: true, events: [{ kind: "judging", playerId: id }] };
+}
+
+/** 確認が終わったが、手を送らない場合(入力のやり直しなど)の再開 */
+export function resume(st, id, now) {
+  if (st.phase !== "playing" || id !== st.turnId) return { ok: false, error: "not_your_turn", events: [] };
+  if (!st.pausedAt) return { ok: false, error: "not_paused", events: [] };
+  unpause(st, now);
+  st.updatedAt = now;
+  return { ok: true, events: [{ kind: "resumed", playerId: id }] };
 }
 
 /** 次に答える人(生きている人の中で、いまの人の次)へ。1人だけになったら終了 */
@@ -135,6 +168,7 @@ export function move(st, id, m, now) {
   if (st.phase !== "playing") return { ok: false, error: "bad_phase", events: [] };
   if (id !== st.turnId) return { ok: false, error: "not_your_turn", events: [] };
   if (typeof m !== "object" || m === null) return { ok: false, error: "bad_message", events: [] };
+  unpause(st, now);                      // 確認中だった場合は、ここで時間を再開(止めていた分は延長される)
 
   const r = Rules.checkMove(
     { reading: m.reading, english: m.english, requiredKana: st.required, usedEnglish: st.used },
@@ -171,6 +205,7 @@ export function move(st, id, m, now) {
 export function miss(st, id, info, now) {
   if (st.phase !== "playing") return { ok: false, error: "bad_phase", events: [] };
   if (id !== st.turnId) return { ok: false, error: "not_your_turn", events: [] };
+  unpause(st, now);
   return { ok: true, events: applyMiss(st, id, (info && info.reason) || "wrong", info, now) };
 }
 
@@ -188,7 +223,15 @@ function applyMiss(st, id, reason, info, now) {
 
 /** 時間切れ(アラームから呼ぶ)。まだなら何もしない */
 export function timeout(st, now) {
-  if (st.phase !== "playing" || st.turnEndsAt == null || now < st.turnEndsAt - 50) return { ok: false, events: [] };
+  if (st.phase !== "playing" || st.turnEndsAt == null) return { ok: false, events: [] };
+  if (st.pausedAt) {
+    // 確認中は時間が止まっている。上限(10秒)を過ぎても手が届かなければ、自動で再開する
+    if (now < st.pausedAt + PAUSE_MAX_MS) return { ok: false, events: [] };
+    unpause(st, now);
+    st.updatedAt = now;
+    return { ok: true, events: [{ kind: "resumed", playerId: st.turnId }] };
+  }
+  if (now < st.turnEndsAt - 50) return { ok: false, events: [] };
   return { ok: true, events: applyMiss(st, st.turnId, "timeout", null, now) };
 }
 
@@ -213,6 +256,7 @@ export function rematch(st, id, now) {
 
 /** 次にアラームを鳴らす時刻(ms)。ゲーム中は制限時間、それ以外は片づけ */
 export function nextAlarm(st, now) {
+  if (st.phase === "playing" && st.pausedAt) return st.pausedAt + PAUSE_MAX_MS;
   if (st.phase === "playing" && st.turnEndsAt != null) return st.turnEndsAt;
   const anyone = st.players.some((p) => p.connected);
   return st.updatedAt + (anyone ? 2 * 60 * 60 * 1000 : 10 * 60 * 1000);

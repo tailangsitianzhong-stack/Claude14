@@ -392,12 +392,16 @@
         const tools = ctx.getJudge();
         if (!tools) return p.say("辞書{じしょ}を読{よ}み込{こ}み中{ちゅう}…もう少{すこ}し待{ま}ってね", "ng");
         setBusy(true);
-        const slow = setTimeout(() => p.say("🔍 確認中{かくにんちゅう}…", "hint"), 400);
+        let stopped = false;                           // Geminiで確認する間は、部屋に知らせて全員の時間を止める
         const r = await tools.judge.judge({
           reading: p.text.reading, english: p.text.english,
           requiredKana: state.required, usedEnglish: new Set(state.used)
-        }, { ignoreDakuten: state.settings.ignoreDakuten });
-        clearTimeout(slow);
+        }, { ignoreDakuten: state.settings.ignoreDakuten }, {
+          onRemoteStart: () => {
+            stopped = net.send({ t: "judging" });
+            p.say("🔍 確認中{かくにんちゅう}…（時間{じかん}はストップ中{ちゅう}）", "hint");
+          }
+        });
         if (!play || play !== p || !state || state.phase !== "playing") return;
 
         if (r.ok) {                                   // 通った手を部屋へ。結果(次の人の番)は部屋から届く
@@ -410,6 +414,7 @@
         if (r.reason === "invalid_reading" || r.reason === "invalid_english" || r.reason === "unknown_word") {
           p.say(FORMAT_MESSAGES[r.reason], "ng");     // 形式ミス・未知の語はライフを減らさず、やり直し
           if (r.reason === "invalid_reading") setActive("reading");
+          if (stopped) net.send({ t: "resume" });     // 手は送らないので、止めていた時間を再開してもらう
           return setBusy(false);
         }
         // まちがい: 部屋に報告する(ライフ-1・次の人へ)。つづりミスは復習リストにも入れる
@@ -496,6 +501,9 @@
       if (texts.length) p.bubble(texts.join("　"));
       else if (p.lastTurn === null) p.bubble(`🎮 ${avatarOf(s.turnId)} からスタート！「しりとり」→「り」`);
       if ((events || []).some((e) => e.kind === "miss" && e.playerId === cid)) p.say("♥が1つ減{へ}ったよ", "ng");
+      // 誰かがGeminiで確認している間は、時間が止まる(全員の画面で)
+      $(".shiri-timer").classList.toggle("is-paused", !!s.pausedAt);
+      if (s.pausedAt) p.bubble(`🔍 ${avatarOf(s.turnId)} が確認中{かくにんちゅう}…（時間{じかん}はストップ中{ちゅう}）`);
       // 効果音: 自分の正解=ok / 相手の正解=pop / 間違い=ng / 脱落=heart / 自分の番=turn
       (events || []).forEach((ev) => {
         if (ev.kind === "moved") { Sfx.play(ev.playerId === cid ? "ok" : "pop"); if (ev.playerId === cid) Fx.floatText($("#mp-players"), "+" + ev.points); }

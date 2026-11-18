@@ -90,7 +90,10 @@
       serverNow() { return Date.now() + offset; },
       /** 制限時間のこり(ms)。部屋が足している「おまけ」は引いて見せる */
       remainingMs(state) {
-        return state && state.turnEndsAt ? Math.max(0, state.turnEndsAt - (Date.now() + offset) - GRACE_MS) : 0;
+        if (!state || !state.turnEndsAt) return 0;
+        // 確認中(pausedAt あり)は、止まった時点の残りのまま動かさない
+        const now = state.pausedAt ? state.pausedAt : Date.now() + offset;
+        return Math.max(0, state.turnEndsAt - now - GRACE_MS);
       },
       close() {
         closedByUs = true;

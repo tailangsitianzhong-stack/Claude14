@@ -7,6 +7,7 @@
  *
  * 端末 → 部屋:  {t:"settings",settings} {t:"start"} {t:"rematch"}  と、生存確認の "ping"
  *               しりとり: {t:"move",reading,english} {t:"miss",reason,correct} {t:"hint"}
+ *                         {t:"judging"}(Geminiで確認中=時間を止める) {t:"resume"}(確認が終わった)
  *               漢字検定: {t:"answer",reading} / {t:"answer",choice}（部屋が出題・採点する。答えは端末に送らない）
  * 部屋 → 端末:  {t:"state",state,events,now}   {t:"rejected",for,error,reason}   {t:"error",error}
  */
@@ -99,6 +100,8 @@ export class Room extends DurableObject {
         case "move":     res = L.move(st, id, m, now); break;
         case "miss":     res = L.miss(st, id, m, now); break;
         case "hint":     res = L.hint(st, id, now); break;
+        case "judging":  res = L.judging(st, id, now); break;     // Geminiで確認中: 時間を止める
+        case "resume":   res = L.resume(st, id, now); break;
         case "rematch":  res = L.rematch(st, id, now); break;
         default: return;
       }

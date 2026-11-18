@@ -344,3 +344,7 @@
 .rank-list .no { flex: 0 0 2.2em; font-size: 1.2rem; }
 .rank-list .sc { margin-left: auto; font-size: 1.2rem; color: var(--green); }
 .rank-list .wd { font-size: .8rem; color: var(--ink-soft); }
+
+/* Geminiで確認している間は、時間が止まる(タイマーを青くして、止まっていることを示す) */
+.shiri-timer.is-paused .shiri-timer-bar { background: var(--blue); animation: none; }
+.shiri-timer.is-paused .shiri-timer-num::after { content: " ⏸"; }

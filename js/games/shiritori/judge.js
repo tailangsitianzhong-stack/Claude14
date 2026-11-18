@@ -21,7 +21,8 @@
     const dict = deps.dict;
     const remote = deps.remote || null; // async ({reading, english}) => {ok:boolean, ...} | null
 
-    async function judge(move, opts) {
+    /** hooks.onRemoteStart: Gemini などの外部確認を始める直前に呼ばれる(友達対戦で時間を止めるため) */
+    async function judge(move, opts, hooks) {
       const rule = Rules.checkMove(move, opts);
       if (!rule.ok) return Object.assign({}, rule, { source: "rules" });
 
@@ -38,6 +39,7 @@
 
       if (remote) {
         try {
+          if (hooks && hooks.onRemoteStart) hooks.onRemoteStart();
           const r = await remote({ reading: rule.reading, english: rule.english });
           if (r && r.ok) return Object.assign({ ok: true, source: "remote" }, base);
           if (r && r.ok === false) {

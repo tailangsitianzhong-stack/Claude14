@@ -214,3 +214,76 @@ test("「ん」で脱落した直後でも、ゲームが続けば次の人は�
   assert.equal(st.turnId, "p3");
   assert.ok(L.move(st, "p3", { reading: "ごりら", english: "gorilla" }, T0).ok);
 });
+
+/* ---------- 確認中の時間ストップ(Geminiで判定している間) ---------- */
+test("確認中: 順番の人が知らせると時間が止まり、他の人の画面でも止まる。時間切れにならない", () => {
+  const st = playing(2);
+  const deadline = st.turnEndsAt;
+  assert.equal(L.judging(st, "p2", T0 + 1000).error, "not_your_turn");
+  const at = deadline - 3000;                                     // 締切の3秒前に確認を始める
+  const r = L.judging(st, "p1", at);
+  assert.ok(r.ok);
+  assert.equal(st.pausedAt, at);
+  assert.equal(L.timeout(st, deadline + 2000).ok, false);        // 本来の締切を過ぎても、確認中は時間切れにならない
+  assert.equal(st.players[0].lives, 3);
+  assert.equal(L.nextAlarm(st, T0), at + L.PAUSE_MAX_MS);        // 次のアラームは「止めた時間の上限」
+  assert.equal(L.judging(st, "p1", at + 100).error, "already_paused");
+});
+
+test("確認が終わって手が届くと再開し、止めていた分だけ制限時間が延びる(得点の「はやさ」もそれを反映)", () => {
+  const st = playing(2);
+  const deadline = st.turnEndsAt;
+  L.judging(st, "p1", T0 + 2000);
+  const r = L.move(st, "p1", { reading: "りんご", english: "apple" }, T0 + 6000);   // 4秒確認していた
+  assert.ok(r.ok);
+  assert.equal(st.pausedAt, null);
+  assert.equal(st.turnId, "p2");
+  // 確認していた4秒は、答えるまでの時間に数えない: 2秒で答えたのと同じ得点
+  const quick = playing(2);
+  L.move(quick, "p1", { reading: "りんご", english: "apple" }, T0 + 2000);
+  assert.equal(st.players[0].score, quick.players[0].score);
+  assert.ok(deadline > 0);
+});
+
+test("確認の結果が不合格(miss)でも再開してから処理される。resume で手を送らずに再開もできる", () => {
+  const st = playing(2);
+  const deadline = st.turnEndsAt;
+  L.judging(st, "p1", T0 + 1000);
+  const r = L.resume(st, "p1", T0 + 4000);                        // 3秒止めて再開(形式ミスで入力をやり直す場合など)
+  assert.ok(r.ok);
+  assert.equal(st.turnEndsAt, deadline + 3000);
+  assert.equal(st.turnId, "p1");
+  assert.equal(L.resume(st, "p1", T0 + 5000).error, "not_paused");
+  assert.equal(L.judging(st, "p1", T0 + 5000).error, "already_paused");   // 1つの番につき1回だけ
+
+  const st2 = playing(2);
+  L.judging(st2, "p1", T0 + 1000);
+  assert.ok(L.miss(st2, "p1", { reason: "spelling", correct: "apple" }, T0 + 3000).ok);
+  assert.equal(st2.pausedAt, null);
+  assert.equal(st2.turnId, "p2");
+  assert.equal(st2.pausedOnce, false);                            // 次の人は、また1回止められる
+});
+
+test("確認が長引いても、上限(10秒)で自動的に再開する(通信が切れた時などに、ゲームが止まったままにならない)", () => {
+  const st = playing(2);
+  const deadline = st.turnEndsAt;
+  L.judging(st, "p1", T0 + 1000);
+  assert.equal(L.timeout(st, T0 + 1000 + L.PAUSE_MAX_MS - 1).ok, false);
+  const r = L.timeout(st, T0 + 1000 + L.PAUSE_MAX_MS);
+  assert.ok(r.ok);
+  assert.deepEqual(r.events.map((e) => e.kind), ["resumed"]);
+  assert.equal(st.pausedAt, null);
+  assert.equal(st.turnEndsAt, deadline + L.PAUSE_MAX_MS);
+  assert.equal(st.players[0].lives, 3);                            // まだライフは減っていない(時間が10秒延びただけ)
+  assert.equal(L.nextAlarm(st, T0), st.turnEndsAt);               // その後は、延びた締切がアラームの時刻
+});
+
+test("番が変わると、確認中の時間ストップは解除される", () => {
+  const st = playing(3);
+  L.judging(st, "p1", T0 + 1000);
+  L.timeout(st, T0 + 1000 + L.PAUSE_MAX_MS);                       // 自動再開
+  L.timeout(st, st.turnEndsAt);                                    // p1 の時間切れ → p2 の番
+  assert.equal(st.turnId, "p2");
+  assert.equal(st.pausedAt, null);
+  assert.ok(L.judging(st, "p2", st.askedAt || T0 + 50000).ok);
+});

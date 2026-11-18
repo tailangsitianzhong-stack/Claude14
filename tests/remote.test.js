@@ -95,3 +95,17 @@ test("judge: remote の不合格(正解つき)をそのまま返す", async () =
   const r = await judge.judge({ reading: "ぬいぐるみ", english: "dog", usedEnglish: [] });
   assert.deepEqual([r.ok, r.reason, r.suggestion, r.source], [false, "wrong_english", "plush", "remote"]);
 });
+
+test("judge: 外部確認(Gemini)を始める時だけ onRemoteStart が呼ばれる。辞書で決まる時は呼ばれない", async () => {
+  const dict = Dict.create(DATA);
+  const judge = Judge.create({ dict, remote: async () => ({ ok: true }) });
+  let started = 0;
+  const hooks = { onRemoteStart: () => { started++; } };
+  await judge.judge({ reading: "りんご", english: "apple", usedEnglish: [] }, {}, hooks);        // 辞書にある
+  await judge.judge({ reading: "りんご", english: "appel", usedEnglish: [] }, {}, hooks);        // 打ち間違い
+  await judge.judge({ reading: "ねこ", english: "cat", requiredKana: "ご", usedEnglish: [] }, {}, hooks);   // ルール違反
+  assert.equal(started, 0);
+  await judge.judge({ reading: "ぬいぐるみ", english: "plushie", usedEnglish: [] }, {}, hooks);  // 辞書にない → 確認
+  assert.equal(started, 1);
+  await judge.judge({ reading: "ぬいぐるみ", english: "plushie", usedEnglish: [] });             // hooks なしでも動く
+});
