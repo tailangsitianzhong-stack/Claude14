@@ -284,11 +284,15 @@
         if (s.phase !== "asking") return;
         const rem = g.remainingMs(now);
         const total = cfg.totalSeconds ? cfg.totalSeconds * 1000 : Core.LIMIT[s.q.type] * 1000;
-        $("#timer-bar").style.width = Math.min(100, rem / total * 100) + "%";
-        $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3) Sfx.play("tick"); }
-      }, 100);
+        if (shown !== p.lastShown) {                // 秒が変わった時だけ、画面を書きかえる
+          p.lastShown = shown;
+          $("#timer-num").textContent = shown;
+          Fx.timerBar($("#timer-bar"), rem, total);
+          $("#timer-bar").classList.toggle("is-low", rem <= 5000);
+          if (shown > 0 && shown <= 3) Sfx.play("tick");
+        }
+      }, 250);
 
       $("#kk-quit").addEventListener("click", () => { if (confirm("やめてメニューに戻りますか？")) showMenu(); });
       const skip = $("#kk-skip");

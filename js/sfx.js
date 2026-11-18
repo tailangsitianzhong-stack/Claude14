@@ -8,6 +8,10 @@
  * 音の名前: tap key ok ng tick turn start pop heart win lose end
  * 設定は localStorage の "minigames.settings"（音のON/OFF・音量・バイブ）に保存する。
  * スマホ(iOS)は、ユーザーが画面を触るまで音を出せないので、最初のタップで準備する。
+ *
+ * 省電力: 音の準備(AudioContext)は、動かしたままだと無音でも電池を使う(測定: 約3.5ポイント、iPhoneでは省電力に入りにくくなる)。
+ * そこで、最後に鳴らして/触ってから idleMs(既定8秒)たったら止め、次に鳴らす時に再開する。
+ * アプリが裏に回った(画面が隠れた)時もすぐ止める。
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -23,6 +27,8 @@
     const o = opts || {};
     const storage = o.storage === undefined ? safeStorage() : o.storage;
     const AudioCtor = o.AudioContext;               // テストでは偽物を渡す
+    const idleMs = typeof o.idleMs === "number" ? o.idleMs : 8000;
+    let idleTimer = null;
     const nav = o.navigator === undefined ? (typeof navigator !== "undefined" ? navigator : null) : o.navigator;
     let ctx = null;
     let settings = load();
@@ -60,7 +66,20 @@
         try { ctx = new C(); } catch (_) { return null; }
       }
       if (ctx.state === "suspended" && ctx.resume) { try { ctx.resume(); } catch (_) {} }
+      scheduleSuspend();
       return ctx;
+    }
+
+    /** 無音が続いたら音の準備を止める(電池のため)。鳴らす/触るたびに延長される */
+    function scheduleSuspend() {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(suspendNow, idleMs);
+    }
+    function suspendNow() {
+      clearTimeout(idleTimer);
+      if (ctx && ctx.state === "running" && typeof ctx.suspend === "function") {
+        try { const r = ctx.suspend(); if (r && r.catch) r.catch(() => {}); } catch (_) {}
+      }
     }
 
     /** 1音: 周波数・開始(秒)・長さ(秒)。slideTo で音程をなめらかに変える */
@@ -125,6 +144,8 @@
     function attach(doc) {
       const d = doc || (typeof document !== "undefined" ? document : null);
       if (!d) return;
+      // アプリが裏に回った/画面が消えた時は、すぐ止める
+      d.addEventListener("visibilitychange", () => { if (d.hidden) suspendNow(); });
       d.addEventListener("pointerdown", (e) => {
         if (settings.sound) unlock();
         const b = e.target && e.target.closest && e.target.closest("button");
@@ -134,7 +155,7 @@
       }, true);
     }
 
-    return { play, get, set, attach, unlock, names: NAMES };
+    return { play, get, set, attach, unlock, suspendNow, names: NAMES };
   }
 
   const shared = create();

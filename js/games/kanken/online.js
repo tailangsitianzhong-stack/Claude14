@@ -191,11 +191,15 @@
         const st = shell.state;
         if (!st || st.phase !== "playing" || !st.q) return;
         const rem = shell.remainingMs();
-        $("#timer-bar").style.width = Math.min(100, rem / (st.seconds * 1000) * 100) + "%";
-        $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== u.lastShown) { u.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3 && st.turnId === shell.cid) Sfx.play("tick"); }
-      }, 100);
+        if (shown !== u.lastShown) {                // 秒が変わった時だけ、画面を書きかえる
+          u.lastShown = shown;
+          $("#timer-num").textContent = shown;
+          Fx.timerBar($("#timer-bar"), rem, st.seconds * 1000);
+          $("#timer-bar").classList.toggle("is-low", rem <= 5000);
+          if (shown > 0 && shown <= 3 && st.turnId === shell.cid) Sfx.play("tick");
+        }
+      }, 250);
 
       $("#kk-quit").addEventListener("click", () => { if (confirm("ゲームをやめて部屋を出ますか？")) shell.exit(); });
       return u;

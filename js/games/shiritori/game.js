@@ -254,21 +254,26 @@
       function startTimer() {
         deadline = Date.now() + diff.seconds * 1000;
         clearInterval(timerId);
-        timerId = setInterval(tick, 100);
+        lastShown = -1;
+        timerId = setInterval(tick, 250);           // 表示の更新は1秒ごと。時間切れの判定だけ細かく見る
         tick();
       }
       function remaining() { return Math.max(0, (deadline - Date.now()) / 1000); }
       function tick() {
         if (state.busy) return;
         const r = remaining();
-        $("#timer-bar").style.width = (r / diff.seconds * 100) + "%";
-        $("#timer-bar").classList.toggle("is-low", r <= 5);
         const shown = Math.ceil(r);
-        if (shown !== lastShown) { lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3) Sfx.play("tick"); }
+        if (shown !== lastShown) {                 // 秒が変わった時だけ、画面を書きかえる
+          lastShown = shown;
+          $("#timer-num").textContent = shown;
+          Fx.timerBar($("#timer-bar"), r * 1000, diff.seconds * 1000);
+          $("#timer-bar").classList.toggle("is-low", r <= 5);
+          if (shown > 0 && shown <= 3) Sfx.play("tick");
+        }
         if (r <= 0) onTimeout();
       }
-      function pauseTimer() { pausedAt = Date.now(); }
-      function resumeTimer() { deadline += Date.now() - pausedAt; }
+      function pauseTimer() { pausedAt = Date.now(); Fx.timerBar($("#timer-bar"), remaining() * 1000, diff.seconds * 1000, { frozen: true }); }
+      function resumeTimer() { deadline += Date.now() - pausedAt; lastShown = -1; }
 
       /* ---- ターン ---- */
       function newTurn(keepFields) {

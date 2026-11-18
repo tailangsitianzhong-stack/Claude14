@@ -448,11 +448,17 @@
         if (!state || state.phase !== "playing") return;
         const rem = net.remainingMs(state);
         const total = state.seconds * 1000;
-        $("#timer-bar").style.width = Math.min(100, rem / total * 100) + "%";
-        $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3 && state.turnId === cid) Sfx.play("tick"); }
-      }, 100);
+        const paused = !!state.pausedAt;             // 確認中(時間ストップ)は、バーを固定する
+        if (shown !== p.lastShown || paused !== p.wasPaused) {   // 秒が変わった時・止まった/再開した時だけ書きかえる
+          const secChanged = shown !== p.lastShown;
+          p.lastShown = shown; p.wasPaused = paused;
+          $("#timer-num").textContent = shown;
+          Fx.timerBar($("#timer-bar"), rem, total, { frozen: paused });
+          $("#timer-bar").classList.toggle("is-low", rem <= 5000);
+          if (secChanged && !paused && shown > 0 && shown <= 3 && state.turnId === cid) Sfx.play("tick");
+        }
+      }, 250);
 
       setBusy(true);
     }

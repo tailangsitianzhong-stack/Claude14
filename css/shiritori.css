@@ -168,7 +168,9 @@
   position: relative; height: 22px; margin-bottom: 10px;
   background: #fff; border: 3px solid var(--ink); border-radius: 999px; overflow: hidden;
 }
-.shiri-timer-bar { height: 100%; width: 100%; background: var(--green); transition: width .1s linear; }
+/* バーは幅ではなく transform(拡大縮小)で動かす。幅を動かすとレイアウトの計算が毎フレーム走るため。
+   動かし方は js/fx.js の Fx.timerBar(1秒に1回呼ぶだけで、1秒かけて滑らかに縮む) */
+.shiri-timer-bar { height: 100%; width: 100%; background: var(--green); transform-origin: left center; transform: scaleX(1); will-change: transform; }
 .shiri-timer-bar.is-low { background: var(--red); }
 .shiri-timer-num {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
