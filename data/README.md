@@ -18,6 +18,9 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 ```
 手選びの「CPUが優先して出す語」は `tools/curated-words.txt` で編集します。
 
+## kanji.js（ミニ漢字検定）
+`tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
+
 ## 形式
 `window.SHIRITORI_WORDS = { pairs: [[読み, 英語, レベル(1〜3), フラグ], ...] }`
 フラグ: 1=主要訳 / 2=CPUが出してよい語 / 4=手選びの語

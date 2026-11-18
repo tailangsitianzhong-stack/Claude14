@@ -23,6 +23,15 @@ window.GAMES = [
     unmount() { window.ShiritoriGame.unmount(); }
   },
   {
+    id: "kanken",
+    title: "ミニ漢字検定{かんじけんてい}",
+    icon: "📝",
+    desc: "読{よ}みや漢字{かんじ}を答{こた}えてポイントをためよう！",
+    ready: true,
+    mount(root) { window.KankenGame.mount(root); },
+    unmount() { window.KankenGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",
