@@ -98,7 +98,7 @@
       st.phase = "play";
       st.outcome = null;
       setPrompt(st);
-      return [{ type: "round", round: st.round, kind: topic.kind, need: st.need, holder: st.holder }];
+      return [{ type: "round", round: st.round, topicKind: topic.kind, need: st.need, holder: st.holder }];
     }
 
     function finish(st, now, reason) {

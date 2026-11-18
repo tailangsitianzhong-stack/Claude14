@@ -9,13 +9,18 @@
  *               しりとり: {t:"move",reading,english} {t:"miss",reason,correct} {t:"hint"}
  *                         {t:"judging"}(Geminiで確認中=時間を止める) {t:"resume"}(確認が終わった)
  *               漢字検定: {t:"answer",reading} / {t:"answer",choice}（部屋が出題・採点する。答えは端末に送らない）
+ *               ミニネプリーグ: {t:"answer",word}（お題・導火線・採点は部屋が持つ。答えの一覧は端末に送らない）
  * 部屋 → 端末:  {t:"state",state,events,now}   {t:"rejected",for,error,reason}   {t:"error",error}
  */
 import { DurableObject } from "cloudflare:workers";
 import * as L from "./room-logic.mjs";
 import * as K from "./kanken-room.mjs";
+import * as N from "./nep-room.mjs";
 
 const MAX_MESSAGE = 2000;
+
+/** 次にアラームを鳴らす時刻。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
+const nextAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : L.nextAlarm(st, now));
 
 export class Room extends DurableObject {
   constructor(ctx, env) {
@@ -28,12 +33,12 @@ export class Room extends DurableObject {
 
   async save(st) {
     await this.ctx.storage.put("state", st);
-    await this.ctx.storage.setAlarm(L.nextAlarm(st, Date.now()));
+    await this.ctx.storage.setAlarm(nextAlarmOf(st, Date.now()));
   }
 
   broadcast(st, events) {
-    // 漢字検定の部屋は、答えを取り除いた状態だけを端末に送る
-    const view = st.game === "kanken" ? K.publicState(st) : st;
+    // 漢字検定・ネプリーグの部屋は、答えを取り除いた状態だけを端末に送る
+    const view = st.game === "kanken" ? K.publicState(st) : st.game === "nep" ? N.publicState(st) : st;
     const msg = JSON.stringify({ t: "state", state: view, events: events || [], now: Date.now() });
     for (const ws of this.ctx.getWebSockets()) {
       try { ws.send(msg); } catch (_) { /* 切れかけの接続は無視 */ }
@@ -47,7 +52,8 @@ export class Room extends DurableObject {
     if (request.method === "POST" && url.pathname === "/claim") {
       if (await this.load()) return Response.json({ ok: false });
       const code = url.searchParams.get("code") || "";
-      const room = url.searchParams.get("game") === "kanken" ? K.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
+      const game = url.searchParams.get("game");
+      const room = game === "kanken" ? K.createRoom(code, Date.now()) : game === "nep" ? N.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
       await this.save(room);
       return Response.json({ ok: true });
     }
@@ -85,7 +91,15 @@ export class Room extends DurableObject {
     const now = Date.now();
 
     let res;
-    if (st.game === "kanken") {
+    if (st.game === "nep") {
+      switch (m.t) {
+        case "settings": res = N.setSettings(st, id, m.settings, now); break;
+        case "start":    res = N.start(st, id, now); break;
+        case "answer":   res = N.answer(st, id, m, now); break;
+        case "rematch":  res = N.rematch(st, id, now); break;
+        default: return;
+      }
+    } else if (st.game === "kanken") {
       switch (m.t) {
         case "settings": res = K.setSettings(st, id, m.settings, now); break;
         case "start":    res = K.start(st, id, now); break;
@@ -107,7 +121,7 @@ export class Room extends DurableObject {
       }
     }
     if (!res.ok) {
-      ws.send(JSON.stringify({ t: "rejected", for: m.t, error: res.error || null, reason: res.reason || null }));
+      ws.send(JSON.stringify({ t: "rejected", for: m.t, error: res.error || null, reason: res.reason || null, base: res.base || null, word: res.word || null }));
       return;
     }
     await this.save(st);
@@ -136,9 +150,9 @@ export class Room extends DurableObject {
     if (!st) return;
     const now = Date.now();
     if (st.phase === "playing") {
-      const r = st.game === "kanken" ? K.timeout(st, now) : L.timeout(st, now);
+      const r = st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : L.timeout(st, now);
       if (r.ok) { await this.save(st); this.broadcast(st, r.events); }
-      else await this.ctx.storage.setAlarm(L.nextAlarm(st, now));
+      else await this.ctx.storage.setAlarm(nextAlarmOf(st, now));
       return;
     }
     if (L.expired(st, now)) {
@@ -146,6 +160,6 @@ export class Room extends DurableObject {
       await this.ctx.storage.deleteAll();
       return;
     }
-    await this.ctx.storage.setAlarm(L.nextAlarm(st, now));
+    await this.ctx.storage.setAlarm(nextAlarmOf(st, now));
   }
 }

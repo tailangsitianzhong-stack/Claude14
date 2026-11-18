@@ -7,7 +7,7 @@
  *   POST /judge   {"reading":"ぬいぐるみ","english":"plush"}
  *     → {"ok":true|false|null, "reason":"none|spelling|wrong_english|unavailable|config",
  *        "suggestion":"..."|null, "cached":true|false}
- *   POST /room/new[?game=kanken] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
+ *   POST /room/new[?game=kanken|nep] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
  *   GET  /room/12345?cid=…  (WebSocket)     部屋に入る。進行は room-do.mjs
  *   GET  /health  → {"ok":true,"keySet":true,"model":"...","kv":true}（Origin不要。設定の確認用）
  *
@@ -193,7 +193,8 @@ export async function handle(request, env, deps) {
   }
   // ---- 友達対戦の部屋 ----
   if (request.method === "POST" && url.pathname === "/room/new") {
-    const game = url.searchParams.get("game") === "kanken" ? "kanken" : "shiritori";   // 知らない値はしりとり
+    const g = url.searchParams.get("game");
+    const game = g === "kanken" || g === "nep" ? g : "shiritori";   // 知らない値はしりとり
     return newRoom(env, origin, game);
   }
   const roomMatch = url.pathname.match(/^\/room\/(\d{5})$/);
