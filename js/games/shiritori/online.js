@@ -7,6 +7,9 @@
  *   online.teardown();
  *
  * ctx: { view, endpoint, store, getJudge(), goMenu(), setPlaying(bool) }
+ *   game  : "shiritori"(既定) | "kanken"。部屋を作る時にサーバーへ伝える
+ *   hooks : 他のゲーム(漢字検定)が、ロビーの設定欄・対戦画面・結果画面を差し替えるための関数(js/games/kanken/online.js)
+ *   help  : 入口画面の説明文(「漢字{よみ}」の書き方で、ふりがな付き)
  * 判定(辞書/Gemini)は「答える人の端末」で行い、通った手だけを部屋(サーバー)へ送る。
  * 順番・制限時間・ライフ・得点は部屋が管理する（worker/room-logic.mjs）。
  */
@@ -41,6 +44,9 @@
 
   function create(ctx) {
     const view = ctx.view;
+    const game = ctx.game || "shiritori";
+    const hooks = ctx.hooks || null;
+    let hookTeardown = null;
     let storage = null;
     try { storage = localStorage; } catch (_) {}
     const cid = Net.makeCid(storage);
@@ -73,7 +79,7 @@
           <ul class="howto">
             <li>部屋{へや}を作{つく}ると、5桁{けた}の番号{ばんごう}とQRコードが出{で}るよ</li>
             <li>友達{ともだち}は、QRコードを読{よ}み取{と}るか、番号{ばんごう}を入{い}れて入{はい}れるよ（最大{さいだい}4人{にん}）</li>
-            <li>順番{じゅんばん}に答{こた}えて、最後{さいご}まで残{のこ}った人{ひと}の勝{か}ち！</li>
+            ${(ctx.help || ["順番{じゅんばん}に答{こた}えて、最後{さいご}まで残{のこ}った人{ひと}の勝{か}ち！"]).map((h) => `<li>${h}</li>`).join("")}
           </ul>
           ${!ctx.endpoint ? '<p class="note">この機能{きのう}は、まだ使{つか}えません（判定{はんてい}サーバーが未設定{みせってい}）</p>' : ""}
           ${note ? `<p class="note note-ng">${note}</p>` : ""}
@@ -125,7 +131,7 @@
     async function createRoom() {
       render(`<div class="panel shiri-menu"><p class="note">${Ruby.html("部屋{へや}を作{つく}っています…")}</p></div>`);
       try {
-        const res = await fetch(ctx.endpoint.replace(/\/+$/, "") + "/room/new", { method: "POST" });
+        const res = await fetch(ctx.endpoint.replace(/\/+$/, "") + "/room/new" + (game === "shiritori" ? "" : "?game=" + game), { method: "POST" });
         const data = await res.json();
         if (!res.ok || !data.code) throw new Error("create failed");
         enter(data.code);
@@ -165,6 +171,7 @@
       try {
         const u = new URL(location.href);
         if (c) u.searchParams.set("room", c); else u.searchParams.delete("room");
+        if (c && game !== "shiritori") u.searchParams.set("game", game); else u.searchParams.delete("game");
         history.replaceState(null, "", u.pathname + (u.search || "") + u.hash);
       } catch (_) {}
     }
@@ -173,6 +180,7 @@
       const u = new URL(location.href);
       u.search = ""; u.hash = "";
       u.searchParams.set("room", code);
+      if (game !== "shiritori") u.searchParams.set("game", game);
       return u.toString();
     }
 
@@ -194,11 +202,15 @@
       const prev = state;
       state = st;
       if (st.phase === "lobby") { stopPlay(); showLobby(); }
-      else if (st.phase === "playing") { if (!play) buildPlay(); updatePlay(events, prev); }
-      else if (st.phase === "over") { stopPlay(); showOver(); }
+      else if (st.phase === "playing") {
+        if (hooks) hooks.play(shell, events, prev);
+        else { if (!play) buildPlay(); updatePlay(events, prev); }
+      }
+      else if (st.phase === "over") { stopPlay(); if (hooks) hooks.over(shell); else showOver(); }
     }
 
     function onRejected(m) {
+      if (hooks) return hooks.onRejected && hooks.onRejected(shell, m);
       if (!play) return;
       const MSG = {
         not_connected: `「${esc(state.required)}」から始{はじ}まってないよ！`,
@@ -226,7 +238,13 @@
           ${p.connected ? "" : '<span class="tag tag-off">接続{せつぞく}中{ちゅう}…</span>'}</li>`;
       }).join("");
 
-      const settings = isHost() ? `
+      const startBlock = isHost() ? `
+        <div class="menu-actions">
+          <button type="button" class="btn btn-primary" id="mp-start" ${connected >= 2 ? "" : "disabled"}>スタート！</button>
+        </div>
+        ${connected < 2 ? '<p class="note">友達{ともだち}が入{はい}るまで待{ま}ってね（2人{ふたり}から遊{あそ}べるよ）</p>' : ""}`
+        : '<p class="note">ホストがスタートするのを待{ま}ってね…</p>';
+      const settings = hooks ? hooks.lobbySettings(state, isHost()) + startBlock : isHost() ? `
         <h4 class="menu-sub">難{むずか}しさ</h4>
         <div class="diff-row">
           ${Object.values(DIFFS).map((x) => `
@@ -272,10 +290,12 @@
       if (dak) dak.addEventListener("change", () => net.send({ t: "settings", settings: { ignoreDakuten: dak.checked } }));
       const start = view.querySelector("#mp-start");
       if (start) start.addEventListener("click", () => net.send({ t: "start" }));
+      if (hooks && hooks.bindLobby) hooks.bindLobby(view, (o) => net.send(o));
     }
 
     /* ============ 対戦 ============ */
     function stopPlay() {
+      if (hookTeardown) { hookTeardown(); hookTeardown = null; }
       if (play) play.teardown();
       play = null;
       ctx.setPlaying(false);
@@ -510,6 +530,24 @@
       if (again) again.addEventListener("click", () => net.send({ t: "rematch" }));
       view.querySelector("#mp-menu").addEventListener("click", () => { teardown(); ctx.goMenu(); });
     }
+
+    /** 他のゲームの画面(hooks)が、部屋の状態や通信を使うための口 */
+    const shell = {
+      view,
+      get state() { return state; },
+      cid,
+      render,
+      send: (o) => (net ? net.send(o) : false),
+      remainingMs: () => (net ? net.remainingMs(state) : 0),
+      setPlaying: (on) => ctx.setPlaying(on),
+      isHost: () => isHost(),
+      player: (id) => player(id),
+      avatarOf: (id) => avatarOf(id),
+      nameOf: (id) => nameOf(id),
+      onTeardown(fn) { hookTeardown = fn; },
+      exit() { teardown(); ctx.goMenu(); },
+      hideBanner() { banner.hidden = true; }
+    };
 
     function teardown() { leaveRoom(true); }
     function destroy() { leaveRoom(false); banner.remove(); }

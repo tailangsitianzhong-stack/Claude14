@@ -86,6 +86,7 @@
           <p class="note">ベスト: <b>${best.score}</b>点{てん}（${best.correct}問{もん}正解{せいかい}）</p>
           <div class="menu-actions">
             <button type="button" class="btn btn-primary" id="kk-start" disabled>スタート！</button>
+            <button type="button" class="btn" id="kk-friends">👥 友達{ともだち}と遊{あそ}ぶ</button>
             <button type="button" class="btn" id="kk-review">復習{ふくしゅう}（${store.review.list().length}）</button>
           </div>
           <p class="note" id="kk-note">漢字{かんじ}データを読{よ}み込{こ}み中{ちゅう}…</p>
@@ -93,6 +94,7 @@
       view.querySelectorAll(".kk-mode").forEach((b) => b.addEventListener("click", () => { store.settings.set({ mode: b.dataset.mode }); showMenu(); }));
       view.querySelectorAll(".kk-level").forEach((b) => b.addEventListener("click", () => { store.settings.set({ level: +b.dataset.level }); showMenu(); }));
       view.querySelector("#kk-review").addEventListener("click", showReview);
+      view.querySelector("#kk-friends").addEventListener("click", () => getOnline().showFriends());
       const start = view.querySelector("#kk-start");
       start.addEventListener("click", () => play(st.mode, st.level));
       const note = view.querySelector("#kk-note");
@@ -323,8 +325,24 @@
       view.querySelector("#kk-menu").addEventListener("click", showMenu);
     }
 
-    cleanup = () => { alive = false; stopPlay(); };
+    /* ============ 友達対戦(別ファイル online.js)。使う時に1回だけ作る ============ */
+    let online = null;
+    function getOnline() {
+      if (!online) {
+        online = root.KankenOnline.create({
+          view, store, goMenu: showMenu, setPlaying,
+          endpoint: (root.APP_CONFIG || {}).judgeEndpoint || ""
+        });
+      }
+      return online;
+    }
+
+    cleanup = () => { alive = false; stopPlay(); if (online) online.destroy(); };
     showMenu();
+
+    // QRコード/リンク(?room=12345&game=kanken)から来た時は、その部屋にそのまま入る
+    const m = /[?&]room=(\d{5})(?:&|$)/.exec(location.search);
+    if (m && /[?&]game=kanken(?:&|$)/.test(location.search)) getOnline().enter(m[1]);
   }
 
   function unmount() { if (cleanup) cleanup(); cleanup = null; }

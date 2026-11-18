@@ -1,5 +1,7 @@
 # 友達対戦（最大4人）
 
+対応ゲーム: **しりとり**（この文書）と **ミニ漢字検定**（`docs/kanken.md`）。部屋・番号・QR・ロビーは共通で、部屋を作る時に `POST /room/new?game=kanken` のように種類を伝えます。
+
 無料の Cloudflare Workers + Durable Objects（WebSocket）で動く、部屋方式の対戦です。追加の登録や費用は要りません。
 
 ## 遊び方

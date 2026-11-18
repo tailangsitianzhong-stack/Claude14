@@ -180,3 +180,13 @@ test("友達対戦: WebSocketは部屋コード5桁のときだけ部屋へ中�
   assert.equal((await W.handle(ws("/room/12345", "https://evil.example"), baseEnv({ ROOMS }))).status, 403);
   assert.equal((await W.handle(ws("/room/12345"), baseEnv())).status, 501);
 });
+
+test("友達対戦: 部屋を作る時に game(しりとり/漢字検定)を部屋へ伝える。知らない値はしりとり", async () => {
+  const seen = [];
+  const ROOMS = { idFromName: (n) => n, get: () => ({ fetch: async (url) => { seen.push(new URL(url).searchParams.get("game")); return Response.json({ ok: true }); } }) };
+  const mk = (q) => W.handle(post({}, ORIGIN, "/room/new" + q), baseEnv({ ROOMS }));
+  assert.equal((await mk("")).status, 200);
+  assert.equal((await mk("?game=kanken")).status, 200);
+  assert.equal((await mk("?game=hack")).status, 200);
+  assert.deepEqual(seen, ["shiritori", "kanken", "shiritori"]);
+});

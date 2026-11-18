@@ -445,7 +445,7 @@
 
     // QRコード/リンク(?room=12345)から来た時は、その部屋にそのまま入る
     const m = /[?&]room=(\d{5})(?:&|$)/.exec(location.search);
-    if (m) getOnline().enter(m[1]);
+    if (m && !/[?&]game=kanken(?:&|$)/.test(location.search)) getOnline().enter(m[1]);
   }
 
   function unmount() {

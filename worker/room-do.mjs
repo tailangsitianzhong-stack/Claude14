@@ -5,12 +5,14 @@
  * ・状態は毎回 storage から読み書きする（休止から目覚めても続きができる）
  * ・進行のルールは room-logic.mjs（テスト済み）。ここは通信と保存だけ
  *
- * 端末 → 部屋:  {t:"settings",settings} {t:"start"} {t:"move",reading,english}
- *               {t:"miss",reason,correct} {t:"hint"} {t:"rematch"}  と、生存確認の "ping"
+ * 端末 → 部屋:  {t:"settings",settings} {t:"start"} {t:"rematch"}  と、生存確認の "ping"
+ *               しりとり: {t:"move",reading,english} {t:"miss",reason,correct} {t:"hint"}
+ *               漢字検定: {t:"answer",reading} / {t:"answer",choice}（部屋が出題・採点する。答えは端末に送らない）
  * 部屋 → 端末:  {t:"state",state,events,now}   {t:"rejected",for,error,reason}   {t:"error",error}
  */
 import { DurableObject } from "cloudflare:workers";
 import * as L from "./room-logic.mjs";
+import * as K from "./kanken-room.mjs";
 
 const MAX_MESSAGE = 2000;
 
@@ -29,7 +31,9 @@ export class Room extends DurableObject {
   }
 
   broadcast(st, events) {
-    const msg = JSON.stringify({ t: "state", state: st, events: events || [], now: Date.now() });
+    // 漢字検定の部屋は、答えを取り除いた状態だけを端末に送る
+    const view = st.game === "kanken" ? K.publicState(st) : st;
+    const msg = JSON.stringify({ t: "state", state: view, events: events || [], now: Date.now() });
     for (const ws of this.ctx.getWebSockets()) {
       try { ws.send(msg); } catch (_) { /* 切れかけの接続は無視 */ }
     }
@@ -41,7 +45,9 @@ export class Room extends DurableObject {
     // 新しい部屋コードの確保（すでに使われていたら失敗を返す）
     if (request.method === "POST" && url.pathname === "/claim") {
       if (await this.load()) return Response.json({ ok: false });
-      await this.save(L.createRoom(url.searchParams.get("code") || "", Date.now()));
+      const code = url.searchParams.get("code") || "";
+      const room = url.searchParams.get("game") === "kanken" ? K.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
+      await this.save(room);
       return Response.json({ ok: true });
     }
 
@@ -78,14 +84,24 @@ export class Room extends DurableObject {
     const now = Date.now();
 
     let res;
-    switch (m.t) {
-      case "settings": res = L.setSettings(st, id, m.settings, now); break;
-      case "start":    res = L.start(st, id, now); break;
-      case "move":     res = L.move(st, id, m, now); break;
-      case "miss":     res = L.miss(st, id, m, now); break;
-      case "hint":     res = L.hint(st, id, now); break;
-      case "rematch":  res = L.rematch(st, id, now); break;
-      default: return;
+    if (st.game === "kanken") {
+      switch (m.t) {
+        case "settings": res = K.setSettings(st, id, m.settings, now); break;
+        case "start":    res = K.start(st, id, now); break;
+        case "answer":   res = K.answer(st, id, m, now); break;
+        case "rematch":  res = K.rematch(st, id, now); break;
+        default: return;
+      }
+    } else {
+      switch (m.t) {
+        case "settings": res = L.setSettings(st, id, m.settings, now); break;
+        case "start":    res = L.start(st, id, now); break;
+        case "move":     res = L.move(st, id, m, now); break;
+        case "miss":     res = L.miss(st, id, m, now); break;
+        case "hint":     res = L.hint(st, id, now); break;
+        case "rematch":  res = L.rematch(st, id, now); break;
+        default: return;
+      }
     }
     if (!res.ok) {
       ws.send(JSON.stringify({ t: "rejected", for: m.t, error: res.error || null, reason: res.reason || null }));
@@ -117,7 +133,7 @@ export class Room extends DurableObject {
     if (!st) return;
     const now = Date.now();
     if (st.phase === "playing") {
-      const r = L.timeout(st, now);
+      const r = st.game === "kanken" ? K.timeout(st, now) : L.timeout(st, now);
       if (r.ok) { await this.save(st); this.broadcast(st, r.events); }
       else await this.ctx.storage.setAlarm(L.nextAlarm(st, now));
       return;
