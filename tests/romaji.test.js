@@ -56,17 +56,23 @@ test("小さい字: xa / la / xya", () => {
   assert.equal(type("kixyo"), "きょ");
 });
 
-test("ん: nn / n+子音 / 語末のn / 「onna」", () => {
+test("ん: nn は打った瞬間に「ん」/ n+子音 / 語末のn / 「onna」", () => {
+  assert.deepEqual(type("nn", { flush: false }), { text: "ん", pending: "" });   // 確定を待たずに「ん」
+  assert.deepEqual(type("kann", { flush: false }), { text: "かん", pending: "" });
   assert.equal(type("nn"), "ん");
-  assert.equal(type("kan"), "かん");                        // 語末は確定時に ん
+  assert.equal(type("kan"), "かん");                        // 語末の n は確定時に ん
   assert.equal(type("kanpai"), "かんぱい");
-  assert.equal(type("kannkou"), "かんこう");                // nn + 子音 → ん
+  assert.equal(type("kannkou"), "かんこう");                // nn + 子音
   assert.equal(type("konnichiha"), "こんにちは");           // nn + i → ん + に
   assert.equal(type("onna"), "おんな");                     // nn + a → ん + な
-  assert.equal(type("kinnyuu"), "きんにゅう");
+  assert.equal(type("kinnyuu"), "きんにゅう");              // nn + y
+  assert.equal(type("konnyaku"), "こんにゃく");
   assert.equal(type("sennsei"), "せんせい");
   assert.equal(type("mikan"), "みかん");
   assert.equal(type("ninnjin"), "にんじん");
+  assert.equal(type("hannei"), "はんねい");                 // nn + e → ん + ね
+  assert.equal(type("hannnei"), "はんねい");                // nnn + e → ん + ね
+  assert.equal(type("nnn", { flush: false }).pending, "n"); // 3つ目の n は次の音の頭として待つ
 });
 
 test("長音 - と 打ち間違いの扱い", () => {

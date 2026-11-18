@@ -6,7 +6,7 @@
  *   applyReading(state, action, { maxLength })        … キーボードの action を適用
  *   flush(state)              … 決定前に、残った「n」を「ん」にする
  *
- * 規則: nn→ん、n+子音→ん、同じ子音の連続→っ(kitte)、tcha→っちゃ、
+ * 規則: nn→ん(打った瞬間)、n+子音→ん、同じ子音の連続→っ(kitte)、tcha→っちゃ、
  *       sha/shi/tsu/chi/fu/ji 等のヘボン式と、si/ti/tu/hu/zi 等の訓令式の両方、
  *       xa/la→ぁ、xtu→っ、"-"→ー。
  */
@@ -64,16 +64,14 @@
     let pending = state.pending + ch;
     const put = (kana) => { if (text.length + kana.length <= max) text += kana; };
 
+    // 「nn」で「ん」になった直後に母音・y が来たら、2つ目の n はその音の頭(な行)として使う。
+    // 例: onna → お・ん・な、konnichiha → こ・ん・に・ち・は（パソコンのIMEと同じ打ち方）
+    if (state.pending === "" && text.endsWith("ん") && (V.includes(ch) || ch === "y")) pending = "n" + ch;
+
     for (let guard = 0; pending && guard < 20; guard++) {
       if (TABLE[pending]) { put(TABLE[pending]); pending = ""; break; }
       if (PREFIXES.has(pending)) break;
-      if (pending === "nn") break;                       // 次の文字で「ん」か「ん+な行」かが決まる
-      if (pending[0] === "n" && pending[1] === "n") {
-        const next = pending[2];
-        put("ん");
-        pending = V.includes(next) || next === "y" ? pending.slice(1) : pending.slice(2);
-        continue;                                        // nna→んな / nnk→ん+k
-      }
+      if (pending === "nn") { put("ん"); pending = ""; break; }     // nn は打った瞬間に「ん」
       if (pending[0] === "n") { put("ん"); pending = pending.slice(1); continue; }       // n+子音
       if (pending[0] === "t" && pending[1] === "c") { put("っ"); pending = pending.slice(1); continue; } // tcha
       if (pending.length >= 2 && pending[0] === pending[1] && /[a-z]/.test(pending[0]) && !V.includes(pending[0])) {
@@ -84,7 +82,7 @@
     return { text, pending };
   }
 
-  /** 入力途中の n / nn を「ん」にして確定する */
+  /** 入力途中の n を「ん」にして確定する（語の最後の「n」） */
   function flush(state) {
     if (state.pending === "n" || state.pending === "nn") return { text: state.text + "ん", pending: "" };
     return { text: state.text, pending: "" };
