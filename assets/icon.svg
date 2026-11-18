@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#ffd23f"/>
+  <g stroke="#fff6c2" stroke-width="10" stroke-linecap="round" fill="none" opacity=".75">
+    <path d="M60 110 l34 -34 M100 150 l48 -48 M30 190 l92 -92"/><path d="M420 470 l-34 34 M470 420 l-48 48"/>
+  </g>
+  <g transform="rotate(-8 256 256)">
+    <rect x="86" y="132" width="340" height="250" rx="42" fill="#fff8dc" stroke="#4a3410" stroke-width="16"/>
+    <text x="176" y="300" font-size="150" font-weight="700" text-anchor="middle" fill="#ef5b4c" stroke="#4a3410" stroke-width="6" paint-order="stroke" font-family="'Hiragino Maru Gothic ProN','Yu Gothic','Noto Sans CJK JP',sans-serif">あ</text>
+    <text x="338" y="300" font-size="150" font-weight="700" text-anchor="middle" fill="#4a90d9" stroke="#4a3410" stroke-width="6" paint-order="stroke" font-family="'Comic Sans MS','Noto Sans',sans-serif">A</text>
+  </g>
+</svg>

@@ -1,0 +1,82 @@
+/* ===== 演出(アニメーション) ===== */
+@keyframes fx-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-9px) rotate(-1deg); }
+  35% { transform: translateX(8px) rotate(1deg); }
+  55% { transform: translateX(-6px); }
+  75% { transform: translateX(4px); }
+}
+@keyframes fx-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  70% { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+@keyframes fx-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes fx-rise {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(.6); }
+  15% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -54px) scale(1); }
+}
+@keyframes fx-fall {
+  0% { transform: translate3d(0, -12vh, 0) rotate(0); opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0), 108vh, 0) rotate(var(--spin, 360deg)); opacity: .9; }
+}
+@keyframes fx-title {
+  0%, 100% { transform: rotate(-2.4deg) translateY(0); }
+  50% { transform: rotate(-1.2deg) translateY(-3px); }
+}
+@keyframes fx-bounce-in {
+  0% { opacity: 0; transform: translateY(14px) scale(.9); }
+  60% { transform: translateY(-4px) scale(1.02); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes fx-blink-bar { 50% { opacity: .55; } }
+@keyframes fx-float-doodle { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-8px) rotate(4deg); } }
+
+.fx-shake { animation: fx-shake .45s ease-in-out; }
+.fx-pop { animation: fx-pop .4s ease-out; }
+.fx-pulse { animation: fx-pulse .35s ease-in-out; }
+
+.fx-float {
+  position: fixed; z-index: 90; pointer-events: none; font-size: 1.5rem; font-weight: bold; color: #2e8b3e;
+  text-shadow: 2px 2px 0 #fff8dc, -1px -1px 0 #fff8dc; animation: fx-rise 1s ease-out forwards;
+}
+.fx-float.ng { color: #c0392b; }
+
+.fx-confetti { position: fixed; inset: 0; z-index: 80; pointer-events: none; overflow: hidden; }
+.fx-confetti i { position: absolute; top: 0; border-radius: 2px; opacity: 0; animation: fx-fall 2.4s linear forwards; }
+
+/* ホーム画面 */
+.home-title { animation: fx-title 4.5s ease-in-out infinite; transform-origin: 50% 80%; }
+.game-card { animation: fx-bounce-in .55s ease-out backwards; }
+.game-card:nth-child(2) { animation-delay: .1s; }
+.game-card:nth-child(3) { animation-delay: .2s; }
+
+/* 背景の落書き(クレヨンの星やハート) */
+.doodles { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; opacity: .8; }
+/* 位置(外側のg の transform)と、ゆらゆらの動き(内側の .d)は別の要素にする。同じ要素だと動きが位置を上書きしてしまう */
+.doodles .d { animation: fx-float-doodle 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.doodles > g:nth-child(2n) .d { animation-duration: 7.5s; animation-delay: -2s; }
+.doodles > g:nth-child(3n) .d { animation-duration: 9s; animation-delay: -4s; }
+
+/* 結果画面 */
+.shiri-result { animation: fx-bounce-in .5s ease-out; }
+.result-icon { display: inline-block; animation: fx-pop .8s ease-out .15s backwards; }
+
+/* 残り時間が少ない時 */
+.shiri-timer-bar.is-low { animation: fx-blink-bar .5s steps(1) infinite; }
+
+/* 自分の番 */
+#kk-turn.is-mine, .mp-chip.is-turn { animation: fx-pulse .6s ease-out 1; }
+
+/* ○×のメッセージ */
+.shiri-message[data-kind="ok"], .kk-feedback[data-kind="ok"] { animation: fx-pop .4s ease-out; }
+.shiri-message[data-kind="ng"], .kk-feedback[data-kind="ng"] { animation: fx-shake .4s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-title, .game-card, .doodles .d, .result-icon, .shiri-result,
+  .shiri-timer-bar.is-low, #kk-turn.is-mine, .mp-chip.is-turn,
+  .shiri-message, .kk-feedback { animation: none !important; }
+  .fx-confetti, .fx-float { display: none; }
+}

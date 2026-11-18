@@ -169,6 +169,7 @@
       const game = Core.create({ dict, judge, difficulty: st.difficulty, ignoreDakuten: st.ignoreDakuten });
       const diff = game.difficulty;
       setPlaying(true);
+      Sfx.play("start");
 
       view.innerHTML = `
         <div class="shiri-hud">
@@ -263,7 +264,7 @@
         $("#timer-bar").style.width = (r / diff.seconds * 100) + "%";
         $("#timer-bar").classList.toggle("is-low", r <= 5);
         const shown = Math.ceil(r);
-        if (shown !== lastShown) { lastShown = shown; $("#timer-num").textContent = shown; }
+        if (shown !== lastShown) { lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3) Sfx.play("tick"); }
         if (r <= 0) onTimeout();
       }
       function pauseTimer() { pausedAt = Date.now(); }
@@ -291,6 +292,7 @@
         };
         if (r.review) store.review.add(r.review);
         renderHud();
+        Sfx.play("ng"); Fx.shake($(".shiri-fields")); Fx.shake($("#hud-lives"));
         if (r.gameOver) { say(MSG[r.reason] || "", "ng"); return endGame(); }
         say((MSG[r.reason] || "") + "  ♥が1つ減{へ}ったよ", "ng");
         newTurn(false);
@@ -334,6 +336,7 @@
         // 成功
         renderHud(); renderHistory();
         say(`OK！ +${r.points}点{てん}`, "ok");
+        Sfx.play("ok"); Fx.floatText($("#hud-score"), "+" + r.points); Fx.pop($("#hud-score"));
         state.text = { reading: "", english: "" };
         state.pending = "";
         renderFields();
@@ -348,6 +351,7 @@
           const r = game.cpuTurn();
           if (r.kind === "cpu_stuck") { bubble("🤖 うーん… 思{おも}いつかない！"); return endGame(); }
           bubble(`🤖 「${r.reading}」 ＝ ${r.english}`);
+          Sfx.play("pop");
           renderHistory();
           newTurn(true);
         }, rand(CPU_THINK_MS[0], CPU_THINK_MS[1]));
@@ -396,6 +400,8 @@
     /* ============ けっか ============ */
     function showResult(s, record) {
       stopPlay();
+      Sfx.play(s.result === "win" ? "win" : "lose");
+      if (s.result === "win") Fx.confetti();
       const t = RESULT_TEXT[s.result];
       const diffKey = store.settings.get().difficulty;
       view.innerHTML = `

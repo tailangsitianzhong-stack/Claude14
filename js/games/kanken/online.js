@@ -168,6 +168,14 @@
           if (ev.kind === "answered" && !ev.correct && ev.playerId === shell.cid && ctx.store) ctx.store.review.add({ text: ev.word, reading: ev.reading });
         });
         if (msgs.length) feedback(Ruby.html(msgs.map((m) => m.t).join("　")), msgs[0].k);
+        // 効果音: 正解=ok / 間違い=ng / 脱落=heart / 自分の番=turn
+        (events || []).forEach((ev) => {
+          if (ev.kind === "answered") {
+            Sfx.play(ev.correct ? "ok" : "ng");
+            if (ev.correct) Fx.floatText($("#mp-players"), "+" + ev.points); else Fx.shake($("#mp-players"));
+          } else if (ev.kind === "out") Sfx.play("heart");
+        });
+        if ((events || []).some((e) => e.kind === "turn" && e.playerId === shell.cid)) setTimeout(() => Sfx.play("turn"), 380);
 
         if (st.q && (u.qid !== st.q.id || u.turn !== st.turnId)) renderStage(st);
       };
@@ -179,7 +187,7 @@
         $("#timer-bar").style.width = Math.min(100, rem / (st.seconds * 1000) * 100) + "%";
         $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== u.lastShown) { u.lastShown = shown; $("#timer-num").textContent = shown; }
+        if (shown !== u.lastShown) { u.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3 && st.turnId === shell.cid) Sfx.play("tick"); }
       }, 100);
 
       $("#kk-quit").addEventListener("click", () => { if (confirm("ゲームをやめて部屋を出ますか？")) shell.exit(); });
@@ -206,6 +214,8 @@
       const rank = st.ranking.map((id) => shell.player(id)).filter(Boolean);
       const winner = rank[0];
       const iWon = winner && winner.id === shell.cid;
+      Sfx.play(iWon ? "win" : "lose");
+      if (iWon) Fx.confetti();
       const lv = Q.LEVELS[st.settings.level - 1];
       const m = MODES.find((x) => x.key === st.settings.mode);
       shell.render(`

@@ -6,7 +6,6 @@
 
   const $ = (sel) => document.querySelector(sel);
   const screens = document.querySelectorAll(".screen");
-  const SETTINGS_KEY = "minigames.settings";
 
   let currentGame = null;
 
@@ -46,7 +45,7 @@
     const root = $("#game-root");
     root.innerHTML = "";
     show("game");
-    game.mount(root, { goHome, settings: loadSettings() });
+    game.mount(root, { goHome, settings: Sfx.get() });
   }
 
   function goHome() {
@@ -56,18 +55,6 @@
     show("home");
   }
 
-  /* ---------- 設定（localStorage） ---------- */
-  function loadSettings() {
-    try {
-      return Object.assign({ sound: true }, JSON.parse(localStorage.getItem(SETTINGS_KEY)));
-    } catch (_) {
-      return { sound: true };
-    }
-  }
-  function saveSettings(s) {
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (_) {}
-  }
-
   /* ---------- イベント ---------- */
   $("#btn-home").addEventListener("click", goHome);
   $("#btn-settings").addEventListener("click", () => show("settings"));
@@ -75,11 +62,18 @@
     b.addEventListener("click", () => show(b.dataset.goto))
   );
 
-  const soundBox = $("#opt-sound");
-  soundBox.checked = loadSettings().sound;
-  soundBox.addEventListener("change", () => {
-    saveSettings(Object.assign(loadSettings(), { sound: soundBox.checked }));
-  });
+  /* ---------- 設定: 音・音量・バイブ（保存は js/sfx.js） ---------- */
+  const cur = Sfx.get();
+  const soundBox = $("#opt-sound"), volume = $("#opt-volume"), vibe = $("#opt-vibe");
+  soundBox.checked = cur.sound;
+  volume.value = Math.round(cur.volume * 100);
+  vibe.checked = cur.vibrate;
+  soundBox.addEventListener("change", () => { Sfx.set({ sound: soundBox.checked }); Sfx.play("ok"); });
+  volume.addEventListener("input", () => Sfx.set({ volume: volume.value / 100 }));
+  volume.addEventListener("change", () => Sfx.play("ok"));
+  vibe.addEventListener("change", () => { Sfx.set({ vibrate: vibe.checked }); Sfx.play("ng"); });
+  $("#btn-test-sound").addEventListener("click", () => Sfx.play("win"));
+  Sfx.attach(document);                                   // ボタンの音と、最初のタップでの音の準備
 
   /* ---------- 起動 ---------- */
   renderGameList();

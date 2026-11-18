@@ -136,6 +136,7 @@
       setPlaying(true);
       const g = Core.create({ bank, mode: modeKey, level });
       const cfg = g.config;
+      Sfx.play("start");
       const info = MODE_INFO.find((m) => m.key === modeKey);
 
       render(`
@@ -246,6 +247,8 @@
         else if (r.correct) feedback(Ruby.html(`⭕ 正解{せいかい}！ +${r.points}点{てん}`), "ok");
         else feedback(Ruby.html(`${r.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌ "}正解{せいかい}は「${ans}」`), "ng");
         $("#kk-stage").classList.toggle("is-ng", !r.correct && !r.skipped);
+        if (r.correct) { Sfx.play("ok"); Fx.floatText($("#hud-score"), "+" + r.points); Fx.pop($("#hud-score")); }
+        else if (!r.skipped) { Sfx.play("ng"); Fx.shake($("#kk-stage")); if (g.state().lives !== null) Fx.shake($("#hud-lives")); }
 
         const quick = cfg.totalSeconds !== null;                          // タイムアタックは待たずに次へ
         const wait = quick ? 0 : r.correct ? 500 : 1700;
@@ -283,7 +286,7 @@
         $("#timer-bar").style.width = Math.min(100, rem / total * 100) + "%";
         $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; }
+        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3) Sfx.play("tick"); }
       }, 100);
 
       $("#kk-quit").addEventListener("click", () => { if (confirm("やめてメニューに戻りますか？")) showMenu(); });
@@ -298,6 +301,8 @@
     function showResult(sum, record) {
       const info = MODE_INFO.find((m) => m.key === sum.mode);
       const passed = sum.mode === "exam" && sum.reason === "done" && sum.correct >= Math.ceil(sum.maxQuestions * PASS_RATE);
+      Sfx.play(passed || record ? "win" : sum.correct ? "end" : "lose");
+      if (passed || record) Fx.confetti();
       let headline;
       if (sum.mode === "timeattack") headline = `60秒{びょう}で <b>${sum.correct}</b>問{もん}正解{せいかい}！`;
       else if (sum.mode === "survival") headline = `<b>${sum.correct}</b>問{もん}正解{せいかい}！`;

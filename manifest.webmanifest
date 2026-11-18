@@ -1,0 +1,17 @@
+{
+  "name": "ミニゲーム広場",
+  "short_name": "ミニゲーム",
+  "description": "英語しりとりや漢字検定が遊べる、友達とも対戦できるミニゲーム集",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ja",
+  "background_color": "#ffd23f",
+  "theme_color": "#ffd23f",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

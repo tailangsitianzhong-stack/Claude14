@@ -5,5 +5,8 @@
   // (判定用のWorkerは worker/wrangler.jsonc で別にデプロイ)
   "name": "minigame",
   "compatibility_date": "2026-10-01",
+  // 公開するファイルを public/ に集める(デプロイのたびに実行される)。
+  // ダッシュボードのビルドコマンドが古くても、新しいファイル(assets/ や manifest)が漏れないようにここに書く
+  "build": { "command": "mkdir -p public && cp -r index.html manifest.webmanifest css js data assets public/" },
   "assets": { "directory": "./public" }
 }

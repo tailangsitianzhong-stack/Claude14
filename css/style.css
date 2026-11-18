@@ -198,3 +198,7 @@ rt { font-size: .48em; font-weight: normal; letter-spacing: 0; line-height: 1; c
 .home-title rt { font-size: .26em; text-shadow: none; letter-spacing: .05em; color: var(--ink); }
 .game-card .name { line-height: 1.7; }
 .game-card .desc, .note, .howto li { line-height: 1.75; }
+
+/* 設定: 音量スライダー */
+.setting input[type="range"] { flex: 1; max-width: 220px; height: 28px; accent-color: var(--red); }
+.panel .btn-small { margin-top: 10px; }

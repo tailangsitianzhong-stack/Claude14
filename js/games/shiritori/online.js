@@ -201,7 +201,10 @@
     function onState(st, events) {
       const prev = state;
       state = st;
-      if (st.phase === "lobby") { stopPlay(); showLobby(); }
+      if (st.phase === "lobby") {
+        stopPlay(); showLobby();
+        if ((events || []).some((e) => (e.kind === "joined" || e.kind === "left") && e.playerId !== cid)) Sfx.play("pop");
+      }
       else if (st.phase === "playing") {
         if (hooks) hooks.play(shell, events, prev);
         else { if (!play) buildPlay(); updatePlay(events, prev); }
@@ -443,7 +446,7 @@
         $("#timer-bar").style.width = Math.min(100, rem / total * 100) + "%";
         $("#timer-bar").classList.toggle("is-low", rem <= 5000);
         const shown = Math.ceil(rem / 1000);
-        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; }
+        if (shown !== p.lastShown) { p.lastShown = shown; $("#timer-num").textContent = shown; if (shown > 0 && shown <= 3 && state.turnId === cid) Sfx.play("tick"); }
       }, 100);
 
       setBusy(true);
@@ -493,6 +496,13 @@
       if (texts.length) p.bubble(texts.join("　"));
       else if (p.lastTurn === null) p.bubble(`🎮 ${avatarOf(s.turnId)} からスタート！「しりとり」→「り」`);
       if ((events || []).some((e) => e.kind === "miss" && e.playerId === cid)) p.say("♥が1つ減{へ}ったよ", "ng");
+      // 効果音: 自分の正解=ok / 相手の正解=pop / 間違い=ng / 脱落=heart / 自分の番=turn
+      (events || []).forEach((ev) => {
+        if (ev.kind === "moved") { Sfx.play(ev.playerId === cid ? "ok" : "pop"); if (ev.playerId === cid) Fx.floatText($("#mp-players"), "+" + ev.points); }
+        else if (ev.kind === "miss") { Sfx.play("ng"); Fx.shake($("#mp-players")); }
+        else if (ev.kind === "out" || ev.kind === "n_out") Sfx.play("heart");
+      });
+      if ((events || []).some((e) => e.kind === "turn" && e.playerId === cid)) setTimeout(() => Sfx.play("turn"), 380);
 
       // 手番が変わったら入力をリセットし、自分の番だけ入力できるようにする
       if (p.lastTurn !== s.turnId || (events || []).some((e) => e.kind === "turn" || e.kind === "started")) {
@@ -511,6 +521,8 @@
       const rank = state.ranking.map((id) => player(id)).filter(Boolean);
       const winner = rank[0];
       const iWon = winner && winner.id === cid;
+      Sfx.play(iWon ? "win" : "lose");
+      if (iWon) Fx.confetti();
       render(`
         <div class="panel shiri-result">
           <div class="result-icon">${iWon ? "🎉" : "🏁"}</div>
