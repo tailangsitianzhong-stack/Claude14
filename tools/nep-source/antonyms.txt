@@ -1,0 +1,126 @@
+# 反対語。形式: 問題の語|正解(半角スペース区切り・複数OK)
+hot|cold cool freezing
+cold|hot warm
+big|small little tiny
+small|big large huge
+long|short
+short|long tall
+tall|short low
+high|low
+low|high
+fast|slow
+slow|fast quick
+old|new young
+new|old
+young|old
+good|bad evil
+bad|good
+happy|sad unhappy
+sad|happy glad
+up|down
+down|up
+in|out
+out|in
+open|close closed shut
+close|open far
+day|night
+night|day
+light|dark heavy
+dark|light bright
+heavy|light
+easy|hard difficult
+hard|easy soft
+soft|hard loud rough
+loud|quiet silent soft
+quiet|loud noisy
+clean|dirty
+dirty|clean
+full|empty
+empty|full
+rich|poor
+poor|rich
+strong|weak
+weak|strong
+wet|dry
+dry|wet
+early|late
+late|early
+right|wrong left
+wrong|right
+left|right
+black|white
+white|black
+yes|no
+no|yes
+come|go
+go|come stop
+buy|sell
+sell|buy
+love|hate
+hate|love like
+begin|end finish
+start|stop end finish
+stop|go start
+win|lose
+lose|win find
+laugh|cry
+cry|laugh
+sit|stand
+stand|sit
+push|pull
+pull|push
+give|take receive get
+take|give
+ask|answer
+answer|ask question
+teacher|student pupil
+boy|girl
+girl|boy
+man|woman
+woman|man
+king|queen
+queen|king
+mother|father
+father|mother
+brother|sister
+sister|brother
+husband|wife
+wife|husband
+sun|moon
+moon|sun
+summer|winter
+winter|summer
+north|south
+south|north
+east|west
+west|east
+front|back
+back|front
+inside|outside
+outside|inside
+above|below
+below|above
+before|after
+after|before
+always|never
+never|always
+many|few
+few|many
+more|less
+less|more
+best|worst
+worst|best
+first|last
+last|first
+safe|dangerous
+dangerous|safe
+true|false
+false|true
+alive|dead
+dead|alive
+awake|asleep
+asleep|awake
+war|peace
+peace|war
+friend|enemy
+enemy|friend

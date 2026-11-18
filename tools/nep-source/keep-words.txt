@@ -1,0 +1,7 @@
+# 規則のゆれで「変化形」と見なされても、単語リストに残す語(複数形でしか使わない語・-ingで終わる名詞など)
+news glasses pants scissors jeans series species lens bus gas yes always perhaps towards clothes pajamas trousers shorts headquarters mathematics physics economics politics athletics ethics
+morning evening building painting meeting wedding feeling ceiling king ring wing thing something anything nothing everything spring string swing sing bring being during sibling darling
+lightning pudding dumpling stocking clothing wiring ending beginning drawing reading writing
+sometimes upstairs downstairs afterwards backwards nowadays anyways yours hers ours theirs whereabouts stairs
+interesting amazing boring exciting charming annoying disgusting confusing embarrassing terrifying amusing surprising shocking frightening fascinating willing missing
+tired scared excited bored surprised worried interested confused pleased shocked embarrassed frightened married crowded
