@@ -11,7 +11,7 @@
 .kk-mode small { font-size: .78rem; color: var(--ink-soft); }
 .kk-mode.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 3px rgba(239, 91, 76, .25); }
 
-.kk-levels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.kk-levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }   /* Lv1〜4 / Lv5・漢検2級・漢検1級 */
 .kk-level {
   display: flex; flex-direction: column; align-items: center; gap: 0; padding: 6px 2px; font: inherit; color: var(--ink);
   background: #fff; border: 3px solid var(--ink-soft); border-radius: 12px; cursor: pointer; line-height: 1.7;
@@ -62,3 +62,12 @@
 .kk-choices.is-off .kk-choice { opacity: .5; pointer-events: none; }
 .kk-choice[disabled] { cursor: default; }
 #kk-turn.is-mine { background: #c9f0c9; border-color: #2e8b3e; font-weight: bold; }
+
+/* 送りがな付きの語(教える): 答える漢字の部分に太い線、送りがなはうすく */
+.kk-target { text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 6px; text-underline-offset: 9px; }
+.kk-okuri { opacity: .38; }
+.kk-word:has(.kk-target) { padding-bottom: 14px; }
+.kk-badge small, .kk-badge rt { font-size: .7em; }
+.kk-level:nth-child(n+6) { border-color: #7a5aa0; }
+.kk-level:nth-child(n+6) b { color: #7a5aa0; }
+.kk-level:nth-child(n+6).is-on { border-color: var(--red); }

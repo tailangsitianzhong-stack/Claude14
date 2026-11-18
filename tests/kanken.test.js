@@ -11,29 +11,84 @@ const bank = Q.createBank(DATA);
 function seeded(seed) { let s = seed; return () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648); }
 const KANJI = new Set(DATA.kanji.map((k) => k[0]));
 
-test("データ: 常用漢字2136字・5レベル・各レベルに出題できる", () => {
+test("データ: 常用漢字2136字・7レベル・各レベルに出題できる", () => {
   assert.equal(DATA.kanji.length, 2136);
   assert.deepEqual([1, 2, 3, 4, 5].map((l) => DATA.kanji.filter((k) => k[1] === l).length), [240, 420, 366, 555, 555]);
-  for (let l = 1; l <= 5; l++) {
+  assert.equal(Q.LEVELS.length, 7);
+  assert.deepEqual(Q.LEVELS.map((l) => l.base), [10, 20, 30, 50, 80, 120, 200]);
+  for (let l = 1; l <= 7; l++) {
     const sz = bank.size(l);
-    assert.ok(sz.read > 500 && sz.write > 300, `Lv${l} ${JSON.stringify(sz)}`);
+    const min = l >= 6 ? { read: 150, write: 100 } : l === 5 ? { read: 400, write: 200 } : { read: 500, write: 300 };
+    assert.ok(sz.read >= min.read && sz.write >= min.write, `Lv${l} ${JSON.stringify(sz)}`);
   }
   assert.ok(DATA.words.length > 10000);
+  assert.ok(DATA.words.every((w) => w[1].length <= 12));          // 読みは12文字まで(入力欄は14文字)
 });
 
-test("読み問題: 熟語は漢字、答えはひらがなだけ。レベルは字のレベルの最大値", () => {
+test("語の形: 「漢字だけ」か「漢字+送りがな」。答えは仮名。漢検1級(Lv7)の語は常用漢字以外を含み、それ以外は常用漢字だけ", () => {
   for (const [text, reading, level] of DATA.words) {
+    assert.match(text, /^[一-龠]+[ぁ-ゖ]*$/, text);
     assert.match(reading, /^[ぁ-ゖー]+$/, text);
-    const ks = [...text].filter((c) => KANJI.has(c));
-    assert.ok(ks.length >= 1, text);
-    assert.equal(level, Math.max(...ks.map((k) => bank.kanjiLevel.get(k))), text);
+    const ks = [...text].filter((c) => /[一-龠]/.test(c));
+    const hyo = ks.some((k) => !KANJI.has(k));
+    assert.equal(level === 7, hyo, `${text} Lv${level}`);
+    if (!hyo) {
+      const maxLv = Math.max(...ks.map((k) => bank.kanjiLevel.get(k)));
+      if (level <= 4) assert.equal(level, maxLv, text);               // Lv1〜4 は、一番難しい漢字のレベル
+      else assert.ok(maxLv >= 4 && level >= 5, `${text} Lv${level} max${maxLv}`);   // Lv5/6 は中高の漢字を含む
+    }
   }
+  // 子ども向けにふさわしくない字を含む語は無い
+  assert.equal(DATA.words.filter((w) => /[淫姦娼妓屍糞尿屁膣睾勃媾猥痴嬲]/.test(w[0])).length, 0);
+  // 難しいレベルに、地名などの固有名詞(札幌・靖国神社)が混ざっていない
+  assert.ok(!DATA.words.some((w) => w[0] === "札幌" || w[0] === "靖国神社"));
+});
+
+test("送りがな付きの語: 読み問題は漢字の部分だけを答える(教える→おし)。送りがなまで答えても正解", () => {
+  // 全ての送りがな付きの語で、答え(漢字の部分)が空にならない
+  const rng = seeded(5);
+  let okuri = 0;
+  for (const w of DATA.words) {
+    const m = /^([一-龠]+)([ぁ-ゖ]+)$/.exec(w[0]);
+    if (!m) continue;
+    okuri++;
+    assert.ok(w[1].endsWith(m[2]) && w[1].length > m[2].length, `${w[0]} ${w[1]}`);
+  }
+  assert.ok(okuri > 1500);
+
+  const q = bank.next({ level: 1, rng, type: "read" });
+  assert.equal(q.type, "read");
+  // 「教える」を直接作って確かめる
+  const tiny = Q.createBank({ kanji: [["教", 3, 4, "きょう"]], words: [["教える", "おしえる", 3, -1, ""], ["先生", "せんせい", 3, -1, ""]] });
+  const seen = {};
+  for (let i = 0; i < 20; i++) { const x = tiny.next({ level: 3, rng: seeded(i + 1), type: "read" }); seen[x.text] = x; }
+  const oshieru = seen["教える"];
+  assert.deepEqual([oshieru.kanji, oshieru.okuri, oshieru.answer, oshieru.alt], ["教", "える", "おし", "おしえる"]);
+  assert.equal(Q.checkReading("おし", oshieru), true);
+  assert.equal(Q.checkReading("オシ", oshieru), true);
+  assert.equal(Q.checkReading("おしえる", oshieru), true);          // 送りがなまで入力してもOK
+  assert.equal(Q.checkReading("おそ", oshieru), false);
+  assert.equal(Q.checkReading("える", oshieru), false);
+  const sensei = seen["先生"];
+  assert.equal(sensei.kanji, undefined);                              // 送りがなの無い語は、これまでどおり全体の読み
+  assert.equal(Q.checkReading("せんせい", sensei), true);
+  assert.equal(Q.checkReading("せん", sensei), false);
+});
+
+test("難しいレベルでは、1〜2つ下のレベルの語を混ぜる(易しすぎる語は混ぜない)", () => {
+  const rng = seeded(11);
+  const got = { 6: new Set(), 7: new Set() };
+  for (const level of [6, 7]) {
+    for (let i = 0; i < 400; i++) { const q = bank.next({ level, rng, used: new Set() }); got[level].add(q.level); }
+  }
+  assert.deepEqual([...got[6]].sort(), [4, 5, 6]);
+  assert.deepEqual([...got[7]].sort(), [5, 6, 7]);
 });
 
 test("書き取り問題: 4択は重複なし・正解を1つだけ含み、にせ漢字は常用漢字・語が実在しない字", () => {
   const rng = seeded(7);
   let made = 0;
-  for (let l = 1; l <= 5; l++) {
+  for (let l = 1; l <= 7; l++) {
     for (let i = 0; i < 400; i++) {
       const q = bank.next({ level: l, rng, type: "write" });
       assert.equal(q.type, "write");
@@ -41,13 +96,14 @@ test("書き取り問題: 4択は重複なし・正解を1つだけ含み、に�
       assert.equal(new Set(q.choices).size, 4, JSON.stringify(q));
       assert.equal(q.choices.filter((c) => c === q.answer).length, 1);
       assert.equal(q.choices[q.answerIndex], q.answer);
-      assert.ok(q.choices.every((c) => KANJI.has(c)));
+      // 答えが常用漢字なら、にせ漢字も常用漢字だけ(難しい字を混ぜない)。答えが表外漢字(漢検1級)なら、表外の字も入る
+      if (KANJI.has(q.answer)) assert.ok(q.choices.every((c) => KANJI.has(c)), JSON.stringify(q));
       assert.equal(q.text.split("□").length, 2);                               // 空欄は1か所
       assert.equal(q.full.replace(q.answer, "□"), q.text.replace(/□/, "□"));  // 空欄に答えを入れると元の語
       made++;
     }
   }
-  assert.equal(made, 2000);
+  assert.equal(made, 2800);
 });
 
 test("書き取り問題: 4択のどれを入れても、答え以外は辞書に載る別の語にならない(データ作りで保証)", () => {

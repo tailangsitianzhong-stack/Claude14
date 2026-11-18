@@ -6,8 +6,15 @@
  *
  * 入力: jamdict.db（PyPI の jamdict-data。JMdict と KANJIDIC2 が入っている）
  * 出力: 常用漢字 2,136字（小1〜高3）と、そこから作る熟語の問題データ
- *   kanji: [字, レベル1〜5, 学年, 音読み(ひらがな, カンマ区切り)]
- *   words: [熟語, 読み, レベル, 書き取りで空欄にする位置(-1=読みだけ), にせ漢字の候補(文字列)]
+ *   kanji: [字, レベル1〜5, 学年, 音読み(ひらがな, カンマ区切り)]   ※常用漢字だけ
+ *   words: [語, 読み, レベル, 書き取りで空欄にする位置(-1=読みだけ), にせ漢字の候補(文字列)]
+ *
+ * 語のレベル
+ *   Lv1〜4: 語の中で一番むずかしい漢字のレベル(小1-2 / 小3-4 / 小5-6 / 中高の基本)
+ *   Lv5   : 中高の応用の漢字を1字だけ含む、よく使う語
+ *   Lv6(漢検2級相当): 常用漢字だけの語のうち、難しい漢字を2字以上含む語・やや珍しい語
+ *   Lv7(漢検1級相当): 常用漢字以外の漢字(JIS第一・第二水準の表外漢字 約4,200字)を含む語
+ * 語の形は「漢字だけ」か「漢字+送りがな」(教える)。読み問題では、送りがなを除いた漢字の部分だけを答える
  *
  * 品質のための決まり
  *  ・読みが1通りに決まる語だけを使う（同じ表記で読みが複数ある語は除く）
@@ -36,6 +43,13 @@ const chars = new Map();   // 字 -> {grade, freq, strokes, radical, on:[ひら�
 for (const r of all("SELECT ID id, literal, grade, freq, stroke_count strokes FROM character WHERE grade IN ('1','2','3','4','5','6','8')")) {
   chars.set(r.literal, { id: r.id, grade: +r.grade, freq: r.freq == null ? null : +r.freq, strokes: +r.strokes || 0, radical: 0, on: [] });
 }
+// 表外漢字(漢検1級用): JIS第一・第二水準のうち、常用漢字でないもの
+for (const r of all(`SELECT c.ID id, c.literal literal, c.freq freq, c.stroke_count strokes FROM character c
+                     JOIN codepoint cp ON cp.cid = c.ID AND cp.cp_type = 'jis208'
+                     WHERE c.grade IS NULL OR c.grade IN ('9','10')`)) {
+  if (!chars.has(r.literal)) chars.set(r.literal, { id: r.id, grade: 0, freq: r.freq == null ? null : +r.freq, strokes: +r.strokes || 0, radical: 0, on: [], hyo: true });
+}
+const isJouyou = (ch) => chars.has(ch) && !chars.get(ch).hyo;
 const byId = new Map([...chars].map(([k, v]) => [v.id, k]));
 for (const r of all("SELECT g.cid cid, r.value value FROM reading r JOIN rm_group g ON g.ID = r.gid WHERE r.r_type = 'ja_on'")) {
   const ch = byId.get(r.cid);
@@ -47,6 +61,7 @@ for (const r of all("SELECT cid, value FROM radical WHERE rad_type = 'classical'
 }
 // レベル: 小1-2=1 / 小3-4=2 / 小5-6=3 / 中・高(学年8)は使われやすさ順に半分ずつ=4,5
 const level = new Map();
+for (const [ch, v] of chars) if (v.hyo) level.set(ch, 7);
 const secondary = [...chars].filter(([, v]) => v.grade === 8)
   .sort((a, b) => (a[1].freq ?? 1e9) - (b[1].freq ?? 1e9));
 for (const [ch, v] of chars) {
@@ -81,6 +96,14 @@ for (const [idseq, forms] of entryKanji) for (const f of forms) {
   if (!readingsOfForm.has(f.text)) readingsOfForm.set(f.text, new Set());
   for (const k of kanaOf.get(idseq) || []) readingsOfForm.get(f.text).add(k);
 }
+// かな書きが普通の語(「ある」「できる」など)。表外漢字で書いた形は使わない
+const usuallyKana = new Set();
+for (const r of all("SELECT s.idseq idseq FROM misc m JOIN Sense s ON s.ID = m.sid WHERE m.text = 'word usually written using kana alone'")) usuallyKana.add(r.idseq);
+// 語の最初の英語の意味(固有名詞かどうかの判定に使う: 「Sapporo」のように大文字で始まる)
+const firstGloss = new Map();
+for (const r of all("SELECT s.idseq idseq, g.text text FROM Sense s JOIN SenseGloss g ON g.sid = s.ID WHERE g.lang = 'eng' ORDER BY s.ID, g.rowid")) {
+  if (!firstGloss.has(r.idseq)) firstGloss.set(r.idseq, r.text);
+}
 const kjInfoTagged = new Set(); // 当て字・不規則・古い表記などの注意タグがある漢字表記のID
 for (const r of all("SELECT kid FROM KJI")) kjInfoTagged.add(r.kid);
 const kjPrio = new Map();       // 漢字表記のID -> タグ
@@ -105,7 +128,13 @@ const MISC_NG = new Set([
 ]);
 const POS_OK = (p) => /noun|verb|adjective|adverb/i.test(p) && !/expression|interjection|prefix|suffix|counter|pronoun|numeric/i.test(p);
 
-const RANK_MAX = 30;
+const MAX_READING = 12;        // 読みの長さの上限(画面の入力欄は14文字まで)
+const RANK_MAX = 30;           // 常用漢字の語: よく使う語(Lv1〜5)
+const RANK_MAX_HARD = 60;      // Lv6(2級): 難しい漢字を2字以上含む語は、やや珍しい語まで
+const RANK_MAX_HYO = 60;       // Lv7(1級): 表外漢字を含む語
+// 子ども向けのゲームなので、性的・排せつに関する漢字を含む語は使わない
+const BAD_KANJI = new Set([..."淫姦娼妓屍糞尿屁膣睾勃媾猥痴嬲"]);
+
 
 function prioRank(tags) {       // 小さいほど日常的
   if (!tags) return 99;
@@ -168,32 +197,42 @@ for (const [idseq, forms] of entryKanji) {
   for (const f of forms) {
     const text = f.text;
     const rank = prioRank(kjPrio.get(f.id));
-    if (rank > RANK_MAX) continue;                             // よく使う語だけ
+    if (rank > RANK_MAX_HYO) continue;
     if (kjInfoTagged.has(f.id)) continue;                      // 当て字・古い表記などは使わない
+    if (!/^[一-龠]+[ぁ-ゖ]*$/.test(text)) continue;            // 「漢字だけ」か「漢字+送りがな」(教える)だけ
     const ks = [...text].filter(isKanji);
-    if (!ks.length || text.includes("々")) continue;
-    if (![...text].every((c) => isKanji(c) || /[ぁ-ん]/.test(c))) continue;   // 漢字とひらがなだけ
-    if (ks.some((k) => !chars.has(k))) continue;               // 常用漢字だけの語
+    if (ks.some((k) => !chars.has(k) || BAD_KANJI.has(k))) continue;   // JISの漢字だけ。不適切な字は除く
+    const hyo = ks.some((k) => !isJouyou(k));
+    if (hyo && usuallyKana.has(idseq)) continue;               // 表外漢字は、かな書きが普通の語を除く
+    const hard = ks.filter((k) => level.get(k) >= 4).length;
+    // よく使う語はそのまま。やや珍しい語は「難しい漢字を2字以上含む」場合だけ(Lv6)。表外漢字の語はLv7
+    if (!hyo && rank > RANK_MAX && !(hard >= 2 && rank <= RANK_MAX_HARD)) continue;
     const rset = readingsOfForm.get(text);
     if (!rset || rset.size !== 1) continue;                    // 読みが1通りに決まる語だけ
     const reading = [...rset][0];
-    if (!/^[ぁ-ゖー]+$/.test(reading)) continue;
-    const lv = Math.max(...ks.map((k) => level.get(k)));
+    if (!/^[ぁ-ゖー]+$/.test(reading) || reading.length > MAX_READING) continue;   // 長すぎる語(役所名など)は入力しにくいので使わない
+    const maxLv = Math.max(...ks.map((k) => level.get(k)));
+    let lv = maxLv;
+    if (hyo) lv = 7;
+    else if (rank > RANK_MAX) lv = 6;
+    else if (maxLv === 5 && ks.filter((k) => level.get(k) === 5).length >= 2) lv = 6;
+    if (lv >= 6 && /^[A-Z]/.test(firstGloss.get(idseq) || "")) continue;   // 難しいレベルでは、地名・人名などの固有名詞は除く
     const old = picked.get(text);
-    if (!old || rank < old.rank) picked.set(text, { text, reading, level: lv, rank, ks });
+    if (!old || rank < old.rank) picked.set(text, { text, reading, level: lv, maxLv, rank, ks, hyo });
   }
 }
 
 /** 書き取り用: 空欄にする字と、にせ漢字の候補を決める */
 function blankInfo(w) {
-  if ([...w.text].some((c) => !isKanji(c))) return null;       // 全部が漢字の熟語だけ
+  if ([...w.text].some((c) => !isKanji(c))) return null;       // 全部が漢字の熟語だけ(送りがな付きは4択にしない)
   const segs = alignOn(w.text, w.reading);
   if (!segs) return null;
   const cs = [...w.text];
   let best = null;
   cs.forEach((ch, i) => {
     const lv = level.get(ch);
-    const sibs = (onIndex.get(segs[i]) || []).filter((s) => s !== ch);
+    // にせ漢字: 同じ音読みの字。常用漢字の問題では、常用漢字だけから選ぶ(表外の難しい字は混ぜない)
+    const sibs = (onIndex.get(segs[i]) || []).filter((s) => s !== ch && (chars.get(ch).hyo || isJouyou(s)));
     const good = sibs.filter((s) => {
       const t = cs.slice(); t[i] = s;
       return !allForms.has(t.join(""));                         // その字に置きかえた語が実在するなら使わない
@@ -210,7 +249,7 @@ function blankInfo(w) {
       return a < b ? -1 : 1;
     });
     if (good.length >= 3) {
-      const score = (lv === w.level ? 1000 : 0) + good.filter((s) => level.get(s) <= lv).length;
+      const score = (lv === w.maxLv ? 1000 : 0) + good.filter((s) => level.get(s) <= lv).length;
       if (!best || score > best.score) best = { i, good: good.slice(0, 8), score };
     }
   });
@@ -224,7 +263,7 @@ for (const w of picked.values()) {
 }
 words.sort((a, b) => a[2] - b[2] || a[5] - b[5] || (a[0] < b[0] ? -1 : 1));
 
-const kanji = [...chars].map(([ch, v]) => [ch, level.get(ch), v.grade, [...new Set(v.on)].join(",")])
+const kanji = [...chars].filter(([, v]) => !v.hyo).map(([ch, v]) => [ch, level.get(ch), v.grade, [...new Set(v.on)].join(",")])
   .sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1));
 
 const body = {
@@ -238,10 +277,11 @@ writeFileSync(outPath, "/* 自動生成: tools/build-kanji.mjs — 直接編集�
 console.log(`wrote ${outPath}: ${kanji.length} kanji, ${words.length} words`);
 
 if (showStats) {
-  const lv = (arr, f) => [1, 2, 3, 4, 5].map((l) => arr.filter((x) => f(x) === l).length);
-  console.log("漢字 Lv1-5:", lv(kanji, (k) => k[1]).join(" / "));
-  console.log("語   Lv1-5:", lv(words, (w) => w[2]).join(" / "));
-  console.log("書き取り可 Lv1-5:", lv(words.filter((w) => w[3] >= 0), (w) => w[2]).join(" / "));
+  const lv = (arr, f) => [1, 2, 3, 4, 5, 6, 7].map((l) => arr.filter((x) => f(x) === l).length);
+  console.log("常用漢字 Lv1-5:", lv(kanji, (k) => k[1]).slice(0, 5).join(" / "), "| 表外漢字(Lv7):", [...chars.values()].filter((v) => v.hyo).length);
+  console.log("語   Lv1-7:", lv(words, (w) => w[2]).join(" / "));
+  console.log("書き取り可 Lv1-7:", lv(words.filter((w) => w[3] >= 0), (w) => w[2]).join(" / "));
+  console.log("送りがな付きの語:", words.filter((w) => /[ぁ-ゖ]$/.test(w[0])).length, "語");
   const cov = new Map();
   for (const w of words) for (const ch of w[0]) if (isKanji(ch)) cov.set(ch, (cov.get(ch) || 0) + 1);
   const none = kanji.filter((k) => !cov.has(k[0]));

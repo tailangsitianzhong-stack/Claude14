@@ -13,7 +13,7 @@
   const Keyboard = root.ShiritoriKeyboard;
   const Ruby = root.Ruby;
 
-  const MAX_READING = 12;
+  const MAX_READING = 14;
   const MODES = [
     { key: "exam", icon: "📝", name: "ミニ検定{けんてい}", desc: "最大{さいだい}60問{もん}・ライフ ♥5（時間切{じかんぎ}れもライフ-1）" },
     { key: "survival", icon: "🔥", name: "サバイバル", desc: "ライフ ♥3・時間切{じかんぎ}れは即脱落{そくだつらく}・問題数{もんだいすう}は無制限{むせいげん}" }
@@ -117,9 +117,10 @@
         u.text = ""; u.pending = ""; u.busy = !myTurn;
         const stage = $("#kk-stage");
         if (q.type === "read") {
+          const okuri = !!q.kanji;                       // 送りがな付き(教える): 線の漢字の部分だけ答える
           stage.innerHTML = `
-            <div class="kk-prompt">${Ruby.html(myTurn ? "この読{よ}みは？（ひらがなで入力{にゅうりょく}）" : `${shell.avatarOf(st.turnId)} が答{こた}えるよ`)}</div>
-            <div class="kk-word">${esc(q.text)}</div>
+            <div class="kk-prompt">${Ruby.html(myTurn ? (okuri ? "線{せん}の漢字{かんじ}の読{よ}みは？（送{おく}りがなは入力{にゅうりょく}しなくてOK）" : "この読{よ}みは？（ひらがなで入力{にゅうりょく}）") : `${shell.avatarOf(st.turnId)} が答{こた}えるよ`)}</div>
+            <div class="kk-word">${okuri ? `<span class="kk-target">${esc(q.kanji)}</span><span class="kk-okuri">${esc(q.okuri)}</span>` : esc(q.text)}</div>
             ${myTurn ? '<div class="shiri-field is-active kk-field"><span class="shiri-text" id="kk-reading"></span></div>' : ""}`;
           $("#shiri-kb").hidden = !myTurn;
           drawField();

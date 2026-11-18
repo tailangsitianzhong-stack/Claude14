@@ -40,7 +40,7 @@ export function setSettings(st, id, patch, now) {
   if (id !== st.hostId) return { ok: false, error: "not_host", events: [] };
   if (st.phase !== "lobby") return { ok: false, error: "bad_phase", events: [] };
   if (patch && MODES.includes(patch.mode)) st.settings.mode = patch.mode;
-  if (patch && Number.isInteger(patch.level) && patch.level >= 1 && patch.level <= 5) st.settings.level = patch.level;
+  if (patch && Number.isInteger(patch.level) && patch.level >= 1 && patch.level <= Q.LEVELS.length) st.settings.level = patch.level;
   st.updatedAt = now;
   return { ok: true, events: [] };
 }
@@ -182,7 +182,7 @@ export function publicState(st) {
   if (copy.q) {
     const q = copy.q;
     copy.q = q.type === "read"
-      ? { type: "read", id: q.id, level: q.level, text: q.text }
+      ? Object.assign({ type: "read", id: q.id, level: q.level, text: q.text }, q.okuri ? { kanji: q.kanji, okuri: q.okuri } : {})   // 送りがな付きは、漢字の部分と送りがなを見せる(答えは含めない)
       : { type: "write", id: q.id, level: q.level, text: q.text, reading: q.reading, choices: q.choices };
   }
   return copy;

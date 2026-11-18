@@ -8,6 +8,9 @@
  *
  * 問題の形:
  *   { type:"read",  id, level, text:"検定", answer:"けんてい" }
+ *   送りがな付きの語(教える)は、漢字の部分だけを答える:
+ *   { type:"read",  id, level, text:"教える", kanji:"教", okuri:"える", answer:"おし", alt:"おしえる" }
+ *     alt は、送りがなまで入力した場合も正解にするための読み
  *   { type:"write", id, level, text:"□定", reading:"けんてい", choices:["検","険","験","剣"], answerIndex:0, answer:"検" }
  */
 (function (root, factory) {
@@ -21,10 +24,15 @@
     { level: 2, label: "Lv2", range: "小学3〜4年", short: "小3〜4", base: 20 },
     { level: 3, label: "Lv3", range: "小学5〜6年", short: "小5〜6", base: 30 },
     { level: 4, label: "Lv4", range: "中学〜高校(基本)", short: "中高{ちゅうこう}基本{きほん}", base: 50 },
-    { level: 5, label: "Lv5", range: "中学〜高校(応用)", short: "中高{ちゅうこう}応用{おうよう}", base: 80 }
+    { level: 5, label: "Lv5", range: "中学〜高校(応用)", short: "中高{ちゅうこう}応用{おうよう}", base: 80 },
+    // 漢検2級: 常用漢字だけの、難しい漢字を2字以上含む語・やや珍しい語
+    { level: 6, label: "Lv6", range: "漢検2級(常用漢字・上級)", short: "漢検{かんけん}2級{きゅう}", base: 120 },
+    // 漢検1級: 常用漢字以外の漢字(表外漢字 約4,200字)を含む語
+    { level: 7, label: "Lv7", range: "漢検1級(表外漢字)", short: "漢検{かんけん}1級{きゅう}", base: 200 }
   ];
   const TYPE_MULT = { read: 1.5, write: 1 };     // 読み(入力)は当てずっぽうが効かないので高め
   const REVIEW_MIX = 0.3;                        // 選んだレベルより易しい字を混ぜる割合
+  const MAX_LEVEL = 7;
   const DECOY_POOL = 6;                          // にせ漢字は、候補の先頭(紛らわしい順)からこの数の中で選ぶ
 
   const kata2hira = (s) => s.replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
@@ -44,8 +52,8 @@
   }
 
   function createBank(data) {
-    const readByLevel = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-    const writeByLevel = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+    const readByLevel = {}, writeByLevel = {};
+    for (let l = 1; l <= MAX_LEVEL; l++) { readByLevel[l] = []; writeByLevel[l] = []; }
     const kanjiLevel = new Map(data.kanji.map((k) => [k[0], k[1]]));
     for (const w of data.words) {
       const [text, reading, level, blank, decoys] = w;
@@ -57,7 +65,13 @@
     function size(level) { return { read: readByLevel[level].length, write: writeByLevel[level].length }; }
 
     function makeRead(w) {
-      return { type: "read", id: "r:" + w[0], level: w[2], text: w[0], answer: w[1] };
+      const [text, reading, level] = w;
+      // 送りがな付きの語(教える): 漢字の部分(おし)だけを答える。語の終わりの仮名が送りがな
+      const m = /^([一-龠]+)([ぁ-ゖ]+)$/.exec(text);
+      if (m && reading.endsWith(m[2]) && reading.length > m[2].length) {
+        return { type: "read", id: "r:" + text, level, text, kanji: m[1], okuri: m[2], answer: reading.slice(0, -m[2].length), alt: reading };
+      }
+      return { type: "read", id: "r:" + text, level, text, answer: reading };
     }
     function makeWrite(w, rng) {
       const [text, reading, level, blank, decoys] = w;
@@ -82,7 +96,11 @@
 
       for (let attempt = 0; attempt < 40; attempt++) {
         let lv = opts.level;
-        if (lv > 1 && rng() < REVIEW_MIX) lv = 1 + Math.floor(rng() * (lv - 1));
+        if (lv > 1 && rng() < REVIEW_MIX) {
+          // 易しいレベルを混ぜる。Lv1〜5 は Lv1 から、漢検2級・1級は1〜2つ下のレベルから(易しすぎる語を混ぜない)
+          const lo = lv >= 6 ? lv - 2 : 1;
+          lv = lo + Math.floor(rng() * (lv - lo));
+        }
         const type = attempt > 20 ? (want === "read" ? "write" : "read") : want;   // 出し尽くしたら、もう一方の形式へ
         const list = (type === "read" ? readByLevel : writeByLevel)[lv];
         if (!list.length) continue;
@@ -98,7 +116,8 @@
   }
 
   /* ---------- 答え合わせ・得点 ---------- */
-  const checkReading = (input, q) => q.type === "read" && sameReading(input, q.answer);
+  /** 読み問題の答え合わせ。送りがな付きの語は、漢字の部分だけでも、送りがなまで入力しても正解 */
+  const checkReading = (input, q) => q.type === "read" && (sameReading(input, q.answer) || (!!q.alt && sameReading(input, q.alt)));
   const checkChoice = (index, q) => q.type === "write" && index === q.answerIndex;
 
   /**

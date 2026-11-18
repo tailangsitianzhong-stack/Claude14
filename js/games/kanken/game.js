@@ -13,7 +13,7 @@
   const Keyboard = root.ShiritoriKeyboard;
   const Ruby = root.Ruby;
 
-  const MAX_READING = 12;
+  const MAX_READING = 14;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -141,7 +141,7 @@
 
       render(`
         <div class="shiri-hud">
-          <div class="kk-badge">${esc(info.icon)} ${esc(Q.LEVELS[level - 1].label)}</div>
+          <div class="kk-badge">${esc(info.icon)} ${esc(Q.LEVELS[level - 1].label)}${level >= 6 ? " " + Ruby.html(Q.LEVELS[level - 1].short) : ""}</div>
           <div class="hud-lives" id="hud-lives" aria-label="ライフ"></div>
           <div class="hud-score">スコア <b id="hud-score">0</b></div>
         </div>
@@ -187,9 +187,10 @@
         if (!cfg.totalSeconds) feedback("");            // 前の問題の結果を消す(タイムアタックは待たずに進むので残す)
         const stage = $("#kk-stage");
         if (q.type === "read") {
+          const okuri = !!q.kanji;                       // 送りがな付き(教える): 線の漢字の部分だけ答える
           stage.innerHTML = `
-            <div class="kk-prompt">${Ruby.html("この読{よ}みは？（ひらがなで入力{にゅうりょく}）")}</div>
-            <div class="kk-word">${esc(q.text)}</div>
+            <div class="kk-prompt">${Ruby.html(okuri ? "線{せん}の漢字{かんじ}の読{よ}みは？（送{おく}りがなは入力{にゅうりょく}しなくてOK）" : "この読{よ}みは？（ひらがなで入力{にゅうりょく}）")}</div>
+            <div class="kk-word">${okuri ? `<span class="kk-target">${esc(q.kanji)}</span><span class="kk-okuri">${esc(q.okuri)}</span>` : esc(q.text)}</div>
             <div class="shiri-field is-active kk-field"><span class="shiri-text" id="kk-reading"></span></div>`;
           $("#shiri-kb").hidden = false;
           drawFields();

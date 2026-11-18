@@ -203,7 +203,8 @@ test("公開する状態: 答え・出題済みリストは含まれない。元
     assert.equal(pub.q.choices.length, 4);
     assert.ok(pub.q.reading);
   } else {
-    assert.equal(Object.keys(pub.q).sort().join(), "id,level,text,type");
+    assert.ok(!("alt" in pub.q));
+    assert.equal(Object.keys(pub.q).filter((k) => !["kanji", "okuri"].includes(k)).sort().join(), "id,level,text,type");
     assert.ok(!text.includes(`"${st.q.answer}"`) || st.q.answer === st.q.text);
   }
   // 結果(last)には、直前の問題の正解が含まれる(みんなで見て覚えるため)
