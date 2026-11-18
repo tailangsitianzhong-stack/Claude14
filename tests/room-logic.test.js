@@ -140,6 +140,11 @@ test("「ん」で終わったらその人は脱落", () => {
   assert.ok(r.events.some((e) => e.kind === "n_out"));
   assert.equal(st.phase, "playing");                    // 3人なので続く
   assert.equal(st.turnId, "p2");
+  assert.equal(st.required, "り");                      // 「ん」にはならず、脱落した人と同じ文字から
+  assert.ok(st.used.includes("bank"));                  // 脱落した語は使用済みのまま
+  // 続けて、次の人が「り」から普通に答えられる
+  assert.ok(L.move(st, "p2", { reading: "りんご", english: "apple" }, T0).ok);
+  assert.equal(st.required, "ご");
   // 2人対戦なら、相手が残って終了
   const g = playing(2);
   L.move(g, "p1", { reading: "りかん", english: "bank" }, T0);
@@ -198,4 +203,14 @@ test("アラームの時刻と片づけ", () => {
   L.disconnect(lb, "p1", T0);
   assert.equal(L.expired(lb, T0 + 9 * 60 * 1000), false);
   assert.equal(L.expired(lb, T0 + 10 * 60 * 1000), true);
+});
+
+test("「ん」で脱落した直後でも、ゲームが続けば次の人は答えられる(「ん」から始まる状態にならない)", () => {
+  const st = playing(3);
+  L.move(st, "p1", { reading: "りんご", english: "apple" }, T0);          // 要求: ご
+  const r = L.move(st, "p2", { reading: "ごはん", english: "rice" }, T0);  // p2 が「ん」で脱落
+  assert.ok(r.events.some((e) => e.kind === "n_out"));
+  assert.equal(st.required, "ご");                                         // p2 が答えるはずだった「ご」に戻る
+  assert.equal(st.turnId, "p3");
+  assert.ok(L.move(st, "p3", { reading: "ごりら", english: "gorilla" }, T0).ok);
 });

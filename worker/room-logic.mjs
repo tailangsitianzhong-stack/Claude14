@@ -143,6 +143,7 @@ export function move(st, id, m, now) {
 
   const p = player(st, id);
   const events = [];
+  const prevRequired = st.required;                 // この手を答える前の「始める文字」
   const remaining = Math.max(0, Math.min(st.seconds, (st.turnEndsAt - GRACE_MS - now) / 1000));
   p.streak++; p.words++;
   const points = Core.pointsFor({
@@ -158,6 +159,8 @@ export function move(st, id, m, now) {
   if (r.endsWithN) {                       // 「ん」で終わったら、その人は脱落
     eliminate(st, p, events);
     events.push({ kind: "n_out", playerId: id });
+    // 「ん」から始まる言葉は無いので、次の人は脱落した人と同じ文字(直前の語のつなぎ文字)から始める
+    st.required = prevRequired;
   }
   advance(st, id, now, events);
   st.updatedAt = now;
