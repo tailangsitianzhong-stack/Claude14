@@ -29,7 +29,11 @@ export class Room extends DurableObject {
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
 
-  async load() { return (await this.ctx.storage.get("state")) || null; }
+  async load() {
+    const st = (await this.ctx.storage.get("state")) || null;
+    if (st && st.game === "nep" && N.migrate(st)) await this.ctx.storage.put("state", st);   // 古い形式の部屋は、ロビーに戻す
+    return st;
+  }
 
   async save(st) {
     await this.ctx.storage.put("state", st);

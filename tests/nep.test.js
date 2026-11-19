@@ -186,17 +186,43 @@ test("判定: ABC順としりとり(x z q j で終わったら何でもOK)", () 
   assert.equal(T.judge(ch, 1, "quiz", ["quiz"], "dog").ok, true);
 });
 
-// ---------- 進行 ----------
-function game(n = 2, difficulty = "normal", seed = 1) {
+// ---------- 進行(チーム戦) ----------
+function game(n = 4, difficulty = "normal", seed = 1, mode = "vs") {
   const players = [];
   for (let i = 0; i < n; i++) players.push({ id: "p" + (i + 1), name: "P" + (i + 1) });
   const rng = seeded(seed);
-  const st = E.newGame({ players, difficulty, now: T0, rng });
+  const st = E.newGame({ players, difficulty, mode, now: T0, rng });
   st.starterId = "p1";
   return { st, rng };
 }
 /** お題に合う答えを今の問題から1つ選ぶ */
 const goodWord = (st) => T.candidates(st.topic, st.count, st.last, st.used)[0];
+/** 今のラウンドで、持っている人が答え続けて解除する(now を進めながら) */
+function defuseRound(st, rng, now) {
+  let n = 0;
+  while (st.phase === "play" && n++ < 30) assert.ok(E.answer(st, st.holder, goodWord(st), (now += 300), rng).ok);
+  return now;
+}
+/** 導火線が切れるまで待って爆発させる */
+const blowUp = (st, rng) => E.tick(st, st.fuseEndsAt + C.GRACE_MS + 5, rng);
+
+test("チーム: 2対2は席の順に 赤・青・赤・青。協力は全員が同じ1チーム。奇数人の対戦はできない", () => {
+  const { st } = game(4);
+  assert.equal(st.mode, "vs");
+  assert.deepEqual(st.teams.map((t) => t.key), ["red", "blue"]);
+  assert.deepEqual(st.players.map((p) => p.team), [0, 1, 0, 1]);
+  assert.deepEqual(st.teams.map((t) => t.lives), [C.TEAM_LIVES.vs, C.TEAM_LIVES.vs]);
+  const co = game(4, "normal", 1, "coop").st;
+  assert.deepEqual(co.teams.map((t) => t.key), ["all"]);
+  assert.deepEqual(co.players.map((p) => p.team), [0, 0, 0, 0]);
+  assert.equal(co.teams[0].lives, C.TEAM_LIVES.coop);
+  assert.equal(co.goal, C.COOP_GOAL);
+  assert.deepEqual(game(2).st.players.map((p) => p.team), [0, 1]);          // 1対1
+  assert.equal(game(3, "normal", 1, "coop").st.players.length, 3);          // 協力は2〜4人
+  assert.throws(() => game(3, "normal", 1, "vs"), /even/);
+  assert.throws(() => game(1, "normal", 1, "coop"));
+  assert.throws(() => E.newGame({ players: [{ id: "a" }, { id: "b" }], mode: "solo", now: T0 }), /mode/);
+});
 
 test("進行: 開始 → ラウンド開始(爆弾は先頭の人へ・導火線30秒)", () => {
   const { st, rng } = game();
@@ -207,24 +233,24 @@ test("進行: 開始 → ラウンド開始(爆弾は先頭の人へ・導火線
   assert.equal(st.phase, "play");
   assert.equal(st.holder, "p1");
   assert.equal(st.fuseEndsAt, T0 + C.START_MS + 30000);
-  assert.equal(st.need, E.needFor("normal", 2) === st.need ? st.need : st.need); // お題により少なくなることがある
   assert.ok(st.prompt && st.prompt.title);
 });
 
-test("進行: 正解で爆弾が次の人へ渡り、導火線は進んだまま", () => {
-  const { st, rng } = game(3);
+test("進行: 正解で爆弾が次の席の人へ渡る(2対2なら赤→青→赤→青)。導火線は進んだまま", () => {
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
   const fuse = st.fuseEndsAt;
-  const r = E.answer(st, "p1", goodWord(st), T0 + 5000, rng);
-  assert.ok(r.ok);
-  assert.equal(st.holder, "p2");
-  assert.equal(st.count, 1);
-  assert.equal(st.fuseEndsAt, fuse);
-  assert.equal(st.players[0].score, C.POINT);
+  const order = [];
+  for (let i = 0; i < 4; i++) {
+    order.push(st.players.find((p) => p.id === st.holder).team);
+    assert.ok(E.answer(st, st.holder, goodWord(st), T0 + 4000 + i * 500, rng).ok);
+    assert.equal(st.fuseEndsAt, fuse);
+  }
+  assert.deepEqual(order, [0, 1, 0, 1]);         // 答えるたびに相手チームへ
 });
 
 test("進行: 持っていない人の答え・まちがいは受け付けない(爆弾は渡らない)", () => {
-  const { st, rng } = game(3);
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
   assert.equal(E.answer(st, "p2", goodWord(st), T0 + 4000, rng).reason, "not_your_turn");
   const bad = E.answer(st, "p1", "zzqqxx", T0 + 4000, rng);
@@ -244,12 +270,11 @@ test("進行: 同じ答えは同じ爆弾のなかで2回使えない", () => {
   assert.equal(E.answer(st, "p2", w, T0 + 5000, rng).reason, "dup");
 });
 
-test("進行: 目標数に届くと解除。最後の人に+20点・次のラウンドは次の人から", () => {
-  const { st, rng } = game(2);
+test("進行: 目標数に届くと解除。最後の人とそのチームに+20点・次のラウンドは次の席の人から", () => {
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
   const need = st.need;
-  let now = T0 + C.START_MS + 1000;
-  let last, i = 0;
+  let now = T0 + C.START_MS + 1000, i = 0, last = null;
   while (st.phase === "play") {
     const pid = st.holder;
     const r = E.answer(st, pid, goodWord(st), (now += 1500), rng);
@@ -262,9 +287,11 @@ test("進行: 目標数に届くと解除。最後の人に+20点・次のラウ
   assert.equal(last.r.events[1].type, "defuse");
   const fin = st.players.find((p) => p.id === last.pid);
   assert.ok(fin.score >= C.POINT + C.BONUS);
-  assert.equal(st.starterId, last.pid === "p1" ? "p2" : "p1");
-  assert.equal(st.players.every((p) => p.lives === C.LIVES), true);
-  // 次のラウンドへ
+  // チームの得点 = メンバーの得点の合計
+  for (const t of [0, 1]) assert.equal(st.teams[t].score, st.players.filter((p) => p.team === t).reduce((a, p) => a + p.score, 0));
+  assert.equal(st.defused, 1);
+  assert.equal(st.starterId, "p" + (((Number(last.pid.slice(1))) % 4) + 1));
+  assert.deepEqual(st.teams.map((t) => t.lives), [C.TEAM_LIVES.vs, C.TEAM_LIVES.vs]);
   E.tick(st, st.nextAt, rng);
   assert.equal(st.phase, "play");
   assert.equal(st.round, 2);
@@ -273,70 +300,116 @@ test("進行: 目標数に届くと解除。最後の人に+20点・次のラウ
   assert.deepEqual(st.used, []);
 });
 
-test("進行: 導火線が切れると、持っていた人だけライフ-1(猶予 1.5 秒つき)", () => {
-  const { st, rng } = game(3);
+test("導火線: 猶予の間は答えが通り、過ぎると爆弾を持っていた人の「チーム」だけライフ-1", () => {
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
-  E.answer(st, "p1", goodWord(st), T0 + 4000, rng);       // p2 が持つ
+  E.answer(st, "p1", goodWord(st), T0 + 4000, rng);       // 赤の p1 → 青の p2 が持つ
   const end = st.fuseEndsAt;
   assert.deepEqual(E.tick(st, end + C.GRACE_MS, rng), []); // 猶予の間はまだ
   assert.ok(E.answer(st, "p2", goodWord(st), end + 1000, rng).ok, "猶予の間なら通る");
-  const holder = st.holder;                                 // p3
+  assert.equal(st.holder, "p3");                           // 赤の p3 が持つ
   const ev = E.tick(st, end + C.GRACE_MS + 5, rng);
   assert.equal(ev[0].type, "explode");
-  assert.equal(ev[0].pid, holder);
-  assert.equal(st.players.find((p) => p.id === holder).lives, C.LIVES - 1);
-  for (const p of st.players) if (p.id !== holder) assert.equal(p.lives, C.LIVES);
+  assert.equal(ev[0].pid, "p3");
+  assert.equal(ev[0].team, 0);
+  assert.equal(st.teams[0].lives, C.TEAM_LIVES.vs - 1);    // 赤が減る
+  assert.equal(st.teams[1].lives, C.TEAM_LIVES.vs);        // 青は減らない
   assert.equal(st.phase, "between");
-  assert.equal(st.starterId, "p1"); // p3 の次(p1)から
+  assert.equal(st.starterId, "p4");                        // p3 の次の席から
+  assert.ok(st.outcome.examples.length >= 1);
 });
 
-test("進行: ライフ0で脱落し、最後の1人が勝ち。爆発後に答えは通らない", () => {
-  const { st, rng } = game(2);
+test("対戦: 相手チームのライフが0になったら勝ち。以後の答えは通らない", () => {
+  const { st, rng } = game(4);
   let now = T0 + C.START_MS;
   E.tick(st, now, rng);
   let guard = 0;
-  while (st.phase !== "over" && guard++ < 20) {
-    if (st.phase === "between") { now = st.nextAt; E.tick(st, now, rng); continue; }
+  // p1(赤)が持っている状態で毎回爆発させる → 赤だけが減って、赤の負け
+  while (st.phase !== "over" && guard++ < 30) {
+    if (st.phase === "between") { st.starterId = "p1"; now = st.nextAt; E.tick(st, now, rng); continue; }
     now = st.fuseEndsAt + C.GRACE_MS + 10;
-    const holder = st.holder;
-    const ev = E.tick(st, now, rng);
-    assert.equal(ev[0].pid, holder);
+    E.tick(st, now, rng);
   }
   assert.equal(st.phase, "over");
-  assert.equal(st.result.reason, "last");
-  const loser = st.players.find((p) => !p.alive);
-  assert.equal(loser.lives, 0);
-  assert.notEqual(st.result.winnerId, loser.id);
-  assert.equal(E.answer(st, st.result.winnerId, "apple", now + 1, rng).ok, false);
+  assert.equal(st.result.reason, "team_out");
+  assert.equal(st.teams[0].lives, 0);
+  assert.equal(st.teams[1].lives, C.TEAM_LIVES.vs);
+  assert.equal(st.result.winnerTeam, 1);
+  assert.equal(E.answer(st, "p2", "apple", now + 1, rng).ok, false);
   assert.equal(E.nextDeadline(st), 0);
+  assert.deepEqual(st.result.teams.map((t) => t.lives), [0, C.TEAM_LIVES.vs]);
+  assert.equal(st.result.players.length, 4);
 });
 
-test("進行: ラウンド上限で終了。ライフ→得点の順で勝者(同じなら引き分け)", () => {
-  const { st, rng } = game(3);
-  st.maxRounds = 1;
-  E.tick(st, T0 + C.START_MS, rng);
-  st.players[1].score = 50;
-  E.tick(st, st.fuseEndsAt + C.GRACE_MS + 1, rng); // p1 が爆発
+test("対戦: ラウンド上限で終了。ライフ→チームの得点の順で勝者(完全に同じなら引き分け)", () => {
+  const a = game(4);
+  a.st.maxRounds = 1;
+  E.tick(a.st, T0 + C.START_MS, a.rng);
+  a.st.teams[1].score = 50;                                  // 青の得点が高い
+  blowUp(a.st, a.rng);                                       // p1(赤)が爆発 → 赤のライフが減る
+  assert.equal(a.st.phase, "over");
+  assert.equal(a.st.result.reason, "rounds");
+  assert.equal(a.st.result.winnerTeam, 1);                   // 青: ライフが多い
+  const b = game(4);
+  b.st.maxRounds = 1;
+  E.tick(b.st, T0 + C.START_MS, b.rng);
+  b.st.teams[0].lives = 3; b.st.teams[1].lives = 2; b.st.teams[0].score = 10; b.st.teams[1].score = 99;
+  blowUp(b.st, b.rng);                                       // 赤 3→2。青 2。ライフ同じ → 得点で青
+  assert.equal(b.st.result.winnerTeam, 1);
+  const c = game(4);
+  c.st.maxRounds = 1;
+  E.tick(c.st, T0 + C.START_MS, c.rng);
+  c.st.teams[0].lives = 3; c.st.teams[1].lives = 2;
+  blowUp(c.st, c.rng);                                       // 赤 2・青 2・得点 0 同士 → 引き分け
+  assert.equal(c.st.result.winnerTeam, null);
+});
+
+test("協力: みんなでライフを共有。爆弾を8個解除したらクリア", () => {
+  const { st, rng } = game(4, "easy", 3, "coop");
+  let now = T0 + C.START_MS;
+  E.tick(st, now, rng);
+  for (let r = 1; r <= C.COOP_GOAL; r++) {
+    assert.equal(st.round, r);
+    now = defuseRound(st, rng, now);
+    if (r < C.COOP_GOAL) { assert.equal(st.phase, "between"); now = st.nextAt; E.tick(st, now, rng); }
+  }
   assert.equal(st.phase, "over");
-  assert.equal(st.result.reason, "rounds");
-  assert.equal(st.result.winnerId, "p2"); // ライフ同じ(p2,p3)→得点が高い p2
-  const g2 = game(3);
-  g2.st.maxRounds = 1;
-  E.tick(g2.st, T0 + C.START_MS, g2.rng);
-  E.tick(g2.st, g2.st.fuseEndsAt + C.GRACE_MS + 1, g2.rng);
-  assert.equal(g2.st.result.winnerId, null); // 完全に同じ
+  assert.equal(st.result.reason, "coop_clear");
+  assert.equal(st.result.cleared, true);
+  assert.equal(st.result.defused, C.COOP_GOAL);
+  assert.equal(st.teams[0].lives, C.TEAM_LIVES.coop);
+  assert.equal(st.result.mode, "coop");
 });
 
-test("進行: 生きている人数で目標数が変わる / 脱落した人は順番に入らない", () => {
+test("協力: 誰が持っていても、爆発すると全員共通のライフが減る。0で失敗", () => {
+  const { st, rng } = game(4, "normal", 3, "coop");
+  let now = T0 + C.START_MS;
+  E.tick(st, now, rng);
+  const holders = new Set();
+  let guard = 0;
+  while (st.phase !== "over" && guard++ < 40) {
+    if (st.phase === "between") { now = st.nextAt; E.tick(st, now, rng); continue; }
+    holders.add(st.holder);
+    const before = st.teams[0].lives;
+    E.tick(st, st.fuseEndsAt + C.GRACE_MS + 5, rng);
+    assert.equal(st.teams[0].lives, before - 1);
+  }
+  assert.equal(st.result.reason, "coop_fail");
+  assert.equal(st.result.cleared, false);
+  assert.equal(st.teams[0].lives, 0);
+  assert.ok(holders.size >= 2, "爆弾をもつ人はまわる");
+});
+
+test("進行: 人数で目標数が変わる(チーム戦でも人は脱落しない)", () => {
   assert.equal(E.needFor("normal", 4), 6);
   assert.equal(E.needFor("easy", 2), 3);
   assert.equal(E.needFor("hard", 3), 6);
-  const { st, rng } = game(3);
-  st.players[1].alive = false; // p2 は脱落済み
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
-  assert.equal(st.holder, "p1");
+  assert.equal(st.need <= E.needFor("normal", 4), true);
+  // 何度爆発しても、席の順は変わらない(全員が順番にまわる)
   E.answer(st, "p1", goodWord(st), T0 + 4000, rng);
-  assert.equal(st.holder, "p3", "脱落した p2 は飛ばす");
+  assert.equal(st.holder, "p2");
 });
 
 test("進行: nextDeadline / shift / view(答えの一覧を含めない)", () => {
@@ -398,23 +471,24 @@ test("CPU: やさしい強さは上位語だけを使う", () => {
   }
 });
 
-test("CPU 対戦のシミュレーション: ゲームが必ず終わる(2〜4人・全難易度)", () => {
+test("CPU 対戦のシミュレーション: ゲームが必ず終わる(2対2・協力・全難易度)", () => {
   for (const difficulty of ["easy", "normal", "hard"]) {
-    for (const n of [2, 3, 4]) {
-      const rng = seeded(n * 7 + difficulty.length);
+    for (const [mode, n] of [["vs", 4], ["vs", 2], ["coop", 4], ["coop", 2]]) {
+      const rng = seeded(n * 7 + difficulty.length + mode.length);
       const players = Array.from({ length: n }, (_, i) => ({ id: "c" + i, name: "C" + i, cpu: true }));
-      const st = E.newGame({ players, difficulty, now: T0, rng });
+      const st = E.newGame({ players, difficulty, mode, now: T0, rng });
       let now = T0;
       let plan = null, planAt = 0, steps = 0;
-      while (st.phase !== "over" && steps++ < 20000) {
+      while (st.phase !== "over" && steps++ < 40000) {
         now += 250;
         E.tick(st, now, rng);
         if (st.phase !== "play") { plan = null; continue; }
         if (!plan) { plan = Cpu.plan(st, rng); planAt = now + plan.delayMs; }
         else if (now >= planAt) { E.answer(st, st.holder, plan.word, now, rng); plan = null; }
       }
-      assert.equal(st.phase, "over", `${difficulty}/${n}人 が終わる (steps ${steps})`);
-      assert.ok(st.round >= 1 && st.round <= C.MAX_ROUNDS);
+      assert.equal(st.phase, "over", `${mode}/${difficulty}/${n}人 が終わる (steps ${steps})`);
+      assert.ok(st.round >= 1);
+      if (mode === "vs") assert.ok(st.round <= C.MAX_ROUNDS);
     }
   }
 });
@@ -438,15 +512,16 @@ test("熟語・慣用句のお題には、日本語の意味が添えられる",
 
 // ---------- ヒント ----------
 test("ヒント: 持っている人だけ・1ラウンドに1回・-5点。正解の頭文字と文字数が全員に見える", () => {
-  const { st, rng } = game(3);
+  const { st, rng } = game(4);
   E.tick(st, T0 + C.START_MS, rng);
   const now = T0 + C.START_MS + 3000;
   assert.equal(E.hint(st, "p2", now, rng).reason, "not_your_turn");
-  st.players[0].score = 12;
+  st.players[0].score = 12; st.teams[0].score = 12;
   const r = E.hint(st, "p1", now, rng);
   assert.ok(r.ok);
   assert.equal(r.events[0].type, "hint");
   assert.equal(st.players[0].score, 7);
+  assert.equal(st.teams[0].score, 7, "チームの得点からも引く");
   assert.equal(st.hint.pid, "p1");
   assert.equal(st.hint.round, st.round);
   assert.equal(st.hint.count, 0);

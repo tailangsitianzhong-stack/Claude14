@@ -8,7 +8,8 @@
  *
  * ctx: { view, endpoint, store, getJudge(), goMenu(), setPlaying(bool) }
  *   game  : "shiritori"(既定) | "kanken" | "nep"。部屋を作る時にサーバーへ伝える
- *   hooks : 他のゲーム(漢字検定)が、ロビーの設定欄・対戦画面・結果画面を差し替えるための関数(js/games/kanken/online.js)
+ *   hooks : 他のゲームが、ロビーの設定欄・対戦画面・結果画面を差し替えるための関数(js/games/kanken/online.js)。
+ *           startGate(state, 接続人数)→{ok,note} でスタートできる条件、slotTag(state, 参加者)→HTML でメンバー欄の目印(チームの色など)
  *   help  : 入口画面の説明文(「漢字{よみ}」の書き方で、ふりがな付き)
  * 判定(辞書/Gemini)は「答える人の端末」で行い、通った手だけを部屋(サーバー)へ送る。
  * 順番・制限時間・ライフ・得点は部屋が管理する（worker/room-logic.mjs）。
@@ -237,15 +238,18 @@
         if (!p) return `<li class="slot empty"><span class="av">・</span><span>待{ま}っています…</span></li>`;
         return `<li class="slot"><span class="av">${p.avatar}</span>
           <span>${p.id === cid ? "あなた" : "友達{ともだち}"}</span>
+          ${hooks && hooks.slotTag ? hooks.slotTag(state, p) : ""}
           ${p.id === state.hostId ? '<span class="tag">ホスト</span>' : ""}
           ${p.connected ? "" : '<span class="tag tag-off">接続{せつぞく}中{ちゅう}…</span>'}</li>`;
       }).join("");
 
+      // スタートできる条件(ゲームごとに hooks.startGate で変えられる。例: ネプリーグの2対2はちょうど4人)
+      const gate = hooks && hooks.startGate ? hooks.startGate(state, connected) : { ok: connected >= 2, note: "友達{ともだち}が入{はい}るまで待{ま}ってね（2人{ふたり}から遊{あそ}べるよ）" };
       const startBlock = isHost() ? `
         <div class="menu-actions">
-          <button type="button" class="btn btn-primary" id="mp-start" ${connected >= 2 ? "" : "disabled"}>スタート！</button>
+          <button type="button" class="btn btn-primary" id="mp-start" ${gate.ok ? "" : "disabled"}>スタート！</button>
         </div>
-        ${connected < 2 ? '<p class="note">友達{ともだち}が入{はい}るまで待{ま}ってね（2人{ふたり}から遊{あそ}べるよ）</p>' : ""}`
+        ${gate.ok ? "" : `<p class="note">${gate.note}</p>`}`
         : '<p class="note">ホストがスタートするのを待{ま}ってね…</p>';
       const settings = hooks ? hooks.lobbySettings(state, isHost()) + startBlock : isHost() ? `
         <h4 class="menu-sub">難{むずか}しさ</h4>

@@ -19,9 +19,9 @@ function lobby(n = 2) {
   return st;
 }
 const ids = (st) => st.players.map((p) => p.id);
-function playing(n = 2, difficulty = "normal") {
+function playing(n = 2, difficulty = "normal", mode = "coop") {
   const st = lobby(n);
-  N.setSettings(st, st.hostId, { difficulty }, T0);
+  N.setSettings(st, st.hostId, { difficulty, mode }, T0);
   const r = N.start(st, st.hostId, T0, seeded(4));
   assert.ok(r.ok);
   return st;
@@ -37,6 +37,11 @@ test("部屋: 作成と設定。ホストだけが難しさを変えられる", 
   assert.equal(st.settings.difficulty, "hard");
   assert.ok(N.setSettings(st, st.hostId, { difficulty: "bogus" }, T0).ok);
   assert.equal(st.settings.difficulty, "hard");
+  assert.equal(st.settings.mode, "coop");                       // 既定はみんなで協力
+  assert.ok(N.setSettings(st, st.hostId, { mode: "vs" }, T0).ok);
+  assert.equal(st.settings.mode, "vs");
+  assert.ok(N.setSettings(st, st.hostId, { mode: "solo" }, T0).ok);
+  assert.equal(st.settings.mode, "vs", "知らないモードは無視");
 });
 
 test("開始: 2人以上・ホストだけ。最初は「よーい」でお題はまだ出ない", () => {
@@ -108,53 +113,97 @@ test("publicState: お題の答えの一覧・内部のお題(topic)は端末に
   assert.equal(pub.g.used.length, 1);
   assert.equal(pub.players.length, 3);
   for (const p of pub.players) {
-    assert.equal(typeof p.lives, "number");
+    assert.equal(typeof p.team, "number");
+    assert.equal(typeof p.score, "number");
     assert.ok(p.avatar && "connected" in p);
   }
+  assert.equal(pub.g.teams.length, 1);                          // 協力は1チーム(ライフはチームのもの)
+  assert.equal(pub.g.teams[0].lives, 5);
   assert.equal(pub.g.players, undefined);
   assert.equal(pub.phase, "playing");
 });
 
-test("導火線: 猶予の間は答えが通り、過ぎると持っていた人だけライフ-1", () => {
-  const st = playing(3);
+test("導火線: 猶予の間は答えが通り、過ぎると爆弾を持っていた人のチームだけライフ-1(2対2)", () => {
+  const st = playing(4, "normal", "vs");
   N.timeout(st, st.g.nextAt, seeded(2));
   const end = st.g.fuseEndsAt;
   const holder = st.g.holder;
+  const team = N.publicState(st).players.find((p) => p.id === holder).team;
   assert.equal(N.timeout(st, end + 1000).ok, false);
   const r = N.timeout(st, end + 1600);
   assert.ok(r.ok);
   assert.equal(r.events[0].kind, "explode");
   assert.equal(r.events[0].pid, holder);
+  assert.equal(r.events[0].team, team);
   const pub = N.publicState(st);
-  assert.equal(pub.players.find((p) => p.id === holder).lives, 2);
-  assert.equal(pub.players.filter((p) => p.lives === 3).length, 2);
+  assert.equal(pub.g.teams[team].lives, 3);
+  assert.equal(pub.g.teams[1 - team].lives, 4);
   assert.equal(st.g.phase, "between");
   assert.equal(N.nextAlarm(st, end), st.g.nextAt);
   // 遅れて届いた答えは、導火線が切れたあとなので通らない(爆発もすでに起きている)
   assert.equal(N.answer(st, holder, { word: "apple" }, end + 2000).ok, false);
 });
 
-test("ゲーム終了: 最後の1人が勝ち。順位が入り、部屋も終了。再戦でロビーへ", () => {
-  const st = playing(2);
+test("2対2: 席(slot)の順に 赤青赤青。ちょうど4人でないと始められない。協力は2〜4人", () => {
+  const three = lobby(3);
+  N.setSettings(three, three.hostId, { mode: "vs" }, T0);
+  assert.equal(N.start(three, three.hostId, T0).error, "need_four");
+  assert.equal(N.canStart({ mode: "vs" }, 3), false);
+  assert.equal(N.canStart({ mode: "vs" }, 4), true);
+  assert.equal(N.canStart({ mode: "coop" }, 1), false);
+  assert.equal(N.canStart({ mode: "coop" }, 2), true);
+  const st = lobby(4);
+  N.setSettings(st, st.hostId, { mode: "vs", difficulty: "easy" }, T0);
+  assert.ok(N.start(st, st.hostId, T0, seeded(1)).ok);
+  const pub = N.publicState(st);
+  assert.deepEqual(pub.g.teams.map((t) => t.key), ["red", "blue"]);
+  assert.deepEqual(pub.players.map((p) => p.slot), [0, 1, 2, 3]);       // 席の順
+  assert.deepEqual(pub.players.map((p) => p.team), [0, 1, 0, 1]);       // 赤青赤青
+  // 途中で席が空いて別の人が入っても、席の順で並ぶ(slot 順)
+  const room = lobby(4);
+  N.disconnect(room, ids(room)[1], T0 + 1);                            // slot1 の人が抜ける(ロビーなので席が空く)
+  assert.ok(N.join(room, "newcomerxx", T0 + 2).ok);
+  N.setSettings(room, room.hostId, { mode: "vs" }, T0);
+  assert.ok(N.start(room, room.hostId, T0 + 3, seeded(1)).ok);
+  assert.deepEqual(room.players.map((p) => p.slot), [0, 1, 2, 3]);
+  assert.equal(room.players[1].id, "newcomerxx");
+});
+
+test("ゲーム終了(2対2): 相手チームのライフが0で勝ち。順位が入り、部屋も終了。再戦でロビーへ", () => {
+  const st = playing(4, "normal", "vs");
   let now = st.g.nextAt;
   N.timeout(st, now, seeded(3));
   let guard = 0;
-  while (st.phase === "playing" && guard++ < 40) {
+  while (st.phase === "playing" && guard++ < 60) {
     if (st.g.phase === "between") { now = st.g.nextAt; N.timeout(st, now, seeded(guard)); continue; }
     now = st.g.fuseEndsAt + 1600;
     N.timeout(st, now);
   }
   assert.equal(st.phase, "over");
-  assert.equal(st.ranking.length, 2);
-  assert.equal(st.g.result.reason, "last");
-  const winner = st.g.result.winnerId;
-  assert.equal(st.ranking[0], winner);
-  assert.equal(N.answer(st, winner, { word: "apple" }, now + 1).error, "bad_phase");
+  assert.equal(st.ranking.length, 4);
+  assert.ok(["team_out", "rounds"].includes(st.g.result.reason));
+  assert.equal(N.answer(st, ids(st)[0], { word: "apple" }, now + 1).error, "bad_phase");
   assert.equal(N.rematch(st, ids(st).find((i) => i !== st.hostId), now).error, "not_host");
   assert.ok(N.rematch(st, st.hostId, now).ok);
   assert.equal(st.phase, "lobby");
   assert.equal(st.g, null);
   assert.equal(N.publicState(st).g, null);
+});
+
+test("ゲーム終了(協力): ライフがなくなると失敗。クリアなら成功", () => {
+  const st = playing(3, "normal", "coop");
+  let now = st.g.nextAt;
+  N.timeout(st, now, seeded(3));
+  let guard = 0;
+  while (st.phase === "playing" && guard++ < 60) {
+    if (st.g.phase === "between") { now = st.g.nextAt; N.timeout(st, now, seeded(guard)); continue; }
+    now = st.g.fuseEndsAt + 1600;
+    N.timeout(st, now);
+  }
+  assert.equal(st.phase, "over");
+  assert.equal(st.g.result.reason, "coop_fail");
+  assert.equal(st.g.result.cleared, false);
+  assert.equal(N.publicState(st).g.result.mode, "coop");
 });
 
 test("解除: 全員で目標数に届くと、爆発せず次のラウンドへ(部屋のアラームも次のラウンド)", () => {
@@ -210,4 +259,16 @@ test("ヒント: 部屋でも持っている人だけ・1回・全員の画面�
   assert.equal(JSON.stringify(pub).includes('"answers"'), false);
   assert.equal(N.hint(st, holder, st.g.nextAt + 2000).error, "hint_used");
   assert.equal(N.hint(lobby(2), "x", T0).error, "bad_phase");
+});
+
+test("古い形式の部屋(チーム戦になる前)は、ロビーに戻して安全に使える", () => {
+  const st = playing(2);
+  delete st.g.teams;                       // 古い形式を再現
+  delete st.settings.mode;
+  assert.equal(N.migrate(st), true);
+  assert.equal(st.phase, "lobby");
+  assert.equal(st.g, null);
+  assert.equal(st.settings.mode, "coop");
+  assert.equal(N.migrate(st), false);      // 新しい形式なら何もしない
+  assert.equal(N.migrate(lobby(2)), false);
 });

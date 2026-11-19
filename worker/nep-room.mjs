@@ -16,6 +16,7 @@ import * as L from "./room-logic.mjs";
 export { join, disconnect, expired, MAX_PLAYERS, MIN_PLAYERS, GRACE_MS } from "./room-logic.mjs";
 
 export const DIFFICULTIES = Core.DIFFICULTIES;
+export const MODES = Core.MODES;
 const MAX_WORD = 40;
 
 let engine = null;
@@ -23,27 +24,49 @@ const E = () => engine || (engine = Core.create(Topics.create(Words.create(globa
 
 export function createRoom(code, now) {
   const st = L.createRoom(code, now);
-  Object.assign(st, { game: "nep", settings: { difficulty: "normal" }, g: null });
+  Object.assign(st, { game: "nep", settings: { difficulty: "normal", mode: "coop" }, g: null });
   delete st.turnId; delete st.required; delete st.used; delete st.history; delete st.turnEndsAt; delete st.seconds;
   return st;
+}
+
+/**
+ * 保存されている部屋が古い形式(チーム戦になる前など)なら、ロビーに戻して安全に使えるようにする。
+ * 変えたら true を返す(呼び出し側が保存する)
+ */
+export function migrate(st) {
+  let changed = false;
+  if (!st.settings) { st.settings = { difficulty: "normal", mode: "coop" }; changed = true; }
+  if (!MODES.includes(st.settings.mode)) { st.settings.mode = "coop"; changed = true; }
+  if (st.g && !Array.isArray(st.g.teams)) { st.g = null; st.phase = "lobby"; st.ranking = []; changed = true; }
+  return changed;
 }
 
 export function setSettings(st, id, patch, now) {
   if (id !== st.hostId) return { ok: false, error: "not_host", events: [] };
   if (st.phase !== "lobby") return { ok: false, error: "bad_phase", events: [] };
   if (patch && DIFFICULTIES.includes(patch.difficulty)) st.settings.difficulty = patch.difficulty;
+  if (patch && MODES.includes(patch.mode)) st.settings.mode = patch.mode;
   st.updatedAt = now;
   return { ok: true, events: [] };
+}
+
+/**
+ * 開始できる人数: vs(2対2)はちょうど4人、coop(みんなで1チーム)は2〜4人。
+ * 席の順は部屋の席(slot)の順。vs は 赤青赤青 と交互になる(席0・2が赤、1・3が青)
+ */
+export function canStart(settings, connected) {
+  return settings.mode === "vs" ? connected === 4 : connected >= L.MIN_PLAYERS;
 }
 
 export function start(st, id, now, rng) {
   if (id !== st.hostId) return { ok: false, error: "not_host", events: [] };
   if (st.phase !== "lobby") return { ok: false, error: "bad_phase", events: [] };
-  if (st.players.filter((p) => p.connected).length < L.MIN_PLAYERS) return { ok: false, error: "need_players", events: [] };
-  st.players = st.players.filter((p) => p.connected);
+  const here = st.players.filter((p) => p.connected);
+  if (!canStart(st.settings, here.length)) return { ok: false, error: st.settings.mode === "vs" ? "need_four" : "need_players", events: [] };
+  st.players = here.sort((a, b) => a.slot - b.slot);
   st.g = E().newGame({
     players: st.players.map((p) => ({ id: p.id, name: p.avatar, avatar: p.avatar })),
-    difficulty: st.settings.difficulty, now, rng: rng || Math.random
+    difficulty: st.settings.difficulty, mode: st.settings.mode, now, rng: rng || Math.random
   });
   st.phase = "playing";
   st.ranking = [];
@@ -55,7 +78,7 @@ export function start(st, id, now, rng) {
 function sync(st, events) {
   if (st.g && st.g.phase === "over" && st.phase !== "over") {
     st.phase = "over";
-    st.ranking = st.g.result.ranking.map((r) => r.id);
+    st.ranking = st.g.result.players.slice().sort((a, b) => b.score - a.score).map((r) => r.id);
   }
   return events.map((e) => Object.assign({ kind: e.type }, e));
 }

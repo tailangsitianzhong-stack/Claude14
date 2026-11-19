@@ -6,7 +6,7 @@
  *   board.rejected({ reason, base, word }) // 自分の答えが断られた
  *   board.destroy()
  *
- * 画面: 参加者(♥・得点・💣) / お題カード(進み具合 ●●○○) / 導火線バー(1秒に1回だけ更新) /
+ * 画面: チーム(♥・得点。赤/青、または みんなで1チーム) / 参加者(席の順・得点・💣) / お題カード(進み具合 ●●○○) / 導火線バー(1秒に1回だけ更新) /
  *       今のこたえ一覧 / 入力欄＋英語キーボード(自分の番だけ)
  * 省電力: 無限アニメーションなし。バーは 1 秒に1回。動きは Fx の1回きりの演出だけ(docs/battery.md)
  */
@@ -17,6 +17,15 @@
   const Keyboard = root.ShiritoriKeyboard;
   const Ruby = root.Ruby;
 
+  /** チームの色・名前(ルビ記法つき)。vs は赤と青、coop はみんなで1チーム */
+  const TEAMS = {
+    red: { emoji: "🔴", name: "赤{あか}チーム", cls: "team-red" },
+    blue: { emoji: "🔵", name: "青{あお}チーム", cls: "team-blue" },
+    all: { emoji: "🟢", name: "みんなのチーム", cls: "team-all" }
+  };
+  const teamInfo = (g, i) => TEAMS[(g.teams[i] || g.teams[0]).key];
+  const hearts = (t) => "♥".repeat(Math.max(0, t.lives)) + "♡".repeat(Math.max(0, t.maxLives - t.lives));
+  const meOf = (v, id) => v.players.find((p) => p.id === id);
   const MAX_WORD = 24;
   const GRACE_MS = 1500;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
@@ -48,6 +57,7 @@
 
     el.innerHTML = `
       <div class="nep">
+        <div class="nep-teams" id="nep-teams"></div>
         <div class="mp-players nep-players" id="nep-players"></div>
         <div class="nep-card" id="nep-card">
           <div class="nep-title" id="nep-title"></div>
@@ -102,15 +112,33 @@
     }
 
     /* ---------- 描画 ---------- */
+    /** チームの欄: 赤/青のライフと得点(coop はみんなのライフと解除した数) */
+    function teams(v) {
+      const g = v.g;
+      const me = meOf(v, myId);
+      const holder = meOf(v, g.holder);
+      $("#nep-teams").innerHTML = g.teams.map((t, i) => {
+        const info = TEAMS[t.key];
+        const extra = g.mode === "coop" ? `<span class="goal">解除{かいじょ} ${g.defused}/${g.goal}</span>` : `<span class="sc">${t.score}点{てん}</span>`;
+        return `<div class="nep-team ${info.cls}${me && me.team === i ? " is-mine" : ""}${holder && holder.team === i && g.phase === "play" ? " is-turn" : ""}" data-team="${i}">
+          <span class="nm">${info.emoji} ${info.name}</span><span class="lv">${hearts(t)}</span>${extra}</div>`;
+      }).join("");
+      Ruby.apply($("#nep-teams"));
+    }
+
+    /** 参加者: 席の順に並ぶ(赤青赤青)。爆弾を持っている人に💣 */
     function chips(v) {
       const g = v.g;
-      $("#nep-players").innerHTML = v.players.map((p) => `
-        <div class="mp-chip${p.id === g.holder ? " is-turn" : ""}${p.alive ? "" : " is-out"}${p.connected === false ? " is-off" : ""}" data-pid="${esc(p.id)}">
-          <span class="av">${p.alive && p.id === g.holder ? "💣" : esc(avatarOf(p.id) || p.avatar || "")}</span>
-          <span class="who">${p.id === myId ? "あなた" : p.cpu ? "CPU" : "友達{ともだち}"}</span>
-          <span class="lv">${p.alive ? "♥".repeat(Math.max(0, p.lives)) + "♡".repeat(Math.max(0, 3 - p.lives)) : "✕"}</span>
+      const me = meOf(v, myId);
+      $("#nep-players").innerHTML = v.players.map((p) => {
+        const who = p.id === myId ? "あなた" : me && p.team === me.team ? "仲間{なかま}" : "相手{あいて}";
+        return `
+        <div class="mp-chip ${TEAMS[g.teams[p.team].key].cls}${p.id === g.holder ? " is-turn" : ""}${p.connected === false ? " is-off" : ""}" data-pid="${esc(p.id)}">
+          <span class="av">${p.id === g.holder && g.phase === "play" ? "💣" : esc(avatarOf(p.id) || p.avatar || "")}</span>
+          <span class="who">${who}</span>
           <span class="sc">${p.score}</span>
-        </div>`).join("");
+        </div>`;
+      }).join("");
       Ruby.apply($("#nep-players"));
     }
 
@@ -149,10 +177,12 @@
         html = mine ? "💣 あなたの番{ばん}！" : `${esc(avatarOf(g.holder))} が考{かんが}えてるよ…`;
       } else if (g.outcome && g.outcome.type === "explode") {
         const o = g.outcome;
-        html = `💥 ばくはつ！ ${esc(avatarOf(o.pid))}${o.pid === myId ? "（あなた）" : ""} ${o.out ? "は脱落{だつらく}…" : "ライフ -1"}`;
+        const ti = teamInfo(g, o.team);
+        html = `💥 ばくはつ！ ${esc(avatarOf(o.pid))}${o.pid === myId ? "（あなた）" : ""} ${ti.emoji}${ti.name} ${o.out ? "のライフがなくなった…" : "ライフ -1"}`;
         if (o.examples && o.examples.length) extra = `<br><small>${Ruby.html("答{こた}えの例{れい}")}: ${o.examples.map(esc).join(", ")}</small>`;
       } else if (g.outcome && g.outcome.type === "defuse") {
-        html = `🎉 かいじょ！ ${esc(avatarOf(g.outcome.pid))}${g.outcome.pid === myId ? "（あなた）" : ""} +20点{てん}`;
+        const ti = teamInfo(g, g.outcome.team);
+        html = `🎉 かいじょ！ ${esc(avatarOf(g.outcome.pid))}${g.outcome.pid === myId ? "（あなた）" : ""} ${ti.emoji}${ti.name} +20点{てん}`;
       } else if (g.phase !== "over") {
         html = "もうすぐスタート！";
       }
@@ -217,6 +247,7 @@
     function update(v, events) {
       const g = v.g;
       u.view = v;
+      teams(v);
       chips(v);
       card(v);
       const mine = status(v, events);
@@ -276,27 +307,37 @@
     };
   }
 
-  /** 結果画面(HTML)。順位表と、ゲームの結果の理由 */
+  /** 結果画面(HTML)。チームの勝ち負け(vs)/クリアできたか(coop)と、チームとメンバーの成績 */
   function resultHtml(v, o) {
     const g = v.g;
-    const r = g.result || { ranking: [], winnerId: null, reason: "last" };
-    const byId = new Map(v.players.map((p) => [p.id, p]));
-    const rank = r.ranking.map((x) => Object.assign({}, byId.get(x.id), x));
-    const iWon = r.winnerId === o.myId;
-    const title = r.winnerId ? (iWon ? "あなたの勝{か}ち！" : `${esc(o.avatarOf(r.winnerId))} の勝{か}ち！`) : "引{ひ}き分{わ}け！";
-    const why = r.reason === "rounds" ? `${g.maxRounds}ラウンド終了{しゅうりょう}（ライフ→得点{とくてん}の順{じゅん}）` : "最後{さいご}の1人{ひとり}まで生{い}き残{のこ}った！";
+    const r = g.result;
+    const me = meOf(v, o.myId);
+    const t = (i) => TEAMS[g.teams[i].key];
+    let icon, title, why;
+    if (r.mode === "coop") {
+      icon = r.cleared ? "🏆" : "💥";
+      title = r.cleared ? "クリア！" : "ざんねん…";
+      why = r.cleared ? `爆弾{ばくだん}を${r.goal}個{こ}解除{かいじょ}したよ！` : `ライフがなくなった（解除{かいじょ} ${r.defused}/${r.goal}）`;
+    } else {
+      const w = r.winnerTeam;
+      const iWon = w !== null && me && me.team === w;
+      icon = w === null ? "🤝" : iWon ? "🏆" : "💥";
+      title = w === null ? "引{ひ}き分{わ}け！" : iWon ? "あなたのチームの勝{か}ち！" : `${t(w).emoji}${t(w).name}の勝{か}ち！`;
+      why = r.reason === "rounds" ? `${g.maxRounds}ラウンド終了{しゅうりょう}（ライフ→得点{とくてん}の順{じゅん}）` : "相手{あいて}のライフをゼロにしたよ！";
+    }
+    const teamRows = r.teams.map((tm) => `<li class="${t(tm.team).cls}"><span class="no">${t(tm.team).emoji}</span><span>${t(tm.team).name}</span>
+        <span class="lv">${"♥".repeat(Math.max(0, tm.lives))}${tm.lives ? "" : "✕"}</span><span class="sc">${tm.score}点{てん}</span></li>`).join("");
+    const memberRows = r.players.map((p) => `<li class="${t(p.team).cls}"><span class="av">${esc(o.avatarOf(p.id) || "")}</span>
+        <span>${p.id === o.myId ? "あなた" : me && p.team === me.team ? "仲間{なかま}" : "相手{あいて}"}</span>
+        <span class="sc">${p.score}点{てん}</span><span class="wd">${p.correct}語{ご}</span></li>`).join("");
     return `
       <div class="panel shiri-result">
-        <div class="result-icon">${iWon ? "🏆" : r.winnerId ? "💥" : "🤝"}</div>
+        <div class="result-icon">${icon}</div>
         <h3 class="menu-title">${title}</h3>
-        <p class="note">${why}（全${g.round}ラウンド）</p>
-        <ol class="rank-list">
-          ${rank.map((p, i) => `<li><span class="no">${i + 1}位{い}</span><span class="av">${esc(o.avatarOf(p.id) || p.avatar || "")}</span>
-            <span>${p.id === o.myId ? "あなた" : p.cpu ? "CPU" : ""}</span>
-            <span class="lv">${p.alive ? "♥".repeat(Math.max(0, p.lives)) : "✕"}</span>
-            <span class="sc">${p.score}点{てん}</span><span class="wd">${p.correct}語{ご}</span></li>`).join("")}
-        </ol>`;
+        <p class="note">${why}（全${r.round}ラウンド）</p>
+        <ol class="rank-list nep-result-teams">${teamRows}</ol>
+        <ol class="rank-list nep-result-members">${memberRows}</ol>`;
   }
 
-  root.NepBoard = { create, resultHtml, rejectText };
+  root.NepBoard = { create, resultHtml, rejectText, TEAMS };
 })(window);

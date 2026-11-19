@@ -59,3 +59,42 @@
 .nep-hint[hidden], .nep-hint-btn[hidden] { display: none !important; }
 .nep-hint-text { font-size: 1.15rem; letter-spacing: .12em; color: var(--blue); }
 .nep-hint-btn[disabled] { opacity: .55; }
+
+/* モード選択 */
+.nep-modes { display: grid; gap: 8px; }
+.nep-mode {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; font: inherit; color: var(--ink);
+  background: #fff; border: 4px solid var(--ink-soft); border-radius: 14px 18px 12px 20px / 18px 12px 20px 14px; cursor: pointer;
+}
+.nep-mode .ic { font-size: 1.3rem; white-space: nowrap; }
+.nep-mode .tx { display: grid; line-height: 1.7; }
+.nep-mode small { font-size: .74rem; color: var(--ink-soft); }
+.nep-mode.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 3px rgba(239, 91, 76, .25); }
+
+/* チーム(赤・青・みんな)の色 */
+.nep-teams { display: flex; gap: 4px; margin-bottom: 4px; }
+.nep-team {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 6px;
+  padding: 1px 8px; font-size: .74rem; line-height: 1.55; background: rgba(255, 255, 255, .85); border: 3px solid var(--ink-soft); border-radius: 12px;
+}
+.nep-team .nm { white-space: nowrap; }
+.nep-team .lv { color: var(--red); letter-spacing: 0; white-space: nowrap; }
+.nep-team .sc, .nep-team .goal { font-weight: bold; white-space: nowrap; }
+.nep-team.is-mine .nm { text-decoration: underline; text-underline-offset: 3px; }
+.nep-team.is-turn { background: #ffe9a3; }
+.team-red { border-color: #ef5b4c !important; }
+.team-blue { border-color: #4a90d9 !important; }
+.team-all { border-color: #5cb85c !important; }
+.nep-players .mp-chip.is-turn { box-shadow: 0 0 0 3px rgba(255, 210, 63, .7); }
+.nep-players .mp-chip .sc { grid-column: 2; }
+
+/* 結果: チームごと・メンバーごと */
+.nep-result-teams li, .nep-result-members li { border-left: 8px solid; padding-left: 8px; }
+.nep-result-teams li.team-red, .nep-result-members li.team-red { border-left-color: #ef5b4c; }
+.nep-result-teams li.team-blue, .nep-result-members li.team-blue { border-left-color: #4a90d9; }
+.nep-result-teams li.team-all, .nep-result-members li.team-all { border-left-color: #5cb85c; }
+.nep-result-teams li { border-bottom-style: solid; }
+
+.nep-tag { color: #fff; }
+.nep-tag.team-red { background: #ef5b4c; }
+.nep-tag.team-blue { background: #4a90d9; }

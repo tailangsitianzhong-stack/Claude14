@@ -1,5 +1,5 @@
 /**
- * ミニネプリーグ(英語)の画面: メニュー → ひとり用(CPUと対戦) → けっか / 友達対戦
+ * ミニネプリーグ(英語)の画面: メニュー → ひとり用(CPUと組んでチーム戦) → けっか / 友達対戦
  * 進行は core.js、お題は topics.js、CPUは cpu.js、対戦画面は board.js、友達対戦は online.js(部屋はサーバー)。
  * お題データ(data/nep.js・約300KB)は、ひとり用を始める時に読み込む(友達対戦の端末には要らない)。
  */
@@ -15,7 +15,11 @@
     { key: "normal", label: "ふつう", desc: "ちょうどいい" },
     { key: "hard", label: "むずかしい", desc: "目標{もくひょう}は多{おお}め・CPUは速{はや}くて物知{ものし}り" }
   ];
-  const CPU_AVATARS = ["🐱", "🐰", "🐻"];
+  const MODES = [
+    { key: "vs", icon: "🔴🔵", name: "2対{たい}2の対戦{たいせん}", desc: "CPUの仲間{なかま}と組{く}んで、赤{あか}vs青{あお}。席{せき}は赤青赤青{あかあおあかあお}の順{じゅん}" },
+    { key: "coop", icon: "🟢", name: "4人{にん}チーム（協力{きょうりょく}）", desc: "相手{あいて}はいない！みんなで力{ちから}を合{あ}わせて爆弾{ばくだん}を8個{こ}解除{かいじょ}しよう" }
+  ];
+  const PLAYER_AVATARS = ["🐶", "🐱", "🐰", "🐻"];
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -54,42 +58,44 @@
     function showMenu() {
       stopPlay();
       const s = store.settings.get();
-      const rec = store.stats.get(s.difficulty);
+      const rec = store.stats.get(s.mode, s.difficulty);
+      const modeInfo = MODES.find((m) => m.key === s.mode);
       render(`
         <div class="panel shiri-menu">
           <h3 class="menu-title">💣 ミニネプリーグ（英語{えいご}）</h3>
-          <p class="note">爆弾{ばくだん}をまわしながら、お題{だい}に合{あ}う英単語{えいたんご}を1つずつ答{こた}えよう！</p>
+          <p class="note">チーム戦{せん}！爆弾{ばくだん}をまわしながら、お題{だい}に合{あ}う英単語{えいたんご}を1つずつ答{こた}えよう！</p>
           <details class="nep-rules">
             <summary>あそびかた</summary>
             <ul>
-              <li>爆弾{ばくだん}を持{も}っている人{ひと}が、お題{だい}に合{あ}う英単語{えいたんご}を1つ答{こた}えると、となりの人{ひと}に爆弾{ばくだん}がわたるよ</li>
+              <li>爆弾{ばくだん}を持{も}っている人{ひと}が、お題{だい}に合{あ}う英単語{えいたんご}を1つ答{こた}えると、次{つぎ}の席{せき}の人{ひと}に爆弾{ばくだん}がわたるよ</li>
               <li>みんなで目標{もくひょう}の数{かず}まで答{こた}えれば、爆弾{ばくだん}は<b>解除{かいじょ}</b>！（最後{さいご}に答{こた}えた人{ひと}は +20点{てん}）</li>
-              <li>30秒{びょう}のうちに目標{もくひょう}に届{とど}かないと<b>爆発{ばくはつ}</b>！持{も}っていた人{ひと}だけライフ(♥)が1つ減{へ}るよ</li>
-              <li>最後{さいご}まで生{い}き残{のこ}った人{ひと}の勝{か}ち！</li>
+              <li>30秒{びょう}のうちに目標{もくひょう}に届{とど}かないと<b>爆発{ばくはつ}</b>！持{も}っていた人{ひと}の<b>チームの</b>ライフ(♥)が1つ減{へ}るよ</li>
+              <li><b>2対{たい}2</b>：赤{あか}と青{あお}の2チーム。席{せき}は赤青赤青{あかあおあかあお}の順{じゅん}なので、答{こた}えるたびに爆弾{ばくだん}は相手{あいて}チームへ。相手{あいて}のライフをゼロにしたチームの勝{か}ち！</li>
+              <li><b>4人{にん}チーム</b>：相手{あいて}はいないよ。4人{にん}で1つのチームになって、爆弾{ばくだん}を8個{こ}解除{かいじょ}したらクリア！ライフがなくなったら失敗{しっぱい}</li>
               <li>答{こた}えは<b>原形{げんけい}</b>で（dogs ではなく dog）。同{おな}じ爆弾{ばくだん}で同{おな}じ答{こた}えは使{つか}えないよ</li>
             </ul>
           </details>
+          <h4 class="menu-sub">モード</h4>
+          <div class="nep-modes" role="radiogroup" aria-label="モード">
+            ${MODES.map((m) => `
+              <button type="button" class="nep-mode${m.key === s.mode ? " is-on" : ""}" role="radio" aria-checked="${m.key === s.mode}" data-mode="${m.key}">
+                <span class="ic">${m.icon}</span><span class="tx"><b>${m.name}</b><small>${m.desc}</small></span></button>`).join("")}
+          </div>
           <h4 class="menu-sub">難{むずか}しさ</h4>
           <div class="nep-diffs" role="radiogroup" aria-label="難しさ">
             ${DIFFS.map((d) => `
               <button type="button" class="nep-diff${d.key === s.difficulty ? " is-on" : ""}" role="radio" aria-checked="${d.key === s.difficulty}" data-diff="${d.key}">
                 <b>${d.label}</b><small>${d.desc}</small></button>`).join("")}
           </div>
-          <h4 class="menu-sub">CPUの人数{にんずう}</h4>
-          <div class="nep-cpus" role="radiogroup" aria-label="CPUの人数">
-            ${[1, 2, 3].map((n) => `
-              <button type="button" class="nep-cpu${n === s.cpus ? " is-on" : ""}" role="radio" aria-checked="${n === s.cpus}" data-cpus="${n}">
-                <b>${n}人{にん}</b><small>あわせて${n + 1}人{にん}</small></button>`).join("")}
-          </div>
-          <p class="note">戦績{せんせき}（${DIFFS.find((d) => d.key === s.difficulty).label}）: <b>${rec.wins}</b>勝{しょう} / ${rec.played}戦{せん}</p>
+          <p class="note">戦績{せんせき}（${modeInfo.name}・${DIFFS.find((d) => d.key === s.difficulty).label}）: <b>${rec.wins}</b>${s.mode === "coop" ? "回{かい}クリア" : "勝{しょう}"} / ${rec.played}戦{せん}</p>
           <div class="menu-actions">
             <button type="button" class="btn btn-primary" id="nep-start" disabled>スタート！</button>
             <button type="button" class="btn" id="nep-friends">👥 友達{ともだち}と遊{あそ}ぶ</button>
           </div>
           <p class="note" id="nep-note">データを読{よ}み込{こ}み中{ちゅう}…</p>
         </div>`);
+      view.querySelectorAll(".nep-mode").forEach((b) => b.addEventListener("click", () => { store.settings.set({ mode: b.dataset.mode }); showMenu(); }));
       view.querySelectorAll(".nep-diff").forEach((b) => b.addEventListener("click", () => { store.settings.set({ difficulty: b.dataset.diff }); showMenu(); }));
-      view.querySelectorAll(".nep-cpu").forEach((b) => b.addEventListener("click", () => { store.settings.set({ cpus: +b.dataset.cpus }); showMenu(); }));
       view.querySelector("#nep-friends").addEventListener("click", () => getOnline().showFriends());
       const start = view.querySelector("#nep-start");
       start.addEventListener("click", playSolo);
@@ -111,9 +117,9 @@
       stopPlay();
       const { E, Cpu } = tools;
       const s = store.settings.get();
-      const players = [{ id: "me", name: "あなた", avatar: "🐶" }];
-      for (let i = 0; i < s.cpus; i++) players.push({ id: "c" + (i + 1), name: "CPU" + (i + 1), cpu: true, avatar: CPU_AVATARS[i] });
-      const st = E.newGame({ players, difficulty: s.difficulty, now: Date.now() });
+      // 席は4つ。自分は席0(vs なら赤)。vs は席の順に 赤・青・赤・青 なので、席2が自分の仲間、席1・3が相手
+      const players = PLAYER_AVATARS.map((avatar, i) => (i === 0 ? { id: "me", name: "あなた", avatar } : { id: "c" + i, name: "CPU" + i, cpu: true, avatar }));
+      const st = E.newGame({ players, difficulty: s.difficulty, mode: s.mode, now: Date.now() });
       const avatarOf = (id) => (st.players.find((p) => p.id === id) || {}).avatar || "";
       const nameOf = (id) => (st.players.find((p) => p.id === id) || {}).name || "";
       const asView = () => ({ players: st.players, g: st });
@@ -141,8 +147,9 @@
       function finish() {
         if (done) return;
         done = true;
-        const won = st.result.winnerId === "me";
-        store.stats.add(s.difficulty, won);
+        const myTeam = E.byId(st, "me").team;
+        const won = st.mode === "coop" ? st.result.cleared : st.result.winnerTeam === myTeam;
+        store.stats.add(s.mode, s.difficulty, won);
         clearInterval(timer);
         document.removeEventListener("visibilitychange", onVis);
         setTimeout(() => {                      // 爆発の演出を少し見せてから結果へ
