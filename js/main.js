@@ -55,6 +55,12 @@
     show("home");
   }
 
+  /* ---------- スマホの「長押しメニュー」を出さない ----------
+     ダブルタップ拡大の無効化と文字選択の無効化は CSS(css/style.css)。ここは長押しのメニューの保険。ピンチ拡大は残す */
+  if (window.matchMedia && matchMedia("(pointer: coarse)").matches) {
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
   /* ---------- イベント ---------- */
   $("#btn-home").addEventListener("click", goHome);
   $("#btn-settings").addEventListener("click", () => show("settings"));

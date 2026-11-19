@@ -15,6 +15,17 @@
 
 html, body { height: 100%; margin: 0; }
 
+/* スマホの「ダブルタップで拡大」と「長押し(文字選択・メニュー)」を無効にする。
+   ピンチ操作での拡大は残す。touch-action: manipulation = ダブルタップ拡大だけ無効 */
+html, body, * { touch-action: manipulation; }
+@media (pointer: coarse) {
+  html, body, * {
+    -webkit-touch-callout: none;   /* iOS: 長押しのメニュー(コピー・保存など) */
+    -webkit-user-select: none;     /* 長押しの文字選択 */
+    user-select: none;
+  }
+}
+
 body {
   font-family: var(--font);
   color: var(--ink);
