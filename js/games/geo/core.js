@@ -226,7 +226,7 @@
       const t = String(text == null ? "" : text);
       if (!Text.normalize(t)) return { ok: false, reason: "empty", events: [] };
       if (t.length > 40) return { ok: false, reason: "too_long", events: [] };
-      if (Text.matches(t, st.priv.yomi)) return { ok: true, verdict: "correct", events: correct(st, pid, now) };
+      if (Text.matches(t, st.priv.yomi) || Text.matches(t, [st.priv.ans])) return { ok: true, verdict: "correct", events: correct(st, pid, now) };
       // 辞書(読みの一覧)に合わない。別名・表記ゆれの可能性があるので、AI の確認が必要
       b.judging = { text: t, since: now };
       return { ok: true, verdict: "unsure", text: t, events: [{ type: "judging", pid }] };

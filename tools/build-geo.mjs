@@ -32,6 +32,7 @@ const warn = [];
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const shuffle = (arr, r) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const isKana = (s) => /^[ぁ-んー]+$/.test(s);
+const isReading = (s) => /^[ぁ-んーa-z0-9]+$/.test(s);   // 読み: かな + 英小文字・数字(GPS・135 など)
 
 /* ---------- 国・都道府県 ---------- */
 const wc = JSON.parse(readFileSync(countriesPath, "utf8")).filter((c) => c.independent);
@@ -101,7 +102,7 @@ const buzz = [];
 for (const l of [...lines("buzz-hand.txt"), ...lines("buzz-high.txt")]) {
   const [id, cat, lv, text, ans, yomi] = l.split("|");
   const ys = yomi.split(",").map((s) => hira(s.trim()));
-  for (const y of ys) if (!isKana(y)) warn.push(`buzz ${id}: 読みがかなでない "${y}"`);
+  for (const y of ys) if (!isReading(y)) warn.push(`buzz ${id}: 読みがかなでない "${y}"`);
   buzz.push({ id, cat, sc: cat, lv: Number(lv), text, ans, yomi: ys });
 }
 // 国の別名の読み
@@ -135,7 +136,7 @@ for (const p of prefs) {
   const base = p.capYomi.replace(/(し|く)$/, "");
   buzz.push({ id: "pk-" + p.id.slice(3), cat: "japan", sc: "japan", lv: same ? 1 : p.id === "JP-13" ? 3 : fame.pref1.has(p.id) ? 1 : 2, text: `${p.ja}の${suffix(p.ja)}庁所在地はどこでしょう？`, ans: p.cap, yomi: [p.capYomi, base] });
 }
-for (const b of buzz) if (b.yomi.some((y) => !isKana(y))) warn.push(`buzz ${b.id}: 読みがかなでない`);
+for (const b of buzz) if (b.yomi.some((y) => !isReading(y))) warn.push(`buzz ${b.id}: 読みがかなでない`);
 if (new Set(buzz.map((b) => b.id)).size !== buzz.length) warn.push("buzz: id が重複");
 
 /* ---------- 地図で選ぶ ---------- */

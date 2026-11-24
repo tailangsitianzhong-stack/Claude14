@@ -1,6 +1,6 @@
 /**
  * 地理クイズ「早押し」の表示: 問題文が1文字ずつ流れる(「、」「。」で間があく)。わかったら「押す！」で文が止まり、
- * 押した人だけが、かな入力で答える(専用キーボード)。まちがい・時間切れは解答権を失い、文はつづきから流れる。
+ * 押した人だけが、かな・英字・数字で答える(専用キーボード)。まちがい・時間切れは解答権を失い、文はつづきから流れる。
  * 辞書に合わない答えは、AI に確認する(確認中は時間が止まる)。(GeoBoard から呼ばれる。root.GeoViews.buzz)
  *
  * 文字の出る時刻は、問題が持つ表(q.at)と 出題時刻・止まっていた時間(pauseMs) から、端末と部屋が同じ式で計算する。
@@ -15,6 +15,8 @@
   const Keyboard = root.ShiritoriKeyboard;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const MAX_ANSWER = 20;
+  /** 答えの入力の種類: かな(ふつう) / 英字(ASEAN・GPSなど) / 数字(135・6次産業化など) */
+  const MODES = [["kana", "かな"], ["en", "ABC"], ["num", "123"]];
 
   function create(ctx) {
     const { stage, extra, myId, avatarOf, serverNow } = ctx;
@@ -68,9 +70,21 @@
     /* ---------- 入力(かな) ---------- */
     function ensureKeyboard() {
       if (u.kb) return;
-      extra.innerHTML = '<div id="shiri-kb"></div>';
+      extra.innerHTML = '<div class="kb-tabs geo-kbmode" id="geo-kbmode" role="tablist"></div><div id="shiri-kb"></div>';
       u.kb = Keyboard.create(extra.querySelector("#shiri-kb"), { onAction });
-      u.detach = Keyboard.attachPhysicalKeys(() => "kana", onAction, () => u.kb.getKanaMethod());
+      const tabs = extra.querySelector("#geo-kbmode");
+      for (const [id, label] of MODES) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "kb-key kb-tab" + (id === "kana" ? " is-on" : ""); b.dataset.mode = id; b.setAttribute("role", "tab");
+        b.innerHTML = Ruby.html(label);
+        b.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          u.kb.setMode(id);
+          tabs.querySelectorAll(".kb-tab").forEach((x) => { x.classList.toggle("is-on", x === b); x.setAttribute("aria-selected", String(x === b)); });
+        });
+        tabs.appendChild(b);
+      }
+      u.detach = Keyboard.attachPhysicalKeys(() => u.kb.getMode(), onAction, () => u.kb.getKanaMethod(), true);
     }
     function dropKeyboard() {
       if (u.detach) { u.detach(); u.detach = null; }
@@ -112,7 +126,7 @@
       press$.hidden = !(v.phase === "play" && !b.by && !lockedMe);
       let st = "";
       if (v.phase === "play") {
-        if (b.by) st = b.judging ? `🤖 AIが答{こた}えを確認{かくにん}中{ちゅう}…` : b.by === myId ? "✏️ あなたが押{お}した！かなで答{こた}えてね" : `${esc(avatarOf(b.by))} が押{お}した！答{こた}え中{ちゅう}…`;
+        if (b.by) st = b.judging ? `🤖 AIが答{こた}えを確認{かくにん}中{ちゅう}…` : b.by === myId ? "✏️ あなたが押{お}した！答{こた}えを入力{にゅうりょく}してね" : `${esc(avatarOf(b.by))} が押{お}した！答{こた}え中{ちゅう}…`;
         else if (lockedMe) st = "あなたはこの問題{もんだい}の解答権{かいとうけん}がないよ（ほかの人{ひと}を待{ま}とう）";
         else st = "わかったら押{お}してね！";
       }

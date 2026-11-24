@@ -64,6 +64,7 @@
   /* ---------- イベント ---------- */
   $("#btn-home").addEventListener("click", goHome);
   $("#btn-settings").addEventListener("click", () => show("settings"));
+  { const v = $("#app-version"); if (v) v.textContent = "バージョン " + (window.APP_VERSION || "-"); }
   document.querySelectorAll("[data-goto]").forEach((b) =>
     b.addEventListener("click", () => show(b.dataset.goto))
   );

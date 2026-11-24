@@ -4,7 +4,7 @@
  * スペルチェック・貼り付けは一切出ない。
  *
  *   const kb = ShiritoriKeyboard.create(rootEl, { onAction });
- *   kb.setMode("kana" | "en");
+ *   kb.setMode("kana" | "en" | "num");   // num = 数字(0〜9)。地理クイズの早押しで使う
  *   kb.destroy();
  *
  * onAction には ShiritoriInput.applyAction 用の action と
@@ -281,10 +281,22 @@
       wrap.appendChild(controls([toggle]));
     }
 
+    /** 数字キー(0〜9) */
+    function renderNum() {
+      const box = el("div", "kb-en kb-num");
+      ["123", "456", "789", "0"].forEach((digits) => {
+        const row = el("div", "kb-row");
+        digits.split("").forEach((c) => row.appendChild(key(c, "", { type: "char", value: c }, c)));
+        box.appendChild(row);
+      });
+      wrap.appendChild(box);
+      wrap.appendChild(controls([]));
+    }
+
     function render() {
       wrap.innerHTML = "";
       wrap.dataset.mode = mode;
-      if (mode === "kana") renderKana(); else renderEn();
+      if (mode === "kana") renderKana(); else if (mode === "num") renderNum(); else renderEn();
     }
 
     render();
@@ -299,9 +311,10 @@
 
   /**
    * パソコンの物理キーボード対応（英語モードは英字のみ、かなモードは操作キーのみ）
+   * allowDigits=true なら、数字キー(0〜9)も、どのモードでも入力できる(地理クイズの早押し用)。
    * 戻り値の関数を呼ぶと解除される。
    */
-  function attachPhysicalKeys(getMode, onAction, getKanaMethod) {
+  function attachPhysicalKeys(getMode, onAction, getKanaMethod, allowDigits) {
     function onKeyDown(e) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
       if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
@@ -309,6 +322,10 @@
       else if (e.key === "Enter") {
         if (e.target && e.target.tagName === "BUTTON") return; // ボタン操作はそちらで処理
         e.preventDefault(); onAction({ type: "submit" });
+      }
+      else if (/^[0-9]$/.test(e.key) && (allowDigits || getMode() === "num")) {
+        e.preventDefault();
+        onAction({ type: "char", value: e.key });
       }
       else if (getMode() === "en" && /^[a-zA-Z]$/.test(e.key)) {
         e.preventDefault();

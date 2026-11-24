@@ -33,7 +33,7 @@ test("データ: 問題数・形式・読みの形", () => {
   assert.ok(D.buzz.length >= 560 && D.map.length >= 700 && D.choice.length >= 840, `${D.buzz.length}/${D.map.length}/${D.choice.length}`);
   assert.equal(D.countries.length, 194);
   assert.equal(D.prefs.length, 47);
-  for (const b of D.buzz) { assert.ok(b.yomi.length >= 1 && b.yomi.every((y) => /^[ぁ-んー]+$/.test(y)), b.id); assert.ok(["world", "japan"].includes(b.sc)); assert.match(b.text, /[？。]$/); }
+  for (const b of D.buzz) { assert.ok(b.yomi.length >= 1 && b.yomi.every((y) => /^[ぁ-んーa-z0-9]+$/.test(y)), b.id); assert.ok(["world", "japan"].includes(b.sc)); assert.match(b.text, /[？。]$/); }
   for (const m of D.map) assert.ok(Q.isValidTarget(m.map, m.target), m.id);
   for (const c of D.choice) { assert.equal(c.c.length, 4); assert.equal(new Set(c.c).size, 4, c.id); assert.equal(c.a, 0); }
   const kinds = new Set(D.choice.map((c) => c.k));
@@ -356,7 +356,7 @@ test("データ: 高校(レベル3)の問題が、形式×範囲ごとに30問�
   assert.ok(D.map.some((m) => /世界で第\d位/.test(m.text)) && D.map.some((m) => /全国で/.test(m.text)));
   assert.ok(Object.values(D.climate).some((c) => c.ty === "熱帯モンスーン気候") && Object.values(D.climate).some((c) => c.ty === "氷雪気候"));
   // 早押しの読みは、かなキーボードで打てる(数字・英字を含まない)
-  for (const b of D.buzz) for (const y of b.yomi) assert.match(y, /^[ぁ-んー]+$/, b.id);
+  for (const b of D.buzz) for (const y of b.yomi) assert.match(y, /^[ぁ-んーa-z0-9]+$/, b.id);
 });
 
 test("出題: 学年(小中=レベル1〜2 / 高校=レベル3 / すべて)で絞れる。足りなければ学年を問わない", () => {
@@ -493,4 +493,45 @@ test("すべての4択: 選択肢は空でない文字列で、重なりがな�
     assert.equal(q.c[q.a], names.get(code), q.id);
   }
   assert.ok(n >= 50, "写真→国/県の問題 " + n);
+});
+
+test("早押し: 英字・数字でも答えられる(ASEAN・GPS・全角・大文字小文字・数字まじり)", () => {
+  const tryAns = (id, text) => {
+    const q = D.buzz.find((b) => b.id === id);
+    const g = game("buzz", 2); const t0 = start(g);
+    g.st.priv = Object.assign({}, g.st.priv, { ans: q.ans, yomi: q.yomi });
+    E.press(g.st, "p1", t0 + 500);
+    return E.answer(g.st, "p1", text, t0 + 1500).verdict;
+  };
+  assert.equal(tryAns("w37", "ASEAN"), "correct");
+  assert.equal(tryAns("w37", "ａｓｅａｎ"), "correct");           // 全角・小文字
+  assert.equal(tryAns("hw29", "gps"), "correct");
+  assert.equal(tryAns("hw29", "じーぴーえす"), "correct");        // かなでも
+  assert.equal(tryAns("hw33", "ごぜん6じ"), "correct");           // 数字まじり
+  assert.equal(tryAns("hw33", "6"), "unsure");                    // 辞書に合わなければ AI へ
+  assert.equal(tryAns("hj17", "135"), "correct");
+  assert.equal(tryAns("hj17", "135ど"), "correct");
+  assert.equal(tryAns("hj16", "2cm"), "correct");
+  assert.equal(tryAns("hj28", "6じさんぎょうか"), "correct");
+  assert.equal(tryAns("w37", "EUU"), "unsure");
+});
+
+test("専用キーボード: 数字モードがあり、数字の入力は文字として入る", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const kb = fs.readFileSync(path.join(__dirname, "../js/games/shiritori/keyboard.js"), "utf8");
+  assert.match(kb, /renderNum/);
+  assert.match(kb, /allowDigits/);
+  const Romaji = require("../js/games/shiritori/romaji.js");
+  let st = { text: "", pending: "" };
+  for (const a of [{ type: "romaji", value: "g" }, { type: "romaji", value: "o" }, { type: "char", value: "6" }, { type: "char", value: "x" }]) st = Romaji.applyReading(st, a, { maxLength: 20 });
+  assert.equal(st.text, "ご6x");
+});
+
+test("バージョン表示: js/version.js に APP_VERSION があり、index.html が読み込む", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const v = fs.readFileSync(path.join(__dirname, "../js/version.js"), "utf8");
+  assert.match(v, /window\.APP_VERSION = "\d{4}\.\d{2}\.\d{2}-\d+"/);
+  const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
+  assert.match(html, /js\/version\.js/);
+  assert.match(html, /id="app-version"/);
 });

@@ -29,3 +29,6 @@ npm test          # テスト一式
 ## ゲームの追加
 `js/games.js` に `{ id, title, icon, desc, ready, mount(root), unmount() }` を足します。
 文章の漢字には `漢字{かんじ}` と書くと、ふりがな(ルビ)が付きます。ずっと動き続けるアニメーションは電池を大量に使うので作らないでください（`docs/battery.md`）。音は `Sfx.play("ok")`、演出は `Fx.confetti()` などが使えます。
+
+## バージョン表示
+ホーム画面の一番下に「バージョン 日付-通し番号」が出ます（更新が届いたかの目印）。コミットの前に `node tools/stamp-version.mjs` を実行すると `js/version.js` が更新されます。
