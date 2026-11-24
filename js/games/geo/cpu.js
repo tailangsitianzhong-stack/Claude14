@@ -42,7 +42,7 @@
     };
 
     function plan(st, rng = Math.random) {
-      const d = st.difficulty, lv = (st.q && st.q.lv) || 2;
+      const d = st.difficulty, lv = st.grade === "exam" ? (st.q && st.q.ex >= 2 ? 3 : 2) : (st.q && st.q.lv) || 2;   // 大学入試は、CPUも少しまちがえやすい
       if (st.rmode === "choice") {
         const p = clamp(KNOW.choice[d] + (st.q.k === "photo" ? 0.05 : 0) + (LV_ADJ[lv] || 0) * 0.5, 0.15, 0.97);
         const right = rng() < p;

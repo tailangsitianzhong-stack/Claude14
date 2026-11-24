@@ -26,6 +26,7 @@ if (!countriesPath || !admin1Path) { console.error("usage: node tools/build-geo.
 const root = new URL("../", import.meta.url).pathname;
 const src = (n) => root + "tools/geo-source/" + n;
 const lines = (n) => readFileSync(src(n), "utf8").split(/\r?\n/).filter((l) => l.trim() && !l.startsWith("#"));
+const optLines = (n) => (existsSync(src(n)) ? lines(n) : []);   // ファイルが無ければ空
 const warn = [];
 
 /* 決まった乱数(毎回同じ出力になるように) */
@@ -325,6 +326,158 @@ wbQuestions("pop", 70,
 if (new Set(choice.map((c) => c.id)).size !== choice.length) warn.push("choice: id が重複");
 for (const c of choice) if (new Set(c.c).size !== 4) warn.push(`choice ${c.id}: 選択肢が重複`);
 
+/* ---------- 大学入試(共通テスト・二次レベル)の印 ---------- */
+const EXT = { "熱帯雨林気候": 1, "サバナ気候": 1, "砂漠気候": 1, "地中海性気候": 1, "温暖湿潤気候": 1, "西岸海洋性気候": 2, "冷帯(亜寒帯)湿潤気候": 2, "ツンドラ気候": 2, "氷雪気候": 2, "熱帯モンスーン気候": 3, "ステップ気候": 3, "温暖冬季少雨気候": 3, "冷帯冬季少雨気候": 3, "高山気候": 3 };   // 気候の種類ごとの、基礎・標準・発展
+// ex=1(基礎)・2(標準)・3(発展)。xo=1 は「大学入試だけの問題」(小中・高校・すべてには出さない)。
+// すでにある高校レベル(lv3)の問題のうち、資料の読み取り・用語の問題は、大学入試にも出す(印だけ付ける)
+{
+  const EX_CHOICE = { type: 2, stat: 2, indic: 3, pop: 2, graph: 3, table: 2 };
+  for (const c of choice) {
+    if (c.lv !== 3) continue;
+    if (c.k === "type" && EXT[c.c[0]]) c.ex = EXT[c.c[0]];
+    else if (EX_CHOICE[c.k]) c.ex = EX_CHOICE[c.k];
+  }
+  // 景観・土地利用の写真(高校地理): 見た目でわかるものは基礎、地形・農業の知識が必要なものは発展
+  const PH1 = new Set("glacier coralreef geyser iceberg oasis mangrove atoll fjord delta japan-karst japan-wind".split(" "));
+  const PH3 = new Set("columnar mesa meander stilt caldera polder pivot loess tundra taiga savanna steppe rice sheep japan-complex japan-delta japan-showashinzan japan-kussharo japan-rias japan-senmaida".split(" "));
+  for (const c of choice) {
+    const m = /^f[c]?-(.+)$/.exec(c.id);
+    const ph = m && c.k === "photo" && photoUse.find((p) => p.id === m[1] && isScape(p.kind));
+    if (ph) c.ex = PH1.has(ph.id) ? (c.id.startsWith("fc-") ? 2 : 1) : PH3.has(ph.id) ? 3 : 2;
+  }
+  // 高校地理の手書き(用語・しくみ)。基礎(1)=基本の用語 / 発展(3)=むずかしい用語・図法・国際協定。それ以外は標準(2)
+  const EX1 = new Set("hw01 hw03 hw06 hw11 hw12 hw15 hw19 hw22 hw24 hw25 hw26 hw27 hw29 hj03 hj04 hj05 hj08 hj10 hj13 hj15 hj21 hj27".split(" "));
+  const EX3 = new Set("hw07 hw13 hw14 hw18 hw31 hw32 hw35 hw41 hw42 hw43 hw44 hw45 hj01 hj02 hj07 hj09 hj12 hj19 hj20 hj24 hj25 hj26 hj29 hj30".split(" "));
+  for (const b of buzz) if (/^h[wj]\d+$/.test(b.id)) b.ex = EX1.has(b.id) ? 1 : EX3.has(b.id) ? 3 : 2;
+  for (const m of map) if (/^m[hr]/.test(m.id) && m.lv === 3) m.ex = 2;        // 高校地理の手書き・面積/人口の順位
+  for (const m of map) {                                                       // 順位の問題: 上位は基礎、下位は発展
+    const r = /^mr-(?:area|pop)-(\d+)$/.exec(m.id);
+    if (r) m.ex = Number(r[1]) <= 5 ? 1 : Number(r[1]) >= 9 ? 3 : 2;
+    const j = /^mr-j[alsp]-(\d+)$/.exec(m.id);
+    if (j) m.ex = Number(j[1]) <= 2 ? 1 : Number(j[1]) >= 5 ? 3 : 2;
+  }
+  const EXM1 = new Set("mh-609 mh-612 mh-613 mh-614 mh-615 mh-616 mh-621 mh-622 mh-623 mh-626 mh-628 mh-629 mh-633 mh-639 mh-646 mh-649 mh-654 mh-662 mh-663 mh-664 mh-676".split(" "));
+  const EXM3 = new Set("mh-620 mh-624 mh-625 mh-627 mh-630 mh-631 mh-632 mh-634 mh-635 mh-637 mh-638 mh-641 mh-643 mh-645 mh-647 mh-648 mh-655 mh-656 mh-665 mh-666 mh-669 mh-672 mh-678 mh-677".split(" "));
+  for (const m of map) if (EXM1.has(m.id)) m.ex = 1; else if (EXM3.has(m.id)) m.ex = 3;
+}
+// 大学入試だけの問題(手書き)
+for (const l of optLines("exam-buzz.txt")) {                           // id|world/japan|ex|本文|答えの表示|読み(,区切り)
+  const [id, cat, ex, text, ans, yomi] = l.split("|");
+  const ys = yomi.split(",").map((x) => hira(x.trim()));
+  for (const y of ys) if (!isReading(y)) warn.push(`exam-buzz ${id}: 読みがかなでない "${y}"`);
+  if (!["world", "japan"].includes(cat) || ![1, 2, 3].includes(Number(ex))) { warn.push(`exam-buzz ${id}: 形式`); continue; }
+  buzz.push({ id: "x" + id, cat, sc: cat, lv: 3, ex: Number(ex), xo: 1, text, ans, yomi: ys });
+}
+optLines("exam-map.txt").forEach((l, i) => {                           // world/japan|ex|問題文|コード
+  const [kind, ex, text, code] = l.split("|");
+  if (kind === "world" ? !cBy.has(code) : !pBy.has(code)) { warn.push(`exam-map: 知らないコード ${code}`); return; }
+  map.push({ id: `mx-${i + 1}`, map: kind, sc: kind, text, target: code, lv: 3, ex: Number(ex), xo: 1 });
+});
+optLines("exam-choice.txt").forEach((l, i) => {                        // world/japan|ex|問題|正解|まちがい(,区切り3つ)
+  const [sc, ex, q, ans, ...w] = l.split("|");
+  const c = [ans, ...(w.length === 1 ? String(w[0]).split(",") : w)];                // まちがいは「|」区切り、または「,」で1つにまとめる
+  if (!["world", "japan"].includes(sc)) { warn.push(`exam-choice ${i + 1}: 範囲`); return; }
+  if (c.length !== 4 || new Set(c).size !== 4 || ![1, 2, 3].includes(Number(ex))) { warn.push(`exam-choice ${i + 1}: 形式`); return; }
+  choice.push({ id: `xc-${i + 1}`, k: "basic", sc, lv: 3, ex: Number(ex), xo: 1, q, m: {}, c, a: 0 });
+});
+for (const list of [buzz, map, choice]) if (new Set(list.map((x) => x.id)).size !== list.length) warn.push("id が重複");
+
+/* ---------- 大学入試: 自動で作る資料選択 ---------- */
+{
+  const rx = rng(101);
+  const KG = { "熱帯雨林気候": "Af", "熱帯モンスーン気候": "Am", "サバナ気候": "Aw", "砂漠気候": "BW", "ステップ気候": "BS", "地中海性気候": "Cs", "温暖湿潤気候": "Cfa", "温暖冬季少雨気候": "Cw", "西岸海洋性気候": "Cfb", "冷帯(亜寒帯)湿潤気候": "Df", "冷帯冬季少雨気候": "Dw", "ツンドラ気候": "ET", "氷雪気候": "EF", "高山気候": "H" };
+  // (1) ハイサーグラフ → 都市 / 雨温図・表 → ケッペンの記号
+  for (const [id, c] of Object.entries(climate)) {
+    if (!c.ty || !KG[c.ty]) continue;
+    const jp = jpIds.includes(id);
+    const ex = EXT[c.ty];
+    let ds = pickDistract(id, jp ? jpIds : worldIds);
+    if (jp && ds.length < 3) ds = shuffle(jpIds.filter((x) => x !== id), rx).slice(0, 3);
+    if (ds.length === 3) choice.push({ id: "xh-" + id, k: "hyther", sc: jp ? "japan" : "world", lv: 3, ex, xo: 1, q: "次のハイサーグラフ（点は1月〜12月。横軸が月降水量、縦軸が月平均気温）に当てはまる都市は、どれでしょう？", m: { city: id }, c: [c.n, ...ds.map((x) => climate[x].n)], a: 0 });
+    const wrong = shuffle(Object.values(KG).filter((t) => t !== KG[c.ty]), rx).slice(0, 3);
+    choice.push({ id: "xk-" + id, k: "type", sc: jp ? "japan" : "world", lv: 3, ex, xo: 1, q: "この雨温図が表す気候を、ケッペンの気候区分の記号で選びましょう。", m: { city: id, noName: true }, c: [KG[c.ty], ...wrong], a: 0 });
+    if (EXT[c.ty] >= 2 || id.length % 2) {
+      const wrong2 = shuffle(Object.values(KG).filter((t) => t !== KG[c.ty]), rx).slice(0, 3);
+      choice.push({ id: "xt-" + id, k: "type", sc: jp ? "japan" : "world", lv: 3, ex: Math.min(3, ex + 1), xo: 1, q: "この気温と降水量の表が表す気候を、ケッペンの気候区分の記号で選びましょう。", m: { city: id, noName: true, table: true }, c: [KG[c.ty], ...wrong2], a: 0 });
+    }
+  }
+  // (2) 統計の組み合わせ(国A〜C × 指標)
+  const IND = [
+    ["density", "人口密度（人/km²）", (v) => Math.round(v).toLocaleString("en-US"), (a, b) => Math.abs(Math.log(a / b)) >= 0.7],
+    ["urban", "都市人口率（％）", (v) => Math.round(v), (a, b) => Math.abs(a - b) >= 12],
+    ["gni", "1人あたり国民総所得（ドル）", (v) => (Math.round(v / 100) * 100).toLocaleString("en-US"), (a, b) => Math.abs(Math.log(a / b)) >= 0.7],
+    ["life", "平均寿命（歳）", (v) => Math.round(v), (a, b) => Math.abs(a - b) >= 5],
+    ["agri", "農業で働く人の割合（％）", (v) => Math.round(v), (a, b) => Math.abs(a - b) >= 8],
+    ["birth", "出生率（人口千人あたり）", (v) => Math.round(v * 10) / 10, (a, b) => Math.abs(a - b) >= 6],
+    ["age65", "65歳以上の人口の割合（％）", (v) => Math.round(v * 10) / 10, (a, b) => Math.abs(a - b) >= 6]
+  ];
+  const okIds = WB_COUNTRIES.filter((id) => IND.every(([k]) => val(k, id) != null));
+  const c1 = okIds.filter((id) => fame.country1.has(id)), c12 = okIds.filter((id) => fame.country1.has(id) || fame.country2.has(id));
+  const useCount = {};
+  let made = 0;
+  // 国の有名さで、基礎(だれでも知る国だけ)・標準(中学で習う国まで)・発展(あまり知られていない国をふくむ)に分ける
+  for (const [tier, pool, quota, maxUse] of [[1, c1, 45, 5], [2, c12, 45, 4], [3, okIds, 40, 3]]) {
+    let n = 0;
+    for (let tries = 0; tries < 8000 && n < quota; tries++) {
+      const trio = shuffle(pool, rx).slice(0, 3);
+      if (trio.some((id) => (useCount[id + tier] || 0) >= maxUse)) continue;
+      if (tier === 2 && trio.every((id) => fame.country1.has(id))) continue;
+      if (tier === 3 && !trio.some((id) => !fame.country1.has(id) && !fame.country2.has(id))) continue;
+      const good = IND.filter(([k, , , far3]) => [[0, 1], [0, 2], [1, 2]].every(([i, j]) => far3(val(k, trio[i]), val(k, trio[j]))));
+      if (good.length < 4) continue;                                   // 3か国どうしが、十分に離れている指標を4つ選ぶ
+      const inds = shuffle(good, rx).slice(0, 4);
+      const cols = shuffle(trio, rx);                                  // ア・イ・ウの国の並び
+      const names = [...trio].sort().map((id) => cBy.get(id).ja);
+      const L = ["ア", "イ", "ウ"];
+      const label = (perm) => perm.map((id) => cBy.get(id).ja).join("・");               // ア・イ・ウの順
+      const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].map((p) => p.map((i) => cols[i]));
+      const right = label(cols);
+      const wrongs = shuffle(perms.map(label).filter((t) => t !== right), rx).slice(0, 3);
+      trio.forEach((id) => { useCount[id + tier] = (useCount[id + tier] || 0) + 1; });
+      choice.push({
+        id: `xs-${++made}`, k: "combo", sc: "world", lv: 3, ex: tier, xo: 1,
+        q: `次の表のア〜ウは、${names.join("・")}のいずれかの国の統計です。ア・イ・ウの順に国名を並べた組み合わせとして正しいものを選びましょう。`,
+        m: { cols: L, rows: inds.map(([k, lab, fmt]) => [lab, ...cols.map((id) => fmt(val(k, id)))]) }, c: [right, ...wrongs], a: 0
+      });
+      n++;
+    }
+  }
+  // (3) 時差の計算(標準時。サマータイムは考えない)
+  const TZ = [["北京", 8], ["シンガポール", 8], ["バンコク", 7], ["ジャカルタ", 7], ["ニューデリー", 5.5], ["ドバイ", 4], ["モスクワ", 3], ["ナイロビ", 3], ["カイロ", 2], ["パリ", 1], ["ロンドン", 0], ["リオデジャネイロ", -3], ["ニューヨーク", -5], ["シカゴ", -6], ["デンバー", -7], ["ロサンゼルス", -8], ["ホノルル", -10], ["シドニー", 10], ["ウェリントン", 12], ["ソウル", 9]];
+  const fmtT = (min0) => {                                   // 分(日本時間の1月10日0:00=0 からの経過)を「1月x日 午前/午後 h時(m分)」に
+    const day = 10 + Math.floor(min0 / 1440), m = ((min0 % 1440) + 1440) % 1440, h = Math.floor(m / 60), mm = m % 60;
+    return `1月${day}日 ${h < 12 ? "午前" : "午後"}${h % 12 === 0 ? 12 : h % 12}時${mm ? mm + "分" : ""}`;
+  };
+  let tzn = 0;
+  for (const [name, off] of TZ) {
+    for (const baseH of shuffle([6, 9, 12, 15, 18, 21, 23], rx).slice(0, 3)) {
+      const diff = (off - 9) * 60, base = baseH * 60, ans = base + diff;
+      const alts = new Set([fmtT(base - diff), fmtT(ans + 60), fmtT(ans - 60), fmtT(ans + 1440), fmtT(ans - 1440), fmtT(base + diff + 120)]);
+      alts.delete(fmtT(ans));
+      const wrong = shuffle([...alts], rx).slice(0, 3);
+      const crossDay = Math.floor(ans / 1440) !== Math.floor(base / 1440);
+      choice.push({ id: `xz-${++tzn}`, k: "basic", sc: "world", lv: 3, ex: off % 1 ? 3 : crossDay ? 2 : 1, xo: 1, q: `日本（東経135度の標準時）が1月10日の${fmtT(base).replace(/^1月10日 /, "")}のとき、${name}（標準時）は何日の何時でしょう？ サマータイムは考えません。`, m: {}, c: [fmtT(ans), ...wrong], a: 0 });
+    }
+  }
+  for (let i = 0; i < 40; i++) {
+    const [a, b] = shuffle(TZ, rx).slice(0, 2);
+    if (a[1] === b[1]) continue;
+    const baseH = [8, 10, 13, 16, 20, 22][Math.floor(rx() * 6)], base = baseH * 60 + (a[1] - 9) * 60 * 0, diff = (b[1] - a[1]) * 60;
+    const ans = base + diff;
+    const alts = new Set([fmtT(base - diff), fmtT(ans + 60), fmtT(ans - 60), fmtT(ans + 1440), fmtT(ans - 1440)]);
+    alts.delete(fmtT(ans));
+    const wrong = shuffle([...alts], rx).slice(0, 3);
+    if (wrong.length < 3) continue;
+    choice.push({ id: `xz-${++tzn}`, k: "basic", sc: "world", lv: 3, ex: 3, xo: 1, q: `${a[0]}が1月10日の${fmtT(base).replace(/^1月10日 /, "")}のとき、${b[0]}（標準時）は何日の何時でしょう？ サマータイムは考えません。`, m: {}, c: [fmtT(ans), ...wrong], a: 0 });
+  }
+  // (4) 主な輸出品 → 国
+  const trade = optLines("exam-trade.txt").map((l) => { const [code, items] = l.split("|"); return { code, items: items.split(",") }; }).filter((t) => cBy.has(t.code) || (warn.push(`exam-trade: ${t.code}`), false));
+  for (const t of trade) {
+    const ds = shuffle(trade.filter((x) => x.code !== t.code && x.items.every((i) => !t.items.includes(i))), rx).slice(0, 3);
+    if (ds.length < 3) continue;
+    choice.push({ id: `xe-${t.code.toLowerCase()}`, k: "indic", sc: "world", lv: 3, ex: fame.country1.has(t.code) ? 1 : fame.country2.has(t.code) ? 2 : 3, xo: 1, q: "次の表は、ある国の主な輸出品（金額の多い順）です。どの国のものでしょう？", m: { rows: t.items.map((it, i) => [`${i + 1}位`, it]) }, c: [cBy.get(t.code).ja, ...ds.map((d) => cBy.get(d.code).ja)], a: 0 });
+  }
+}
 /* ---------- 出力 ---------- */
 const data = {
   version: 1,
@@ -339,6 +492,10 @@ const body = `/* 自動生成: tools/build-geo.mjs — 直接編集しないこ�
 writeFileSync(outPath, body);
 const kinds = {};
 for (const c of choice) kinds[c.k] = (kinds[c.k] || 0) + 1;
+{
+  const exs = (l) => [1, 2, 3].map((t) => l.filter((x) => x.ex === t).length).join("/");
+  console.log(`大学入試(基礎/標準/発展): 早押し ${exs(buzz)} / 地図 ${exs(map)} / 資料選択 ${exs(choice)}`);
+}
 console.log(`早押し ${buzz.length} (手書き ${buzz.filter((b) => !/^(c|p)-/.test(b.id)).length}) / 地図 ${map.length} (世界 ${map.filter((m) => m.map === "world").length}・日本 ${map.filter((m) => m.map === "japan").length}) / 資料選択 ${choice.length} ${JSON.stringify(kinds)}`);
 console.log(`都市 ${Object.keys(climate).length} / 写真 ${photoUse.length}/${photoRows.length} / 出力 ${outPath} (${(body.length / 1024).toFixed(0)} KB)`);
 if (warn.length) { console.log(`警告 ${warn.length}件:`); warn.slice(0, 40).forEach((w) => console.log("  - " + w)); }

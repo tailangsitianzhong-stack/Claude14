@@ -178,3 +178,17 @@ test("ミックス(部屋): 形式がラウンドごとに変わり、publicStat
   assert.equal(st.phase, "over");
   assert.deepEqual(seen.slice(0, 3).sort(), ["buzz", "choice", "map"], "最初の3問で3形式がそろう");
 });
+
+test("部屋: 学年「高校（大学入試）」(exam)を選べて、大学入試の問題だけが出る。制限時間が長い", () => {
+  const st = lobby(2);
+  assert.ok(R.setSettings(st, st.hostId, { mode: "choice", grade: "exam", rounds: 5 }, T0).ok);
+  assert.equal(st.settings.grade, "exam");
+  assert.ok(R.start(st, st.hostId, T0, seeded(4)).ok);
+  R.timeout(st, st.g.nextAt, seeded(2));
+  const q = Core.create ? null : null; // eslint-disable-line no-unused-vars
+  const data = globalThis.GEO_DATA;
+  const id = st.g.q.id;
+  const src = [...data.choice].find((c) => c.id === id);
+  assert.ok(src && src.ex > 0, "大学入試の問題だけ: " + id);
+  assert.ok(st.g.endsAt - st.g.startedAt >= 25000 || st.g.endsAt - T0 >= 25000);
+});

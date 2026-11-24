@@ -45,6 +45,28 @@
     return half(0) + half(6);
   }
 
+  /** ハイサーグラフ(横軸=月降水量・縦軸=月平均気温。点は1月〜12月を順につないだもの) */
+  function hythergraph(c) {
+    const W = 340, H = 240, L = 40, R = 14, T = 20, B = 36;
+    const pw = W - L - R, ph = H - T - B;
+    const tLo = Math.min(0, Math.floor(Math.min(...c.t) / 10) * 10), tHi = Math.max(tLo + 20, Math.ceil(Math.max(...c.t) / 10) * 10);
+    const pStep = Math.max(50, Math.ceil(Math.max(...c.p) / 5 / 50) * 50), pHi = pStep * 5;
+    const X = (p) => L + (p / pHi) * pw, Y = (t) => T + ph - ((t - tLo) / (tHi - tLo)) * ph;
+    let s = `<svg class="geo-climate" viewBox="0 0 ${W} ${H}" role="img" aria-label="ハイサーグラフ">`;
+    for (let t = tLo; t <= tHi; t += 10) s += `<line x1="${L}" y1="${Y(t).toFixed(1)}" x2="${W - R}" y2="${Y(t).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(Y(t) + 3).toFixed(1)}" text-anchor="end" class="axis t">${t}</text>`;
+    for (let k = 0; k <= 5; k++) s += `<line x1="${X(k * pStep).toFixed(1)}" y1="${T}" x2="${X(k * pStep).toFixed(1)}" y2="${T + ph}" class="grid"/><text x="${X(k * pStep).toFixed(1)}" y="${T + ph + 13}" text-anchor="middle" class="axis p">${k * pStep}</text>`;
+    s += `<text x="${L - 4}" y="${T - 7}" text-anchor="end" class="axis t unit">℃</text><text x="${W - R}" y="${H - 3}" text-anchor="end" class="axis p unit">降水量 mm</text>`;
+    const pts = c.t.map((t, i) => [X(c.p[i]), Y(t)]);
+    s += `<polyline points="${pts.map((q) => q[0].toFixed(1) + "," + q[1].toFixed(1)).join(" ")}" class="line"/>`;
+    pts.forEach((q, i) => { s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="2.8" class="dot"/><text x="${(q[0] + 5).toFixed(1)}" y="${(q[1] - 4).toFixed(1)}" class="axis m">${i + 1}</text>`; });
+    return s + "</svg>";
+  }
+
+  /** 統計の組み合わせ(ア〜ウの列の表) */
+  function comboTable(m) {
+    return `<table class="geo-table geo-combo"><thead><tr><th></th>${m.cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${m.rows.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((v) => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  }
+
   const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 
   function create(ctx) {
@@ -54,6 +76,8 @@
     function material(q) {
       const m = q.m;
       if (q.k === "cap" || q.k === "pref" || q.k === "basic") return "";
+      if (q.k === "hyther") return hythergraph(data.climate[m.city]);
+      if (q.k === "combo") return comboTable(m);
       if (q.k === "type" && m.table) return climateTable(data.climate[m.city]);
       if (q.k === "graph" || q.k === "type") return climateGraph(data.climate[m.city]);
       if (q.k === "table") return climateTable(data.climate[m.city]);
@@ -114,7 +138,10 @@
     function revealHtml(v) {
       const q = v.q, rv = v.reveal;
       let h = `正解{せいかい}は <b>${esc(q.c[rv.a])}</b>`;
-      if (q.k === "graph" || q.k === "table" || q.k === "type") {
+      if (q.k === "hyther") {
+        const c = data.climate[q.m.city];
+        h = `正解{せいかい}は <b>${esc(q.c[rv.a])}</b><br><small>${esc(c.ty || "")}。年平均気温 ${mean(c.t).toFixed(1)}℃・年降水量 ${c.p.reduce((a, b) => a + b, 0)}mm</small>`;
+      } else if (q.k === "graph" || q.k === "table" || q.k === "type") {
         const c = data.climate[q.m.city];
         h = `正解{せいかい}は <b>${esc(q.k === "type" ? q.c[rv.a] : q.c[rv.a])}</b>` + (q.k === "type" ? `<br><small>${esc(c.n)}の雨温図</small>` : "") +
           `<br><small>年平均気温 ${mean(c.t).toFixed(1)}℃・年降水量 ${c.p.reduce((a, b) => a + b, 0)}mm</small>`;

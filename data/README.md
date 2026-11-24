@@ -41,6 +41,7 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 雨温図の気温・降水量: NASA POWER の気候値（約50km四方の平均）。ずれの大きい都市は気温を補正しています。
 - 写真: Wikimedia Commons（パブリックドメイン・CC0・CC BY・CC BY-SA）。写真ごとの作者・ライセンス・元ページは `geo.js` の `photos[].credit` にあり、ゲーム内に表示します。
 - 問題数: 早押し約630・地図約720・資料選択約1260（現地写真約250問を含む）（レベル1〜3がほぼ均等）。有名さの段階は `tools/geo-source/fame.txt`。
+- 大学入試の問題: 早押し261・地図268・資料選択884（`ex`=1〜3）。手書きの元は `tools/geo-source/exam-*.txt`。
 - 詳しくは `docs/geo.md`。
 
 ## kanji.js（ミニ漢字検定）

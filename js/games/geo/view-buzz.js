@@ -159,7 +159,7 @@
     function timer(v, now) {
       const b = v.buzz;
       if (!b || !b.by || b.judging) return null;
-      return { rem: Math.max(0, b.answerEndsAt - now), total: 12000 };
+      return { rem: Math.max(0, b.answerEndsAt - now), total: Math.max(1, b.answerEndsAt - b.at) };
     }
 
     return { update, revealHtml, timer, unbusy() { u.busy = false; }, destroy() { stop(); dropKeyboard(); document.removeEventListener("keydown", onKey); } };

@@ -16,7 +16,7 @@
     { key: "buzz", icon: "⚡", name: "早押{はやお}し" }
   ];
   const SCOPES = [{ key: "both", label: "どちらも" }, { key: "world", label: "世界{せかい}" }, { key: "japan", label: "日本{にほん}" }];
-  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }];
+  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }, { key: "exam", label: "高校{こうこう}（大学入試{だいがくにゅうし}）" }];
   const DIFFS = [{ key: "easy", label: "やさしい" }, { key: "normal", label: "ふつう" }, { key: "hard", label: "むずかしい" }];
   const REASONS = {
     not_playing: "もう締{し}め切{き}られたよ", timeout: "間{ま}に合{あ}わなかった…", already: "もう決定{けってい}しているよ", taken: "ほかの人{ひと}が先{さき}に押{お}したよ",

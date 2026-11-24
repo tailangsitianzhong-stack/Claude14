@@ -8,7 +8,7 @@
   "use strict";
 
   const PREFIX = "minigames.geo.";
-  const MODES = ["choice", "map", "buzz", "mix"], SCOPES = ["both", "world", "japan"], GRADES = ["all", "junior", "high"], DIFFS = ["easy", "normal", "hard"], ROUNDS = [5, 10, 15, 30];
+  const MODES = ["choice", "map", "buzz", "mix"], SCOPES = ["both", "world", "japan"], GRADES = ["all", "junior", "high", "exam"], DIFFS = ["easy", "normal", "hard"], ROUNDS = [5, 10, 15, 30];
 
   function create(storage) {
     const read = (key, fallback) => {

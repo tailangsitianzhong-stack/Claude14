@@ -3,7 +3,7 @@
  * ひとり用(CPU対戦)も、友達対戦(サーバー)も、これを共通で使う。3つの形式を1つの仕組みで扱う。
  *
  *   const E = GeoCore.create(GeoQuestions.create(GEO_DATA));
- *   const st = E.newGame({ players:[{id,name}], mode:"choice|map|buzz|mix", difficulty, scope, grade:"all|junior|high", rounds:10, now, rng });
+ *   const st = E.newGame({ players:[{id,name}], mode:"choice|map|buzz|mix", difficulty, scope, grade:"all|junior|high|exam", rounds:10, now, rng });
  *     mix = ラウンドごとに3つの形式がまざる。今のラウンドの形式は st.rmode(単独の形式なら mode と同じ)
  *   E.tick(st, now, rng)                 // 時間が来たら次のラウンド開始 / 締め切り。起きたことを events で返す
  *   E.choose(st, pid, i, now)            // 資料選択: 選択肢 i を選ぶ
@@ -27,9 +27,10 @@
 
   const START_MS = 2500;        // 開始の「よーい」
   const BETWEEN_MS = 5000;      // ラウンドの間(答え合わせの表示)
-  const CHOICE_MS = { graph: 25000, table: 25000, type: 25000, photo: 20000, stat: 25000, indic: 30000, pop: 30000, cap: 15000, pref: 15000, basic: 15000 };
+  const CHOICE_MS = { graph: 25000, table: 25000, type: 25000, photo: 20000, stat: 25000, indic: 30000, pop: 30000, cap: 15000, pref: 15000, basic: 15000, hyther: 25000, combo: 40000 };
   const MAP_MS = 35000;
   const ANSWER_MS = 12000;      // 早押しで、押してから答えるまで
+  const EXAM_X = 1.3;           // 大学入試の学年は、読み取りや考える時間を長くする
   const AI_WAIT_MS = 12000;     // AI の判定を待つ上限(これを過ぎたら、まちがい扱い)
   const POINT = 10;
   const PENALTY = 5;
@@ -81,8 +82,8 @@
       st.answers = {}; st.reveal = null;
       st.phase = "play"; st.startedAt = now;
       st.buzz = null; st.endsAt = 0;
-      if (st.rmode === "choice") st.endsAt = now + (CHOICE_MS[st.q.k] || 25000);
-      else if (st.rmode === "map") st.endsAt = now + MAP_MS;
+      if (st.rmode === "choice") st.endsAt = now + (st.grade === "exam" ? Math.max(25000, (CHOICE_MS[st.q.k] || 25000) * EXAM_X) : CHOICE_MS[st.q.k] || 25000);
+      else if (st.rmode === "map") st.endsAt = now + MAP_MS * (st.grade === "exam" ? EXAM_X : 1);
       else st.buzz = { by: null, lockedOut: [], pauseMs: 0, at: 0, idx: 0, answerEndsAt: 0, judging: null, wrong: {} };
       return [{ type: "round", round: st.round, mode: st.rmode }];
     }
@@ -194,7 +195,7 @@
       if (b.by) return { ok: false, reason: "taken", events: [] };
       if (b.lockedOut.includes(pid)) return { ok: false, reason: "locked_out", events: [] };
       const idx = Text.visible(st.q.at, buzzElapsed(st, now));
-      Object.assign(b, { by: pid, at: now, idx, answerEndsAt: now + ANSWER_MS, judging: null });
+      Object.assign(b, { by: pid, at: now, idx, answerEndsAt: now + ANSWER_MS * (st.grade === "exam" ? EXAM_X : 1), judging: null });
       return { ok: true, events: [{ type: "press", pid, idx }] };
     }
 

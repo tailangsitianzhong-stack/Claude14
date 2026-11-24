@@ -18,7 +18,7 @@
     { key: "choice", icon: "🖼️", name: "資料{しりょう}選択{せんたく}", desc: "雨温図{うおんず}・表{ひょう}・写真{しゃしん}などを見{み}て、4択{たく}で答{こた}えよう" }
   ];
   const SCOPES = [{ key: "both", label: "どちらも" }, { key: "world", label: "世界{せかい}" }, { key: "japan", label: "日本{にほん}" }];
-  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }];
+  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }, { key: "exam", label: "高校{こうこう}（大学入試{だいがくにゅうし}）", wide: true }];
   const DIFFS = [{ key: "easy", label: "やさしい" }, { key: "normal", label: "ふつう" }, { key: "hard", label: "むずかしい" }];
   const AVATARS = ["🐶", "🐱", "🐰", "🐻"];
 
@@ -89,7 +89,7 @@
           </div>
           <h4 class="menu-sub">学年{がくねん}</h4>
           <div class="geo-opts" role="radiogroup" aria-label="学年">
-            ${GRADES.map((o) => `<button type="button" class="geo-opt${o.key === s.grade ? " is-on" : ""}" data-grade="${o.key}">${o.label}</button>`).join("")}
+            ${GRADES.map((o) => `<button type="button" class="geo-opt${o.key === s.grade ? " is-on" : ""}${o.wide ? " is-wide" : ""}" data-grade="${o.key}">${o.label}</button>`).join("")}
           </div>
           <h4 class="menu-sub">難{むずか}しさ</h4>
           <div class="geo-opts" role="radiogroup" aria-label="難しさ">

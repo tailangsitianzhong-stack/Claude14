@@ -134,3 +134,9 @@
 .geo-popbar .seg.w, .sw.w { background: #9ccc65; }
 .geo-popbar .seg.o, .sw.o { background: #f6a15c; }
 .sw { display: inline-block; width: .8em; height: .8em; margin-right: 4px; border-radius: 3px; vertical-align: -1px; }
+
+/* 統計の組み合わせ(大学入試): ア〜ウの列 */
+.geo-combo th { font-weight: bold; text-align: left; padding: 4px 6px; font-size: .8rem; }
+.geo-combo thead th { text-align: center; background: #fff3c4; font-size: .95rem; }
+.geo-combo td { text-align: right; padding: 4px 8px; font-size: .95rem; white-space: nowrap; }
+.geo-opt.is-wide { flex-basis: 100%; }
