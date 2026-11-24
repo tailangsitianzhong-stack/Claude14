@@ -535,3 +535,22 @@ test("バージョン表示: js/version.js に APP_VERSION があり、index.htm
   assert.match(html, /js\/version\.js/);
   assert.match(html, /id="app-version"/);
 });
+
+test("現地写真の問題: 250問以上。かんたん・ふつう・むずかしいがほぼ同数。写真と出典がそろい、景観の選択肢は同じ種類の中から選ぶ", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const ph = D.choice.filter((c) => c.k === "photo");
+  assert.ok(ph.length >= 250, "写真の問題 " + ph.length);
+  for (const lv of [1, 2, 3]) { const n = ph.filter((c) => c.lv === lv).length; assert.ok(n >= 70 && n <= 100, `写真 レベル${lv}: ${n}`); }
+  assert.ok(D.photos.length >= 130, "写真 " + D.photos.length);
+  for (const p of D.photos) {
+    assert.ok(fs.existsSync(path.join(__dirname, "../assets/geo", p.id + ".webp")), p.id);
+    assert.ok(p.credit && p.credit.author && /^(CC0|Public domain|PD|CC BY)/i.test(p.credit.license) && !/NC|ND/.test(p.credit.license), p.id);
+  }
+  const scapes = new Set(D.photos.filter((p) => /-landscape$/.test(p.kind)).map((p) => p.answer));
+  assert.ok(scapes.size >= 25, "景観の写真 " + scapes.size);
+  for (const c of ph.filter((x) => x.id.startsWith("f-") && scapes.has(x.c[x.a]))) for (const t of c.c) assert.ok(scapes.has(t), `${c.id}: ${t}`);   // 景観の問題の選択肢は、景観の名前だけ
+  for (const c of ph.filter((x) => x.id.startsWith("f-") && !scapes.has(x.c[x.a]))) for (const t of c.c) assert.ok(!scapes.has(t), `${c.id}: ${t}`);
+  // 3つの形式すべてで、全体のレベルのかたよりが小さい
+  const share = D.choice.filter((c) => c.lv === 2).length / D.choice.length;
+  assert.ok(share >= 0.3, "資料選択 ふつうの割合 " + share);
+});

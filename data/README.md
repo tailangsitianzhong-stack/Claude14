@@ -40,7 +40,7 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 国の統計（人口構成・人口密度・都市人口率・1人あたり国民総所得・平均寿命など）: World Bank Open Data（CC BY 4.0）。
 - 雨温図の気温・降水量: NASA POWER の気候値（約50km四方の平均）。ずれの大きい都市は気温を補正しています。
 - 写真: Wikimedia Commons（パブリックドメイン・CC0・CC BY・CC BY-SA）。写真ごとの作者・ライセンス・元ページは `geo.js` の `photos[].credit` にあり、ゲーム内に表示します。
-- 問題数: 早押し約630・地図約720・資料選択約1140（レベル1〜3がほぼ均等）。有名さの段階は `tools/geo-source/fame.txt`。
+- 問題数: 早押し約630・地図約720・資料選択約1260（現地写真約250問を含む）（レベル1〜3がほぼ均等）。有名さの段階は `tools/geo-source/fame.txt`。
 - 詳しくは `docs/geo.md`。
 
 ## kanji.js（ミニ漢字検定）

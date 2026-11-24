@@ -32,6 +32,7 @@ const warn = [];
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const shuffle = (arr, r) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const isKana = (s) => /^[ぁ-んー]+$/.test(s);
+const lvType = (ty) => (["温暖湿潤気候", "砂漠気候", "地中海性気候"].includes(ty) ? 2 : 3);   // 日本・乾燥帯・地中海は、ふつう(中学)でも習う
 const isReading = (s) => /^[ぁ-んーa-z0-9]+$/.test(s);   // 読み: かな + 英小文字・数字(GPS・135 など)
 
 /* ---------- 国・都道府県 ---------- */
@@ -89,7 +90,7 @@ const sum = (a) => a.reduce((x, y) => x + y, 0);
 /* ---------- 写真 ---------- */
 const creditsFile = src("photo-credits.json");
 const credits = existsSync(creditsFile) ? JSON.parse(readFileSync(creditsFile, "utf8")) : {};
-const photoRows = lines("photos.txt").map((l) => { const [id, , answer, kind, hint] = l.split("|"); return { id, answer, kind, hint: hint || "" }; });
+const photoRows = lines("photos.txt").map((l) => { const [id, , answer, kind, hint, lv] = l.split("|"); return { id, answer, kind, hint: hint || "", lv: lv ? Number(lv) : 0 }; });
 const photos = photoRows.filter((p) => credits[p.id] && existsSync(root + `assets/geo/${p.id}.webp`));
 const skipFile = src("photo-skip.txt");
 const skip = new Set(existsSync(skipFile) ? lines("photo-skip.txt").map((l) => l.split("|")[0]) : []);   // 目で見て内容が合わなかった写真
@@ -221,15 +222,19 @@ const ALL_TYPES = ["熱帯雨林気候", "熱帯モンスーン気候", "サバ�
 for (const [id, c] of Object.entries(climate)) {
   if (!c.ty) continue;
   const wrong = shuffle(ALL_TYPES.filter((t) => t !== c.ty), r2).slice(0, 3);
-  choice.push({ id: "y-" + id, k: "type", sc: jpIds.includes(id) ? "japan" : "world", lv: 3, q: `この雨温図が表す気候は、次のうちどれでしょう？`, m: { city: id, noName: true }, c: [c.ty, ...wrong], a: 0 });
+  choice.push({ id: "y-" + id, k: "type", sc: jpIds.includes(id) ? "japan" : "world", lv: lvType(c.ty), q: `この雨温図が表す気候は、次のうちどれでしょう？`, m: { city: id, noName: true }, c: [c.ty, ...wrong], a: 0 });
 }
-const kindGroup = (k) => (k === "japan" ? "japan" : k);
+const isJpKind = (k) => k === "japan" || k === "japan-landscape";
+const isScape = (k) => /-landscape$/.test(k);        // 景観・土地利用(高校地理)。選択肢は同じ種類の中から選ぶ
 for (const p of photoUse) {
   const same = photoUse.filter((x) => x.id !== p.id && x.kind === p.kind);
-  const others = photoUse.filter((x) => x.id !== p.id && x.kind !== p.kind);
+  const others = isScape(p.kind) ? [] : photoUse.filter((x) => x.id !== p.id && x.kind !== p.kind && !isScape(x.kind));
   const pool = shuffle(same, r2).concat(shuffle(others, r2)).slice(0, 3);
   if (pool.length < 3) { warn.push(`photo ${p.id}: 選択肢が足りない`); continue; }
-  choice.push({ id: "f-" + p.id, k: "photo", sc: p.kind === "japan" ? "japan" : "world", lv: p.kind === "japan" || EASY_PHOTOS.has(p.id) ? 1 : 2, q: p.kind === "japan" ? "この写真の場所は、日本のどこでしょう？" : "この写真は、どこでしょう？", m: { file: p.id, hint: p.hint }, c: [p.answer, ...pool.map((x) => x.answer)], a: 0 });
+  const jp = isJpKind(p.kind);
+  const lv = p.lv || (isScape(p.kind) ? 3 : jp || EASY_PHOTOS.has(p.id) ? 1 : 2);
+  const q = isScape(p.kind) ? "この写真に写っている地形・景観・土地利用は、次のうちどれでしょう？" : jp ? "この写真の場所は、日本のどこでしょう？" : "この写真は、どこでしょう？";
+  choice.push({ id: "f-" + p.id, k: "photo", sc: jp ? "japan" : "world", lv, q, m: { file: p.id, hint: p.hint }, c: [p.answer, ...pool.map((x) => x.answer)], a: 0 });
 }
 for (const l of lines("stats.txt")) {
   const [id, kind, rows, ans, wrong, label] = l.split("|");
@@ -267,7 +272,7 @@ lines("choice-basic.txt").forEach((l, i) => {
 });
 // 写真の場所がある国・都道府県
 for (const l of lines("photo-country.txt")) {
-  const [pid, code] = l.split("|");
+  const [pid, code, lvText] = l.split("|");
   const ph = photoUse.find((x) => x.id === pid);
   if (!ph) continue;
   const jp = code.startsWith("JP-");
@@ -275,13 +280,22 @@ for (const l of lines("photo-country.txt")) {
   if (!ent) { warn.push(`photo-country: ${code}`); continue; }
   const pool = jp ? prefs.filter((x) => x.id !== code && (x.region === pBy.get(code).region || true)) : sameCont(code);
   const ds = shuffle(pool.length >= 3 ? pool : countries.filter((x) => x.id !== code), r4).slice(0, 3);
-  choice.push({ id: "fc-" + pid, k: "photo", sc: jp ? "japan" : "world", lv: jp ? 2 : EASY_PHOTOS.has(pid) ? 1 : Math.max(lvC(code), 2), q: jp ? "この写真の場所がある都道府県は、次のうちどれでしょう？" : "この写真の場所がある国は、次のうちどれでしょう？", m: { file: pid, hint: ph.hint }, c: [ent.ja, ...ds.map((d) => d.ja)], a: 0 });
+  choice.push({ id: "fc-" + pid, k: "photo", sc: jp ? "japan" : "world", lv: lvText ? Number(lvText) : jp ? 2 : EASY_PHOTOS.has(pid) ? 1 : Math.max(lvC(code), 2), q: jp ? "この写真の場所がある都道府県は、次のうちどれでしょう？" : "この写真の場所がある国は、次のうちどれでしょう？", m: { file: pid, hint: ph.hint }, c: [ent.ja, ...ds.map((d) => d.ja)], a: 0 });
+}
+// 写真の問題のレベルの手直し(photo-level.txt)
+{
+  const byId = new Map(choice.map((c) => [c.id, c]));
+  for (const l of lines("photo-level.txt")) {
+    const [id, lv] = l.split("|");
+    const c = byId.get(id);
+    if (!c || ![1, 2, 3].includes(Number(lv))) warn.push(`photo-level: ${id}`); else c.lv = Number(lv);
+  }
 }
 // 表(気温と降水量)から気候区分
 for (const [id, c] of Object.entries(climate)) {
   if (!c.ty) continue;
   const wrong = shuffle(ALL_TYPES.filter((t) => t !== c.ty), r4).slice(0, 3);
-  choice.push({ id: "yt-" + id, k: "type", sc: jpIds.includes(id) ? "japan" : "world", lv: 3, q: "この気温と降水量の表が表す気候は、次のうちどれでしょう？", m: { city: id, noName: true, table: true }, c: [c.ty, ...wrong], a: 0 });
+  choice.push({ id: "yt-" + id, k: "type", sc: jpIds.includes(id) ? "japan" : "world", lv: lvType(c.ty), q: "この気温と降水量の表が表す気候は、次のうちどれでしょう？", m: { city: id, noName: true, table: true }, c: [c.ty, ...wrong], a: 0 });
 }
 // 高校地理: 世界銀行の統計の表(人口構成・社会経済の指標)から、どの国かを当てる
 const WB_COUNTRIES = countries.map((c) => c.id).filter((id) => ((wb.pop[id] || {}).v || 0) >= 2500000);

@@ -488,5 +488,474 @@
   "author": "Sakaori (talk)",
   "license": "CC BY-SA 3.0",
   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "whitehouse": {
+  "title": "The White House June 2024.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_White_House_June_2024.jpg",
+  "author": "DJTechYT",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "goldengate": {
+  "title": "Golden Gate Bridge at sunset 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Golden_Gate_Bridge_at_sunset_1.jpg",
+  "author": "Brocken Inaglory",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "towerbridge": {
+  "title": "Tower Bridge London Dusk Feb 2006.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Tower_Bridge_London_Dusk_Feb_2006.jpg",
+  "author": "Diliff",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "merlion": {
+  "title": "Merlión, Marina Bay, Singapur, 2023-08-18, DD 45-47 HDR.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Merli%C3%B3n,_Marina_Bay,_Singapur,_2023-08-18,_DD_45-47_HDR.jpg",
+  "author": "Diego Delso",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "empire": {
+  "title": "View of Empire State Building from Rockefeller Center New York City dllu.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu.jpg",
+  "author": "Dllu",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "rushmore": {
+  "title": "Dean Franklin - 06.04.03 Mount Rushmore Monument (by-sa).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Dean_Franklin_-_06.04.03_Mount_Rushmore_Monument_(by-sa).jpg",
+  "author": "Dean Franklin",
+  "license": "Public domain",
+  "licenseUrl": ""
+ },
+ "neuschwanstein": {
+  "title": "Neuschwanstein Castle 2024-02.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Neuschwanstein_Castle_2024-02.jpg",
+  "author": "Wilfredor",
+  "license": "CC0",
+  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+ },
+ "montsaintmichel": {
+  "title": "L'Abbaye du Mont-Saint-Michel, vue du ciel.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:L%27Abbaye_du_Mont-Saint-Michel,_vue_du_ciel.JPG",
+  "author": "Sylvain Verlaine",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "louvre": {
+  "title": "Louvre Museum Wikimedia Commons.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Louvre_Museum_Wikimedia_Commons.jpg",
+  "author": "Benh LIEU SONG (Flickr)",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "petronas": {
+  "title": "The Twins SE Asia 2019 (49171985716).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Twins_SE_Asia_2019_(49171985716).jpg",
+  "author": "James Kerwin from Tbilisi",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+ },
+ "marinabay": {
+  "title": "Puente Helix, museo ArtScience y hotel Marina Bay Sands, Marina Bay, Singapur, 2023-08-17, DD 67-69 HDR.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Puente_Helix,_museo_ArtScience_y_hotel_Marina_Bay_Sands,_Marina_Bay,_Singapur,_2023-08-17,_DD_67-69_HDR.jpg",
+  "author": "Diego Delso",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "chichen": {
+  "title": "Chichen Itza 3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Chichen_Itza_3.jpg",
+  "author": "Daniel Schwen",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "potala": {
+  "title": "Potala.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Potala.jpg",
+  "author": "Ondřej Žváček",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "gyeongbok": {
+  "title": "Front view of the Imperial Throne Hall Geunjeongjeon at Gyeongbokgung Palace with blue sky in Seoul.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Front_view_of_the_Imperial_Throne_Hall_Geunjeongjeon_at_Gyeongbokgung_Palace_with_blue_sky_in_Seoul.jpg",
+  "author": "Basile Morin",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "tiananmen": {
+  "title": "天安门夜景.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:%E5%A4%A9%E5%AE%89%E9%97%A8%E5%A4%9C%E6%99%AF.jpg",
+  "author": "Charlie fong冯成",
+  "license": "Public domain",
+  "licenseUrl": ""
+ },
+ "cappadocia": {
+  "title": "Göreme Valley in Cappadocia edit1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:G%C3%B6reme_Valley_in_Cappadocia_edit1.jpg",
+  "author": "Brocken Inaglory",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "matterhorn": {
+  "title": "CH.VS.Zermatt 2021-10-17 Matterhorn 8726.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:CH.VS.Zermatt_2021-10-17_Matterhorn_8726.jpg",
+  "author": "Roy Egloff",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "pamukkale": {
+  "title": "Pamukkale Hierapolis Travertine pools.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Pamukkale_Hierapolis_Travertine_pools.JPG",
+  "author": "Pvasiliadis",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "skytree": {
+  "title": "Worm's-eye view of Tokyo Skytree with vertical symmetry impression, a sunny day, in Japan.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Worm%27s-eye_view_of_Tokyo_Skytree_with_vertical_symmetry_impression,_a_sunny_day,_in_Japan.jpg",
+  "author": "Basile Morin",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "osakajo": {
+  "title": "Osaka Castle, Main Tower (2850633888).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Osaka_Castle,_Main_Tower_(2850633888).jpg",
+  "author": "alisdair",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+ },
+ "kiyomizu": {
+  "title": "Kiyomizu-dera, Kyoto, November 2016 -01.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Kiyomizu-dera,_Kyoto,_November_2016_-01.jpg",
+  "author": "Martin Falbisoner",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "fushimi": {
+  "title": "Fushimi-Inari-Shrine-Senbon-Torii-2018-Luka-Peternel.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Fushimi-Inari-Shrine-Senbon-Torii-2018-Luka-Peternel.jpg",
+  "author": "Luka Peternel",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "sensoji": {
+  "title": "Senso-ji Kaminarimon 201503b.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Senso-ji_Kaminarimon_201503b.jpg",
+  "author": "Tak1701d",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "rainbowbridge": {
+  "title": "Rainbow Bridge, Tokyo, South view from Odaiba 20190419 1.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rainbow_Bridge,_Tokyo,_South_view_from_Odaiba_20190419_1.jpg",
+  "author": "DXR",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "kumamoto": {
+  "title": "Kumamoto Castle 02n3200.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Kumamoto_Castle_02n3200.jpg",
+  "author": "663highland",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "toya": {
+  "title": "130922 Lake Toya Toyako Hokkaido Japan03s3.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:130922_Lake_Toya_Toyako_Hokkaido_Japan03s3.jpg",
+  "author": "663highland",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "dogo": {
+  "title": "Dogo Onsen Honkan (Main building), 道後温泉 本館 - panoramio (5).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Dogo_Onsen_Honkan_(Main_building),_%E9%81%93%E5%BE%8C%E6%B8%A9%E6%B3%89_%E6%9C%AC%E9%A4%A8_-_panoramio_(5).jpg",
+  "author": "z tanuki",
+  "license": "CC BY 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+ },
+ "ginzan": {
+  "title": "Takimi-tei in Ginzan Onsen 20181006.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Takimi-tei_in_Ginzan_Onsen_20181006.jpg",
+  "author": "掬茶",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "ritsurin": {
+  "title": "Ritsurin Garden, Takamatsu 3-27 (26501902471).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ritsurin_Garden,_Takamatsu_3-27_(26501902471).jpg",
+  "author": "KimonBerlin",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "glacier": {
+  "title": "Perito Moreno Glacier Patagonia Argentina Luca Galuzzi 2005.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Perito_Moreno_Glacier_Patagonia_Argentina_Luca_Galuzzi_2005.JPG",
+  "author": "Luca Galuzzi (Lucag)",
+  "license": "CC BY-SA 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5"
+ },
+ "uvalley": {
+  "title": "Panoramic Overview from Glacier Point over Yosemite Valley 2013 Alternative.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Panoramic_Overview_from_Glacier_Point_over_Yosemite_Valley_2013_Alternative.jpg",
+  "author": "Tuxyso",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "delta": {
+  "title": "ISS035-E-007148 Nile - Sinai - Dead Sea - Wide Angle View.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:ISS035-E-007148_Nile_-_Sinai_-_Dead_Sea_-_Wide_Angle_View.jpg",
+  "author": "Expedition 35 Crew Image courtesy of the NASA Johnson Space Center, Image Scienc",
+  "license": "Public domain",
+  "licenseUrl": ""
+ },
+ "oasis": {
+  "title": "Oasis de Huacachina, Ica, Perú, 2015-07-29, DD 18.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Oasis_de_Huacachina,_Ica,_Per%C3%BA,_2015-07-29,_DD_18.JPG",
+  "author": "Diego Delso",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "atoll": {
+  "title": "Maldives - aerial view4.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Maldives_-_aerial_view4.jpg",
+  "author": "Hotel Kaesong",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "coralreef": {
+  "title": "The heart reef, part of the Great Barrier Reef near Airlie Beach, Whitsunday Islands, Queensland.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_heart_reef,_part_of_the_Great_Barrier_Reef_near_Airlie_Beach,_Whitsunday_Islands,_Queensland.jpg",
+  "author": "Ayanadak123",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "savanna": {
+  "title": "Acacia Tree Savanna Serengeti Nov26 A7CR 16374.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Acacia_Tree_Savanna_Serengeti_Nov26_A7CR_16374.jpg",
+  "author": "This Photo was taken by Timothy A. Gonsalves. Feel free to use my photos, but pl",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "tundra": {
+  "title": "Fall colors of the arctic tundra on a bluebird sky day. (c51fb8df-1dd8-b71c-0753-1c57348df744).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Fall_colors_of_the_arctic_tundra_on_a_bluebird_sky_day._(c51fb8df-1dd8-b71c-0753-1c57348df744).jpg",
+  "author": "NPS Photo",
+  "license": "Public domain",
+  "licenseUrl": ""
+ },
+ "geyser": {
+  "title": "Strokkur geyser eruption, close-up view.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Strokkur_geyser_eruption,_close-up_view.jpg",
+  "author": "Andreas Tille",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "polder": {
+  "title": "KinderdijkMolens02.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:KinderdijkMolens02.jpg",
+  "author": "Lucas Hirschegger",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "openpit": {
+  "title": "Mina de Chuquicamata, Calama, Chile, 2016-02-01, DD 110-112 PAN.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Mina_de_Chuquicamata,_Calama,_Chile,_2016-02-01,_DD_110-112_PAN.JPG",
+  "author": "Diego Delso",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "tea": {
+  "title": "Tea plantation Haputale.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Tea_plantation_Haputale.jpg",
+  "author": "Adbar",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "columnar": {
+  "title": "County Antrim - Giant's Causeway - Tops of Basalt Columns - geograph.org.uk - 3987884.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:County_Antrim_-_Giant%27s_Causeway_-_Tops_of_Basalt_Columns_-_geograph.org.uk_-_3987884.jpg",
+  "author": "Suzanne Mischyshyn",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "mesa": {
+  "title": "Monument Valley Sunset MC.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Monument_Valley_Sunset_MC.jpg",
+  "author": "Christian Mehlführer, User:Chmehl",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "meander": {
+  "title": "Méandres de la San Juan, Goosenecks State Park, Utah.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:M%C3%A9andres_de_la_San_Juan,_Goosenecks_State_Park,_Utah.jpg",
+  "author": "Christian David",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "stilt": {
+  "title": "Floating villages of Cambodia.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Floating_villages_of_Cambodia.jpg",
+  "author": "Divya Manian",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+ },
+ "caldera": {
+  "title": "Ngorongoro landscape (crater rim).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ngorongoro_landscape_(crater_rim).jpg",
+  "author": "Jerry Michalski",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "coffee": {
+  "title": "Coffee Flowers Show.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Coffee_Flowers_Show.jpg",
+  "author": "User:FCRebelo",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "iceberg": {
+  "title": "McMurdo Iceberg NASA.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:McMurdo_Iceberg_NASA.jpg",
+  "author": "Chris Larsen, NASA's Operation IceBridge mission.",
+  "license": "Public domain",
+  "licenseUrl": ""
+ },
+ "japan-senmaida": {
+  "title": "Wajima Shiroyone Senmaida Rice Terraces.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Wajima_Shiroyone_Senmaida_Rice_Terraces.jpg",
+  "author": "Catalogingcsusb1",
+  "license": "CC0",
+  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+ },
+ "japan-karst": {
+  "title": "Akiyoshi Plateau from Akiyoshidai Karst Observation Deck (northeast).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Akiyoshi_Plateau_from_Akiyoshidai_Karst_Observation_Deck_(northeast).jpg",
+  "author": "そらみみ (Soramimi)",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "japan-showashinzan": {
+  "title": "130922 Showa-shinzan Sobetsu Hokkaido Japan05bs5.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:130922_Showa-shinzan_Sobetsu_Hokkaido_Japan05bs5.jpg",
+  "author": "663highland",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "santorini": {
+  "title": "1000 Three domes of Oia in Santorini Photo by Giles Laurent.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:1000_Three_domes_of_Oia_in_Santorini_Photo_by_Giles_Laurent.jpg",
+  "author": "Giles Laurent",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "mangrove": {
+  "title": "Mangrove ciudad del carmen2020.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Mangrove_ciudad_del_carmen2020.jpg",
+  "author": "Cvmontuy",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "steppe": {
+  "title": "草原风景.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:%E8%8D%89%E5%8E%9F%E9%A3%8E%E6%99%AF.jpg",
+  "author": "악준동",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "taiga": {
+  "title": "Ergaki, Siberian pine forest, Spruce forest, Taiga wilderness, Sayan Mountains, Siberia, Russia.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ergaki,_Siberian_pine_forest,_Spruce_forest,_Taiga_wilderness,_Sayan_Mountains,_Siberia,_Russia.jpg",
+  "author": "Vyacheslav Argenberg",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
+ },
+ "loess": {
+  "title": "Loess landscape china.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Loess_landscape_china.jpg",
+  "author": "Till Niermann (User:Till.niermann)",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "vineyard": {
+  "title": "Rows of grapes.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rows_of_grapes.jpg",
+  "author": "OregonDOT",
+  "license": "CC BY 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+ },
+ "wheat": {
+  "title": "The combine Claas Lexion 584 in the wheat harvest.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:The_combine_Claas_Lexion_584_in_the_wheat_harvest.jpg",
+  "author": "Michael Gäbler",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "rice": {
+  "title": "Rice terraces in Vietnam.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Rice_terraces_in_Vietnam.jpg",
+  "author": "Eerin25",
+  "license": "CC0",
+  "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+ },
+ "japan-wind": {
+  "title": "Nunobiki wind farm 1389924513.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Nunobiki_wind_farm_1389924513.jpg",
+  "author": "contri from Yonezawa Yamagata, Japan",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "japan-complex": {
+  "title": "Mt. Fuji and Keiyo petrochemical complex.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Mt._Fuji_and_Keiyo_petrochemical_complex.JPG",
+  "author": "Nanashinodensyaku",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "japan-kussharo": {
+  "title": "130713 Lake Kussharo Teshikaga Hokkaido Japan01s5.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:130713_Lake_Kussharo_Teshikaga_Hokkaido_Japan01s5.jpg",
+  "author": "663highland",
+  "license": "CC BY 2.5",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.5"
+ },
+ "japan-delta": {
+  "title": "Aerial view of Hiroshima city - Mar 25, 2025.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Hiroshima_city_-_Mar_25,_2025.jpg",
+  "author": "Eric Salard",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "pivot": {
+  "title": "Aerial view of center pivot irrigation north of Deverre, Nebraska 4.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_center_pivot_irrigation_north_of_Deverre,_Nebraska_4.jpg",
+  "author": "Codrin.B",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+ },
+ "sheep": {
+  "title": "Gostwyck Sheep in the paddock-1 (26205255823).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Gostwyck_Sheep_in_the_paddock-1_(26205255823).jpg",
+  "author": "Sheba_Also 43,000 photos",
+  "license": "CC BY-SA 2.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+ },
+ "oilpalm": {
+  "title": "Oil Palm plantation in Rupit, North Musi Rawas, South Sumatra.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Oil_Palm_plantation_in_Rupit,_North_Musi_Rawas,_South_Sumatra.jpg",
+  "author": "Firzafp",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+ },
+ "japan-rias": {
+  "title": "Miyako Bay, Jodogahama and central Miyako City from Gassan.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Miyako_Bay,_Jodogahama_and_central_Miyako_City_from_Gassan.jpg",
+  "author": "Yasu (talk)",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
  }
 }

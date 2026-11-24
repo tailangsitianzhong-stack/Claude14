@@ -34,7 +34,7 @@ niagara|Niagara Falls Horseshoe Falls|ナイアガラの滝|world-nature|アメ�
 iguazu|Iguazu Falls Argentina Brazil|イグアスの滝|world-nature|アルゼンチンとブラジルの国境にある滝
 uyuni|Salar de Uyuni Bolivia|ウユニ塩湖|world-nature|ボリビアにある世界最大の塩の湖
 amazon|Amazon river rainforest aerial|アマゾン川|world-nature|南アメリカの熱帯雨林を流れる大河
-fjord|Geirangerfjord Norway|フィヨルド|world-nature|氷河がけずった細長い入り江(ノルウェー)
+fjord|Geirangerfjord Norway|フィヨルド|world-landscape|氷河がけずってできた、細長い入り江(ノルウェー)|3
 aurora|Aurora borealis Iceland|オーロラ|world-nature|北極に近い夜空に現れる光
 everest|Mount Everest Himalaya|エベレスト|world-nature|ヒマラヤ山脈にある世界最高峰
 halong|Ha Long Bay Vietnam|ハロン湾|world-nature|ベトナムの海に多くの岩の島が並ぶ景色
@@ -69,3 +69,74 @@ kenrokuen|Kenrokuen garden Kanazawa|兼六園|japan|石川県にある日本三�
 okinawa|Churaumi Aquarium Okinawa|美ら海水族館|japan|沖縄県にある水族館
 sapporo|Sapporo Clock Tower Hokkaido|札幌時計台|japan|北海道の札幌にある古い時計台
 dotonbori|Dotonbori Osaka Glico sign|道頓堀|japan|大阪の繁華街
+# --- 追加(世界の名所)。6つめは、「どこでしょう？」のレベル(省略すると、有名な名所=1・それ以外=2) ---
+whitehouse|White House Washington DC north facade|ホワイトハウス|world-monument|アメリカの首都ワシントンD.C.にある大統領の官邸|1
+goldengate|Golden Gate Bridge sunset|ゴールデンゲートブリッジ|world-monument|アメリカのサンフランシスコにある赤い吊り橋|1
+towerbridge|Tower Bridge London Thames|タワーブリッジ|world-monument|イギリスのロンドンで、テムズ川にかかる橋|1
+merlion|Merlion Singapore Marina Bay|マーライオン|world-monument|シンガポールにある、ライオンの頭と魚の体をした像|1
+empire|Empire State Building New York skyline|エンパイア・ステート・ビルディング|world-monument|アメリカのニューヨークにある超高層ビル|1
+rushmore|Mount Rushmore National Memorial|ラシュモア山|world-monument|アメリカの大統領4人の顔がほられた山|2
+neuschwanstein|Neuschwanstein Castle Bavaria|ノイシュバンシュタイン城|world-monument|ドイツのバイエルン州にある、白い山の上の城|2
+montsaintmichel|Mont-Saint-Michel aerial abbey island|モン・サン・ミシェル|world-monument|フランスの海にうかぶ、修道院のある島|2
+louvre|Louvre Pyramid Paris|ルーヴル美術館|world-monument|フランスのパリにある、ガラスのピラミッドが目印の美術館|2
+petronas|Petronas Towers Kuala Lumpur|ペトロナス・ツインタワー|world-monument|マレーシアの首都クアラルンプールにある高層ビル|2
+marinabay|Marina Bay Sands Singapore hotel|マリーナベイ・サンズ|world-monument|シンガポールの、3棟のビルの上に船がのったようなホテル|2
+chichen|Chichen Itza El Castillo pyramid Mexico|チチェン・イッツァ|world-monument|メキシコのユカタン半島にある、マヤ文明のピラミッド|2
+potala|Potala Palace Lhasa|ポタラ宮|world-monument|中国のチベット自治区のラサにある宮殿|3
+gyeongbok|Gyeongbokgung Palace Seoul Geunjeongjeon|景福宮|world-monument|韓国の首都ソウルにある王宮|2
+tiananmen|Tiananmen Gate Beijing|天安門|world-monument|中国の首都北京にある、広場に面した門|2
+cappadocia|Cappadocia Goreme fairy chimneys|カッパドキア|world-nature|トルコ中央部の、きのこのような奇岩がならぶ地域|2
+santorini|Santorini Oia|サントリーニ島|world-nature|ギリシャのエーゲ海にある、白い家と青い屋根の島|2
+matterhorn|Matterhorn Zermatt Switzerland|マッターホルン|world-nature|スイスとイタリアの国境にある、とがった形のアルプスの山|2
+pamukkale|Pamukkale white terraces pools Hierapolis|パムッカレ|world-nature|トルコにある、白い石灰華の段々の景色|3
+# --- 追加(日本の名所) ---
+skytree|Tokyo Skytree|東京スカイツリー|japan|東京都にある、高さ634メートルの電波塔|1
+osakajo|Osaka Castle main tower|大阪城|japan|大阪府にある、豊臣秀吉がきずいた城|1
+kiyomizu|Kiyomizu-dera Kyoto main hall stage|清水寺|japan|京都府にある、「清水の舞台」で知られる寺|1
+fushimi|Fushimi Inari Taisha senbon torii|伏見稲荷大社|japan|京都府にある、赤い鳥居がたくさん並ぶ神社|1
+sensoji|Senso-ji Kaminarimon Asakusa|浅草寺（雷門）|japan|東京都にある、大きな提灯で知られる寺|1
+rainbowbridge|Rainbow Bridge Tokyo Odaiba|レインボーブリッジ|japan|東京湾にかかる、お台場へ向かう吊り橋|2
+kumamoto|Kumamoto Castle|熊本城|japan|熊本県にある、加藤清正がきずいた城|2
+toya|Lake Toya Hokkaido|洞爺湖|japan|北海道にある、有珠山の近くのカルデラ湖|2
+dogo|Dogo Onsen Honkan Matsuyama|道後温泉|japan|愛媛県の松山にある、古い温泉の建物|2
+ginzan|Ginzan Onsen Yamagata|銀山温泉|japan|山形県にある、木造の旅館が川ぞいにならぶ温泉街|2
+ritsurin|Ritsurin Garden Takamatsu|栗林公園|japan|香川県の高松にある大名庭園|3
+# --- 追加(景観・土地利用。高校地理)。kind は world-landscape / japan-landscape。6つめはレベル(省略=3) ---
+glacier|Perito Moreno Glacier Argentina|氷河|world-landscape|山の斜面をゆっくり流れ下る、巨大な氷のかたまり|2
+uvalley|Yosemite Valley glacial valley|U字谷|world-landscape|氷河がけずってできた、断面がUの字の谷|3
+delta|Nile Delta from space|三角州（デルタ）|world-landscape|河口に、川が運んだ土砂がたまってできた平らな土地|3
+oasis|Huacachina oasis Peru dunes|オアシス|world-landscape|砂漠の中で、水がわき出て緑のある場所|3
+mangrove|Mangrove forest|マングローブ林|world-landscape|熱帯の河口や海岸の、海水がまじる所に育つ林|3
+atoll|Maldives atoll aerial view|環礁|world-landscape|サンゴ礁が、輪のように島をつくった地形|3
+coralreef|Great Barrier Reef aerial Whitsunday|サンゴ礁|world-landscape|あたたかい海で、サンゴがつくる地形(オーストラリアの北東)|2
+steppe|Mongolia steppe landscape grassland|ステップ（草原）|world-landscape|雨が少なく、木が育たず草が広がる乾燥した草原|3
+savanna|Serengeti savanna acacia tree|サバナ|world-landscape|熱帯の、まばらな木と背の高い草の草原|3
+tundra|Tundra landscape Alaska autumn|ツンドラ|world-landscape|北極に近く、地面がこおり、こけや低い草だけが育つ地域|3
+taiga|Taiga forest|タイガ（針葉樹林）|world-landscape|北の寒い地域に、どこまでも広がる針葉樹の森|3
+geyser|Strokkur geyser eruption Iceland|間欠泉|world-landscape|地下の熱でわかされた水が、いきおいよくふき出す|2
+polder|Kinderdijk windmills Netherlands|風車と干拓地（ポルダー）|world-landscape|オランダで、海をせきとめた低い土地の水をくみ出す|3
+openpit|Open pit copper mine Chuquicamata|露天掘りの鉱山|world-landscape|地表から、すり鉢状に掘りすすめる鉱山|3
+tea|Tea plantation Sri Lanka hills|茶のプランテーション|world-landscape|熱帯・亜熱帯の丘で、大規模に茶を育てる農園|3
+loess|Loess Plateau|黄土高原|world-landscape|中国の、黄色い細かい土でできた高原|3
+columnar|Giants Causeway basalt columns|柱状節理|world-landscape|溶岩が冷えて固まるとき、六角形の柱の形に割れた岩|3
+pivot|Center pivot irrigation Nebraska|センターピボット農業|world-landscape|アメリカの乾燥地で、地下水をまいて育てる円形の畑|3
+mesa|Monument Valley mesa butte Arizona|メサとビュート|world-landscape|アメリカ西部の乾燥地で、かたい地層がのこった台地と岩山|3
+meander|Goosenecks State Park San Juan River meander|蛇行する川|world-landscape|大きくくねくねと曲がりながら流れる川|3
+stilt|Stilt houses over water Cambodia Tonle Sap floating village|高床式住居|world-landscape|熱帯の、水辺や湿地に、柱の上に建てた家|3
+caldera|Ngorongoro Crater landscape|カルデラ|world-landscape|火山の噴火のあとに、大きなくぼ地ができた地形|3
+sheep|Merino sheep Australia paddock|羊の放牧|world-landscape|ニュージーランドやオーストラリアで盛んな牧畜|3
+vineyard|Vineyard rows grapes|ぶどう畑|world-landscape|地中海性気候に向いた作物。ワインの原料になる|3
+coffee|Coffee plantation Brazil Minas Gerais|コーヒー農園|world-landscape|ブラジルの高地に広がる、熱帯の作物の農園|3
+wheat|Wheat field harvest combine|小麦畑（大規模農業）|world-landscape|北アメリカの大平原で、大型機械を使って行う農業|3
+oilpalm|Oil palm plantation Sumatra|アブラヤシ農園|world-landscape|東南アジアで開発が進む、油をとる木の農園|3
+iceberg|Iceberg Antarctica floating blue|氷山|world-landscape|氷河や氷だなから割れて、海にうかぶ巨大な氷|2
+rice|Rice terraces Vietnam|水田（稲作）|world-landscape|アジアのモンスーン地域で盛んな、米をつくる田|3
+japan-rias|Jodogahama Miyako Iwate|リアス海岸|japan-landscape|岩手県から宮城県の海岸に見られる、入り組んだ湾の地形|3
+japan-senmaida|Senmaida Shiroyone terraced rice fields Wajima|棚田（千枚田）|japan-landscape|石川県の輪島にある、山の斜面の小さな田|3
+japan-karst|Akiyoshidai karst plateau Yamaguchi|カルスト地形|japan-landscape|山口県の秋吉台にある、石灰岩がとけてできた地形|3
+japan-wind|Wind farm Japan|風力発電|japan-landscape|風の強い海ぞいや高原に立つ、プロペラのある発電設備|3
+japan-complex|Industrial complex Japan petrochemical|石油化学コンビナート|japan-landscape|臨海部にならぶ、石油から工業原料をつくる工場群|3
+japan-delta|Hiroshima Japan aerial city river|三角州|japan-landscape|広島市の中心部がある、川の河口にできた平地|3
+japan-showashinzan|Showa-shinzan lava dome Hokkaido Usu|溶岩ドーム|japan-landscape|北海道の昭和新山のように、ねばりけの強い溶岩がもり上がった火山|3
+japan-kussharo|Lake Kussharo|カルデラ湖|japan-landscape|北海道の屈斜路湖のように、噴火のあとのくぼ地に水がたまった湖|3
+
