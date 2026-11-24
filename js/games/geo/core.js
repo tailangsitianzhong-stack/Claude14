@@ -27,7 +27,7 @@
 
   const START_MS = 2500;        // 開始の「よーい」
   const BETWEEN_MS = 5000;      // ラウンドの間(答え合わせの表示)
-  const CHOICE_MS = { graph: 25000, table: 25000, type: 25000, photo: 20000, stat: 25000 };
+  const CHOICE_MS = { graph: 25000, table: 25000, type: 25000, photo: 20000, stat: 25000, indic: 30000, pop: 30000, cap: 15000, pref: 15000, basic: 15000 };
   const MAP_MS = 35000;
   const ANSWER_MS = 12000;      // 早押しで、押してから答えるまで
   const AI_WAIT_MS = 12000;     // AI の判定を待つ上限(これを過ぎたら、まちがい扱い)

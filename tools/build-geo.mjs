@@ -45,6 +45,10 @@ for (const c of countries) {
 for (const w of wc) if (!cBy.has(w.cca3)) warn.push(`countries: ${w.cca3} がない`);
 const prefs = lines("prefs.txt").map((l) => { const [id, ja, yomi, cap, capYomi, region] = l.split("|"); return { id, ja, yomi, cap, capYomi, region }; });
 const pBy = new Map(prefs.map((p) => [p.id, p]));
+/* 知名度(出題のレベル): 1=かんたん 2=ふつう 3=むずかしい */
+const fame = Object.fromEntries(lines("fame.txt").map((l) => { const [k, v] = l.split("|"); return [k, new Set(v.split(" "))]; }));
+const lvC = (id) => (fame.country1.has(id) ? 1 : fame.country2.has(id) ? 2 : 3);
+const lvP = (id) => (fame.pref1.has(id) ? 1 : fame.pref2.has(id) ? 2 : 3);
 
 /* 都道府県の隣接(境界の頂点を2つ以上共有していれば隣) */
 const admin1 = JSON.parse(readFileSync(admin1Path, "utf8"));
@@ -89,6 +93,7 @@ const photos = photoRows.filter((p) => credits[p.id] && existsSync(root + `asset
 const skipFile = src("photo-skip.txt");
 const skip = new Set(existsSync(skipFile) ? lines("photo-skip.txt").map((l) => l.split("|")[0]) : []);   // 目で見て内容が合わなかった写真
 const photoUse = photos.filter((p) => !skip.has(p.id));
+const EASY_PHOTOS = new Set("eiffel pisa colosseum bigben pyramids sphinx greatwall tajmahal liberty opera fuji himeji kinkaku todaiji tokyotower christ machu".split(" "));   // だれでも知っている名所
 
 /* ---------- 早押し ---------- */
 const hira = (s) => s.replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
@@ -102,14 +107,14 @@ for (const l of [...lines("buzz-hand.txt"), ...lines("buzz-high.txt")]) {
 // 国の別名の読み
 const ALIAS = { USA: ["あめりか", "べいこく"], GBR: ["えいこく", "ゆーけー"], ARE: ["ゆーえーいー"], KOR: ["だいかんみんこく"], PRK: ["ちょうせんみんしゅしゅぎじんみんきょうわこく"], CHN: ["ちゅうかじんみんきょうわこく"], RUS: ["ろしあ"], CZE: ["ちぇこきょうわこく"], MMR: ["びるま"], CIV: ["あいぼりーこーすと"], SWZ: ["すわじらんど"], MKD: ["まけどにあ"], TLS: ["とるれすて"], FSM: ["みくろねしあ"], KNA: ["せんときっつねーびす"], DMA: ["どみにか"] };
 const AUTO_COUNTRIES = "RUS CAN USA CHN BRA AUS IND ARG KAZ DZA SAU MEX IDN LBY IRN MNG PER AGO MLI ZAF COL ETH BOL EGY TZA NGA VEN PAK TUR CHL ZMB MMR AFG SOM FRA ESP SWE THA IRQ PNG DEU FIN VNM MYS NOR POL ITA PHL NZL GBR ROU GRC BGD NPL ISL CUB KOR PRT CHE AUT NLD IRL LKA JOR UKR KEN MAR MDG KHM".split(" ");
-const manNum = (km2) => { const m = km2 / 10000; return m >= 10 ? String(Math.round(m)) : m >= 1 ? m.toFixed(1).replace(/\.0$/, "") : String(Math.round(km2 / 1000) / 10); };
-for (const id of AUTO_COUNTRIES) {
-  const c = cBy.get(id), w = wcBy.get(id);
-  if (!c || !w) { warn.push(`auto国: ${id}`); continue; }
+const areaText = (km2) => (km2 >= 10000 ? `約${(km2 / 10000 >= 10 ? String(Math.round(km2 / 10000)) : (km2 / 10000).toFixed(1).replace(/\.0$/, ""))}万平方キロメートル` : `約${km2 >= 100 ? Math.round(km2 / 10) * 10 : Math.round(km2)}平方キロメートル`);
+for (const c of countries) {
+  if (c.id === "JPN") continue;
+  const w = wcBy.get(c.id);
   const nb = (w.borders || []).map((b) => cBy.get(b) && cBy.get(b).ja).filter(Boolean);
   const border = nb.length === 0 ? "周りを海に囲まれた島国で、" : nb.length <= 4 ? `${nb.join("、")}と国境を接し、` : `${nb.length}か国と国境を接し、`;
-  const text = `この国は、${c.cont}にあり、${border}面積は約${manNum(w.area)}万平方キロメートルで、首都は${c.cap}です。この国はどこでしょう？`;
-  buzz.push({ id: "c-" + id.toLowerCase(), cat: "world", sc: "world", lv: w.area > 500000 ? 1 : 2, text, ans: c.ja, yomi: [hira(c.yomi), ...(ALIAS[id] || [])] });
+  const text = `この国は、${c.cont}にあり、${border}面積は${areaText(w.area)}で、首都は${c.cap}です。この国はどこでしょう？`;
+  buzz.push({ id: "c-" + c.id.toLowerCase(), cat: "world", sc: "world", lv: lvC(c.id), text, ans: c.ja, yomi: [hira(c.yomi), ...(ALIAS[c.id] || [])] });
 }
 const suffix = (ja) => ja.slice(-1);                                         // 都・道・府・県
 const shortYomi = (p) => (p.id === "JP-01" ? [] : [p.yomi.replace(/(けん|ふ|と)$/, "")]);
@@ -117,7 +122,18 @@ for (const p of prefs) {
   const nb = neighbors.get(p.id).map((n) => pBy.get(n).ja);
   const border = nb.length === 0 ? "他の都道府県と陸でつながっておらず、" : nb.length <= 5 ? `${nb.join("、")}と接し、` : `${nb.slice(0, 4).join("、")}など${nb.length}の都府県と接し、`;
   const text = `この都道府県は、${p.region}地方にあり、${border}${suffix(p.ja)}庁所在地は${p.cap}です。この都道府県はどこでしょう？`;
-  buzz.push({ id: "p-" + p.id.slice(3), cat: "japan", sc: "japan", lv: 2, text, ans: p.ja, yomi: [p.yomi, ...shortYomi(p)] });
+  buzz.push({ id: "p-" + p.id.slice(3), cat: "japan", sc: "japan", lv: lvP(p.id), text, ans: p.ja, yomi: [p.yomi, ...shortYomi(p)] });
+}
+// 国の首都・都道府県の県庁所在地を答える(国名・県名がヒント)
+for (const c of countries) {
+  if (c.cap === c.ja || c.cap.includes(c.ja) || c.ja.includes(c.cap)) continue;
+  buzz.push({ id: "cp-" + c.id.toLowerCase(), cat: "world", sc: "world", lv: lvC(c.id), text: c.id === "JPN" ? "日本の首都はどこでしょう？" : `${c.cont}にある${c.ja}の首都はどこでしょう？`, ans: c.cap, yomi: [c.capYomi] });
+}
+for (const p of prefs) {
+  const city = p.cap.replace(/[市区]$/, "");
+  const same = p.ja.startsWith(city);
+  const base = p.capYomi.replace(/(し|く)$/, "");
+  buzz.push({ id: "pk-" + p.id.slice(3), cat: "japan", sc: "japan", lv: same ? 1 : p.id === "JP-13" ? 3 : fame.pref1.has(p.id) ? 1 : 2, text: `${p.ja}の${suffix(p.ja)}庁所在地はどこでしょう？`, ans: p.cap, yomi: [p.capYomi, base] });
 }
 for (const b of buzz) if (b.yomi.some((y) => !isKana(y))) warn.push(`buzz ${b.id}: 読みがかなでない`);
 if (new Set(buzz.map((b) => b.id)).size !== buzz.length) warn.push("buzz: id が重複");
@@ -125,23 +141,24 @@ if (new Set(buzz.map((b) => b.id)).size !== buzz.length) warn.push("buzz: id が
 /* ---------- 地図で選ぶ ---------- */
 const map = [];
 const r1 = rng(11);
-const capQs = shuffle(countries.filter((c) => c.cap !== c.ja && !/^(JPN)$/.test(c.id)), r1).slice(0, 55);
-for (const c of capQs) map.push({ id: "mc-" + c.id.toLowerCase(), map: "world", sc: "world", text: `首都が「${c.cap}」の国はどこでしょう？`, target: c.id, lv: 2 });
+for (const c of countries.filter((c) => c.cap !== c.ja && !c.cap.includes(c.ja) && !c.ja.includes(c.cap))) map.push({ id: "mc-" + c.id.toLowerCase(), map: "world", sc: "world", text: `首都が「${c.cap}」の国はどこでしょう？`, target: c.id, lv: lvC(c.id) });
+for (const c of countries) map.push({ id: "mn-" + c.id.toLowerCase(), map: "world", sc: "world", text: `地図で「${c.ja}」を選ぼう！`, target: c.id, lv: lvC(c.id) });
+for (const p of prefs) map.push({ id: "mnp-" + p.id.slice(3), map: "japan", sc: "japan", text: `地図で「${p.ja}」を選ぼう！`, target: p.id, lv: lvP(p.id) });
 for (const l of lines("map-hand.txt")) {
   const a = l.split("|");
   if (a[0] === "world") {
     if (!cBy.has(a[2])) { warn.push(`map-hand: 知らない国 ${a[2]}`); continue; }
-    map.push({ id: "mw-" + map.length, map: "world", sc: "world", text: `「${a[1]}」がある国はどこでしょう？`, target: a[2], lv: 1 });
+    map.push({ id: "mw-" + map.length, map: "world", sc: "world", text: `「${a[1]}」がある国はどこでしょう？`, target: a[2], lv: lvC(a[2]) });
   } else {
     if (!pBy.has(a[2])) { warn.push(`map-hand: 知らない県 ${a[2]}`); continue; }
     const t = a[3] === "sight" ? `「${a[1]}」がある都道府県はどこでしょう？` : a[3] === "food" ? `「${a[1]}」で有名な都道府県はどこでしょう？` : `「${a[1]}」の産地として有名な都道府県はどこでしょう？`;
-    map.push({ id: "mj-" + map.length, map: "japan", sc: "japan", text: t, target: a[2], lv: 1 });
+    map.push({ id: "mj-" + map.length, map: "japan", sc: "japan", text: t, target: a[2], lv: Math.min(2, lvP(a[2])) });
   }
 }
 for (const p of prefs) {
   const city = p.cap.replace(/[市区]$/, "");
   if (p.id === "JP-13" || p.ja.startsWith(city)) continue;                   // 県名と同じ(青森市→青森県)は簡単すぎる
-  map.push({ id: "mp-" + p.id.slice(3), map: "japan", sc: "japan", text: `${suffix(p.ja)}庁所在地が「${p.cap}」の都道府県はどこでしょう？`, target: p.id, lv: 1 });
+  map.push({ id: "mp-" + p.id.slice(3), map: "japan", sc: "japan", text: `${suffix(p.ja)}庁所在地が「${p.cap}」の都道府県はどこでしょう？`, target: p.id, lv: Math.min(2, lvP(p.id)) });
 }
 // 高校地理の手書き(答えが1つに決まるもの)
 for (const l of lines("map-high.txt")) {
@@ -211,17 +228,62 @@ for (const p of photoUse) {
   const others = photoUse.filter((x) => x.id !== p.id && x.kind !== p.kind);
   const pool = shuffle(same, r2).concat(shuffle(others, r2)).slice(0, 3);
   if (pool.length < 3) { warn.push(`photo ${p.id}: 選択肢が足りない`); continue; }
-  choice.push({ id: "f-" + p.id, k: "photo", sc: p.kind === "japan" ? "japan" : "world", lv: p.kind === "japan" ? 1 : 2, q: p.kind === "japan" ? "この写真の場所は、日本のどこでしょう？" : "この写真は、どこでしょう？", m: { file: p.id, hint: p.hint }, c: [p.answer, ...pool.map((x) => x.answer)], a: 0 });
+  choice.push({ id: "f-" + p.id, k: "photo", sc: p.kind === "japan" ? "japan" : "world", lv: p.kind === "japan" || EASY_PHOTOS.has(p.id) ? 1 : 2, q: p.kind === "japan" ? "この写真の場所は、日本のどこでしょう？" : "この写真は、どこでしょう？", m: { file: p.id, hint: p.hint }, c: [p.answer, ...pool.map((x) => x.answer)], a: 0 });
 }
 for (const l of lines("stats.txt")) {
   const [id, kind, rows, ans, wrong, label] = l.split("|");
   const rs = rows.split(","), ws = wrong.split(",");
   if (rs.length !== 5 || ws.length < 3) { warn.push(`stats ${id}: 形式`); continue; }
   const cs = [ans, ...shuffle(ws, r2).slice(0, 3)];
-  choice.push({ id: "s-" + id, k: "stat", sc: kind, lv: 3, q: `次の表は、${label || (kind === "japan" ? "都道府県" : "国")}の1位から5位までを並べたものです。何の表でしょう？`, m: { rows: rs }, c: cs, a: 0 });
+  choice.push({ id: "s-" + id, k: "stat", sc: kind, lv: Number(id.slice(1)) <= 24 ? 2 : 3, q: `次の表は、${label || (kind === "japan" ? "都道府県" : "国")}の1位から5位までを並べたものです。何の表でしょう？`, m: { rows: rs }, c: cs, a: 0 });
+}
+// 国と首都・都道府県と県庁所在地の4択(国・県の知名度でレベルが変わる)
+const sameCont = (id) => countries.filter((x) => x.cont === cBy.get(id).cont && x.id !== id);
+const r4 = rng(51);
+const okCap = (c) => c.cap !== c.ja && !c.cap.includes(c.ja) && !c.ja.includes(c.cap);
+for (const c of countries.filter(okCap)) {
+  const pool = sameCont(c.id).filter(okCap);
+  const ds = shuffle(pool, r4).slice(0, 3);
+  if (ds.length < 3) { warn.push(`cap ${c.id}: 選択肢が足りない`); continue; }
+  choice.push({ id: "cc-" + c.id.toLowerCase(), k: "cap", sc: "world", lv: lvC(c.id) === 3 ? 3 : 1,   // 4択なので、「国→首都」はふつうの知名度でもかんたん
+     q: `${c.ja}の首都は、次のうちどれでしょう？`, m: {}, c: [c.cap, ...ds.map((d) => d.cap)], a: 0 });
+  choice.push({ id: "cn-" + c.id.toLowerCase(), k: "cap", sc: "world", lv: lvC(c.id), q: `首都が${c.cap}の国は、次のうちどれでしょう？`, m: {}, c: [c.ja, ...ds.map((d) => d.ja)], a: 0 });
+}
+for (const p of prefs) {
+  const near = prefs.filter((x) => x.id !== p.id && x.region === p.region);
+  const pool = near.length >= 3 ? near : prefs.filter((x) => x.id !== p.id);
+  const ds = shuffle(pool, r4).slice(0, 3);
+  const lv = p.ja.startsWith(p.cap.replace(/[市区]$/, "")) ? 1 : lvP(p.id) === 3 ? 3 : Math.min(2, lvP(p.id));
+  choice.push({ id: "pc-" + p.id.slice(3), k: "pref", sc: "japan", lv, q: `${p.ja}の${suffix(p.ja)}庁所在地は、次のうちどれでしょう？`, m: {}, c: [p.cap, ...ds.map((d) => d.cap)], a: 0 });
+  choice.push({ id: "pn-" + p.id.slice(3), k: "pref", sc: "japan", lv, q: `${suffix(p.ja)}庁所在地が${p.cap}の都道府県は、次のうちどれでしょう？`, m: {}, c: [p.ja, ...ds.map((d) => d.ja)], a: 0 });
+}
+// 基本の4択(手書き)
+lines("choice-basic.txt").forEach((l, i) => {
+  const [sc, lv, q, ans, wrong] = l.split("|");
+  const c = [ans, ...wrong.split(",")];
+  if (c.length !== 4 || new Set(c).size !== 4) { warn.push(`choice-basic ${i}: 選択肢`); return; }
+  choice.push({ id: `b-${i + 1}`, k: "basic", sc, lv: Number(lv), q, m: {}, c, a: 0 });
+});
+// 写真の場所がある国・都道府県
+for (const l of lines("photo-country.txt")) {
+  const [pid, code] = l.split("|");
+  const ph = photoUse.find((x) => x.id === pid);
+  if (!ph) continue;
+  const jp = code.startsWith("JP-");
+  const ent = jp ? pBy.get(code) : cBy.get(code);
+  if (!ent) { warn.push(`photo-country: ${code}`); continue; }
+  const pool = jp ? prefs.filter((x) => x.id !== code && (x.region === pBy.get(code).region || true)) : sameCont(code);
+  const ds = shuffle(pool.length >= 3 ? pool : countries.filter((x) => x.id !== code), r4).slice(0, 3);
+  choice.push({ id: "fc-" + pid, k: "photo", sc: jp ? "japan" : "world", lv: jp ? 2 : EASY_PHOTOS.has(pid) ? 1 : Math.max(lvC(code), 2), q: jp ? "この写真の場所がある都道府県は、次のうちどれでしょう？" : "この写真の場所がある国は、次のうちどれでしょう？", m: { file: pid, hint: ph.hint }, c: [ent.ja, ...ds.map((d) => d.ja)], a: 0 });
+}
+// 表(気温と降水量)から気候区分
+for (const [id, c] of Object.entries(climate)) {
+  if (!c.ty) continue;
+  const wrong = shuffle(ALL_TYPES.filter((t) => t !== c.ty), r4).slice(0, 3);
+  choice.push({ id: "yt-" + id, k: "type", sc: jpIds.includes(id) ? "japan" : "world", lv: 3, q: "この気温と降水量の表が表す気候は、次のうちどれでしょう？", m: { city: id, noName: true, table: true }, c: [c.ty, ...wrong], a: 0 });
 }
 // 高校地理: 世界銀行の統計の表(人口構成・社会経済の指標)から、どの国かを当てる
-const WB_COUNTRIES = ["JPN", "SGP", "ARE", "ISR", ...AUTO_COUNTRIES].filter((id, i, a) => a.indexOf(id) === i && cBy.has(id));
+const WB_COUNTRIES = countries.map((c) => c.id).filter((id) => ((wb.pop[id] || {}).v || 0) >= 2500000);
 const val = (k, id) => (wb[k] && wb[k][id] ? wb[k][id].v : null);
 const r3 = rng(37);
 function wbQuestions(kind, need, ok, feat, far2, make) {
@@ -230,17 +292,17 @@ function wbQuestions(kind, need, ok, feat, far2, make) {
   for (const id of targets) {
     const ds = shuffle(cand.filter((x) => x !== id && far2(feat(id), feat(x))), r3).slice(0, 3);
     if (ds.length < 3) { warn.push(`wb ${kind} ${id}: 選択肢が足りない`); continue; }
-    choice.push({ id: `${kind}-${id.toLowerCase()}`, k: kind, sc: "world", lv: 3, m: make(id), c: [cBy.get(id).ja, ...ds.map((d) => cBy.get(d).ja)], a: 0,
+    choice.push({ id: `${kind}-${id.toLowerCase()}`, k: kind, sc: "world", lv: fame.country1.has(id) ? 2 : 3, m: make(id), c: [cBy.get(id).ja, ...ds.map((d) => cBy.get(d).ja)], a: 0,
       q: kind === "indic" ? "次の表は、ある国の近年の統計です。どの国のものでしょう？" : "次の人口構成（年少・生産年齢・老年人口の割合）は、どの国のものでしょう？" });
   }
 }
 const r1d = (x) => Math.round(x * 10) / 10;
-wbQuestions("indic", 45,
+wbQuestions("indic", 90,
   (id) => ["density", "urban", "gni", "life", "agri"].every((k) => val(k, id) != null),
   (id) => ({ d: Math.log10(val("density", id)), g: Math.log10(val("gni", id)), l: val("life", id), a: val("agri", id), u: val("urban", id) }),
   (a, b) => Math.abs(a.g - b.g) >= 0.3 && (Math.abs(a.l - b.l) >= 3 || Math.abs(a.d - b.d) >= 0.4 || Math.abs(a.a - b.a) >= 10),
   (id) => ({ rows: [["人口密度", Math.round(val("density", id)).toLocaleString("en-US") + " 人/km²"], ["都市人口率", Math.round(val("urban", id)) + " %"], ["1人あたり国民総所得", Math.round(val("gni", id) / 10) * 10 + " ドル"], ["平均寿命", Math.round(val("life", id)) + " 歳"], ["農業で働く人の割合", Math.round(val("agri", id)) + " %"]] }));
-wbQuestions("pop", 35,
+wbQuestions("pop", 70,
   (id) => ["age14", "age64", "age65", "birth"].every((k) => val(k, id) != null),
   (id) => ({ y: val("age14", id), o: val("age65", id), b: val("birth", id) }),
   (a, b) => Math.abs(a.o - b.o) >= 5 || Math.abs(a.y - b.y) >= 8,

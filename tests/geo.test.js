@@ -30,7 +30,7 @@ function start(g) { E.tick(g.st, T0 + Core.START_MS, g.rng); return T0 + Core.ST
 
 // ---------- データ ----------
 test("データ: 問題数・形式・読みの形", () => {
-  assert.ok(D.buzz.length >= 200 && D.map.length >= 200 && D.choice.length >= 200, `${D.buzz.length}/${D.map.length}/${D.choice.length}`);
+  assert.ok(D.buzz.length >= 560 && D.map.length >= 700 && D.choice.length >= 840, `${D.buzz.length}/${D.map.length}/${D.choice.length}`);
   assert.equal(D.countries.length, 194);
   assert.equal(D.prefs.length, 47);
   for (const b of D.buzz) { assert.ok(b.yomi.length >= 1 && b.yomi.every((y) => /^[ぁ-んー]+$/.test(y)), b.id); assert.ok(["world", "japan"].includes(b.sc)); assert.match(b.text, /[？。]$/); }
@@ -348,7 +348,7 @@ test("データ: 高校(レベル3)の問題が、形式×範囲ごとに30問�
   for (const [name, list] of [["buzz", D.buzz], ["map", D.map], ["choice", D.choice]]) {
     for (const sc of ["both", "world", "japan"]) assert.ok(n(list, sc) >= 30, `${name}/${sc}/高校 ${n(list, sc)}問`);
   }
-  assert.ok(D.buzz.length >= 280 && D.map.length >= 340 && D.choice.length >= 400);
+  assert.ok(D.buzz.length >= 560 && D.map.length >= 700 && D.choice.length >= 840, `${D.buzz.length}/${D.map.length}/${D.choice.length}`);
   const ind = D.choice.filter((c) => c.k === "indic"), pop = D.choice.filter((c) => c.k === "pop");
   assert.ok(ind.length >= 40 && pop.length >= 30);
   for (const c of ind) { assert.equal(c.m.rows.length, 5); assert.ok(c.m.rows.every(([k, v]) => k && /\d/.test(v))); assert.equal(c.c[0], c.c[0]); }
@@ -435,4 +435,62 @@ test("高校×日本×30問: 各形式で、同じ問題が出ずに30問そろ�
     for (let i = 0; i < 30; i++) used.push(Q.pick(mode, { scope: "japan", grade: "high", rng, used }).pub.id);
     assert.equal(new Set(used).size, 30, mode);
   }
+});
+
+test("バランス: かんたん(レベル1)・ふつう(2)・むずかしい(3)が、形式ごとにほぼ3等分(各28%以上)。範囲ごとにも出題できる", () => {
+  for (const [name, list] of [["buzz", D.buzz], ["map", D.map], ["choice", D.choice]]) {
+    for (const lv of [1, 2, 3]) {
+      const n = list.filter((q) => q.lv === lv).length;
+      assert.ok(n / list.length >= 0.28, `${name} レベル${lv}: ${n}/${list.length}`);
+    }
+    for (const sc of ["world", "japan"]) for (const lv of [1, 2, 3]) {
+      assert.ok(list.filter((q) => q.sc === sc && q.lv === lv).length >= 30, `${name}/${sc}/レベル${lv}`);
+    }
+  }
+});
+
+test("自動生成の問題: 国→首都・首都→国・県→県庁所在地・名前→地図・写真→国 の正解が、データと合っている", () => {
+  const cap = new Map(D.countries.map((c) => [c[1], c[4]])), capOf = new Map(D.countries.map((c) => [c[0], c]));
+  for (const c of D.choice.filter((x) => x.id.startsWith("cc-"))) {
+    const name = c.q.replace("の首都は、次のうちどれでしょう？", "");
+    assert.equal(c.c[0], cap.get(name), c.id);
+  }
+  for (const c of D.choice.filter((x) => x.id.startsWith("cn-"))) {
+    const m = /^首都が(.+)の国は/.exec(c.q);
+    assert.equal(cap.get(c.c[0]), m[1], c.id);
+  }
+  const pref = new Map(D.prefs.map((p) => [p[1], p[3]]));
+  for (const c of D.choice.filter((x) => x.id.startsWith("pc-"))) assert.equal(c.c[0], pref.get(c.q.replace(/の[都道府県]庁所在地は.*$/, "")), c.id);
+  for (const c of D.choice.filter((x) => x.id.startsWith("pn-"))) assert.equal(pref.get(c.c[0]), /庁所在地が(.+)の都道府県/.exec(c.q)[1], c.id);
+  for (const b of D.buzz.filter((x) => x.id.startsWith("cp-"))) assert.ok(capOf.get(b.id.slice(3).toUpperCase()), b.id);
+  for (const m of D.map.filter((x) => x.id.startsWith("mn-"))) assert.ok(capOf.has(m.target), m.id);
+  for (const c of D.choice.filter((x) => x.id.startsWith("fc-"))) assert.ok(D.photos.some((p) => "f-" + p.id === c.id.replace("fc-", "f-")), c.id);
+  // 選択肢に、答えと同じ名前が重なっていない
+  for (const c of D.choice) assert.equal(new Set(c.c).size, 4, c.id);
+});
+
+test("早押しの国の問題は、すべての国・面積の書き方は桁に合っている", () => {
+  const countryQs = D.buzz.filter((b) => /^c-/.test(b.id));
+  assert.ok(countryQs.length >= 190, "国の問題 " + countryQs.length);
+  assert.ok(countryQs.some((b) => /平方キロメートル/.test(b.text) && !/万平方/.test(b.text)), "小さな国は、万を使わない");
+  assert.equal(countryQs.some((b) => /約0\.0万|約0万/.test(b.text)), false);
+});
+
+test("すべての4択: 選択肢は空でない文字列で、重なりがない。写真→国/県の正解は photo-country.txt の国・県の名前", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  for (const c of D.choice) {
+    assert.equal(c.c.length, 4, c.id);
+    for (const x of c.c) assert.ok(typeof x === "string" && x.length > 0 && x !== "null", `${c.id}: ${x}`);
+    assert.equal(new Set(c.c).size, 4, c.id);
+  }
+  const names = new Map([...D.countries.map((c) => [c[0], c[1]]), ...D.prefs.map((p) => [p[0], p[1]])]);
+  const rows = fs.readFileSync(path.join(__dirname, "../tools/geo-source/photo-country.txt"), "utf8").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#")).map((l) => l.split("|"));
+  let n = 0;
+  for (const [pid, code] of rows) {
+    const q = D.choice.find((c) => c.id === "fc-" + pid);
+    if (!q) continue;
+    n++;
+    assert.equal(q.c[q.a], names.get(code), q.id);
+  }
+  assert.ok(n >= 50, "写真→国/県の問題 " + n);
 });

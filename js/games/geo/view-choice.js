@@ -53,6 +53,8 @@
 
     function material(q) {
       const m = q.m;
+      if (q.k === "cap" || q.k === "pref" || q.k === "basic") return "";
+      if (q.k === "type" && m.table) return climateTable(data.climate[m.city]);
       if (q.k === "graph" || q.k === "type") return climateGraph(data.climate[m.city]);
       if (q.k === "table") return climateTable(data.climate[m.city]);
       if (q.k === "photo") {
