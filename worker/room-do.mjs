@@ -9,6 +9,7 @@
  *               しりとり: {t:"move",reading,english} {t:"miss",reason,correct} {t:"hint"}
  *                         {t:"judging"}(Geminiで確認中=時間を止める) {t:"resume"}(確認が終わった)
  *               漢字検定: {t:"answer",reading} / {t:"answer",choice}（部屋が出題・採点する。答えは端末に送らない）
+ *               地理クイズ: {t:"choose",i} {t:"lock",id} {t:"press"} {t:"answer",text}（辞書に合わない答えは AI に確認する）
  *               ミニネプリーグ: {t:"answer",word} {t:"hint"}（お題・導火線・採点は部屋が持つ。答えの一覧は端末に送らない）
  * 部屋 → 端末:  {t:"state",state,events,now}   {t:"rejected",for,error,reason}   {t:"error",error}
  */
@@ -16,11 +17,13 @@ import { DurableObject } from "cloudflare:workers";
 import * as L from "./room-logic.mjs";
 import * as K from "./kanken-room.mjs";
 import * as N from "./nep-room.mjs";
+import * as G from "./geo-room.mjs";
+import { judge as geoJudge } from "./geo-judge.mjs";
 
 const MAX_MESSAGE = 2000;
 
 /** 次にアラームを鳴らす時刻。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
-const nextAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : L.nextAlarm(st, now));
+const nextAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : L.nextAlarm(st, now));
 
 export class Room extends DurableObject {
   constructor(ctx, env) {
@@ -42,7 +45,7 @@ export class Room extends DurableObject {
 
   broadcast(st, events) {
     // 漢字検定・ネプリーグの部屋は、答えを取り除いた状態だけを端末に送る
-    const view = st.game === "kanken" ? K.publicState(st) : st.game === "nep" ? N.publicState(st) : st;
+    const view = st.game === "kanken" ? K.publicState(st) : st.game === "nep" ? N.publicState(st) : st.game === "geo" ? G.publicState(st) : st;
     const msg = JSON.stringify({ t: "state", state: view, events: events || [], now: Date.now() });
     for (const ws of this.ctx.getWebSockets()) {
       try { ws.send(msg); } catch (_) { /* 切れかけの接続は無視 */ }
@@ -57,7 +60,7 @@ export class Room extends DurableObject {
       if (await this.load()) return Response.json({ ok: false });
       const code = url.searchParams.get("code") || "";
       const game = url.searchParams.get("game");
-      const room = game === "kanken" ? K.createRoom(code, Date.now()) : game === "nep" ? N.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
+      const room = game === "kanken" ? K.createRoom(code, Date.now()) : game === "nep" ? N.createRoom(code, Date.now()) : game === "geo" ? G.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
       await this.save(room);
       return Response.json({ ok: true });
     }
@@ -95,7 +98,18 @@ export class Room extends DurableObject {
     const now = Date.now();
 
     let res;
-    if (st.game === "nep") {
+    if (st.game === "geo") {
+      switch (m.t) {
+        case "settings": res = G.setSettings(st, id, m.settings, now); break;
+        case "start":    res = G.start(st, id, now); break;
+        case "choose":   res = G.choose(st, id, m, now); break;
+        case "lock":     res = G.lock(st, id, m, now); break;
+        case "press":    res = G.press(st, id, now); break;
+        case "answer":   res = G.answer(st, id, m, now); break;
+        case "rematch":  res = G.rematch(st, id, now); break;
+        default: return;
+      }
+    } else if (st.game === "nep") {
       switch (m.t) {
         case "settings": res = N.setSettings(st, id, m.settings, now); break;
         case "start":    res = N.start(st, id, now); break;
@@ -131,6 +145,19 @@ export class Room extends DurableObject {
     }
     await this.save(st);
     this.broadcast(st, res.events);
+    if (res.judge) await this.judgeGeo(res.judge);        // 早押しの答えを AI に確認する(確認中は時間が止まっている)
+  }
+
+  /** 地理クイズ: 辞書に合わなかった答えを AI に聞き、結果を反映する。待っている間に状態が変わっていたら無視される */
+  async judgeGeo(j) {
+    let ok = false;
+    try { ok = (await geoJudge(this.env, { question: j.question, answer: j.answer, yomi: j.yomi, input: j.input })).ok === true; } catch (_) { ok = false; }
+    const st = await this.load();
+    if (!st || st.game !== "geo") return;
+    const r = G.judged(st, j.pid, ok, Date.now());
+    if (!r.ok) return;
+    await this.save(st);
+    this.broadcast(st, r.events);
   }
 
   async webSocketClose(ws) { await this.dropped(ws); }
@@ -155,7 +182,7 @@ export class Room extends DurableObject {
     if (!st) return;
     const now = Date.now();
     if (st.phase === "playing") {
-      const r = st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : L.timeout(st, now);
+      const r = st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : st.game === "geo" ? G.timeout(st, now) : L.timeout(st, now);
       if (r.ok) { await this.save(st); this.broadcast(st, r.events); }
       else await this.ctx.storage.setAlarm(nextAlarmOf(st, now));
       return;

@@ -129,7 +129,7 @@
     return {
       update, say,
       resultHtml: result,
-      rejected(msg) { say(msg, "ng"); ctxBase.sfx.play("ng"); },
+      rejected(msg) { say(msg, "ng"); ctxBase.sfx.play("ng"); if (u.mv && u.mv.unbusy) u.mv.unbusy(); },
       destroy() { clearInterval(u.timerId); if (u.mv && u.mv.destroy) u.mv.destroy(); }
     };
   }

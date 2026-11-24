@@ -214,8 +214,16 @@
       return `正解{せいかい}は <b>${esc(rv.name)}</b><br><small>${picks}</small>`;
     }
 
+    function unbusy() {
+      if (u.locked && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play") {
+        u.locked = false;
+        u.svg.querySelectorAll(".locked").forEach((e) => e.classList.remove("locked"));
+        clearSel();
+      }
+    }
+
     const timer = (v, now) => (v.endsAt ? { rem: Math.max(0, v.endsAt - now), total: v.endsAt - v.startedAt } : null);
-    return { update, revealHtml, timer };
+    return { update, revealHtml, timer, unbusy };
   }
 
   root.GeoViews = root.GeoViews || {};

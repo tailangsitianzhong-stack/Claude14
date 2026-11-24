@@ -148,7 +148,7 @@
       return { rem: Math.max(0, b.answerEndsAt - now), total: 12000 };
     }
 
-    return { update, revealHtml, timer, destroy() { stop(); dropKeyboard(); document.removeEventListener("keydown", onKey); } };
+    return { update, revealHtml, timer, unbusy() { u.busy = false; }, destroy() { stop(); dropKeyboard(); document.removeEventListener("keydown", onKey); } };
   }
 
   root.GeoViews = root.GeoViews || {};

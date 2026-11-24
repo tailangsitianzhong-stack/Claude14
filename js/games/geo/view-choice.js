@@ -84,6 +84,7 @@
     }
 
     function update(v, events, newRound) {
+      u.v = v;
       if (!v.q) { stage.innerHTML = `<div class="geo-wait">${Ruby.html("よーい…")}</div>`; u.qid = ""; return; }
       if (u.qid !== v.q.id) build(v);
       // 自分がすでに答えている(再接続など)
@@ -114,8 +115,16 @@
       return h;
     }
 
+    /** 送れなかった/断られたとき: まだ答えが届いていなければ、選び直せるようにする */
+    function unbusy() {
+      if (u.locked && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play") {
+        u.locked = false;
+        stage.querySelectorAll(".geo-choice").forEach((x) => { x.disabled = false; x.classList.remove("is-picked"); });
+      }
+    }
+
     const timer = (v, now) => (v.endsAt ? { rem: Math.max(0, v.endsAt - now), total: v.endsAt - v.startedAt } : null);
-    return { update, revealHtml, timer };
+    return { update, revealHtml, timer, unbusy };
   }
 
   root.GeoViews = root.GeoViews || {};
