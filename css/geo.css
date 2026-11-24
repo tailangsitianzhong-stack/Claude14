@@ -1,0 +1,84 @@
+/* ===== 地理クイズ ===== */
+.geo-root, .geo { max-width: 640px; margin: 0 auto; }
+.geo [hidden], .geo-root [hidden] { display: none !important; }
+
+/* メニュー */
+.geo-modes { display: grid; gap: 8px; }
+.geo-mode {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; font: inherit; color: var(--ink);
+  background: #fff; border: 4px solid var(--ink-soft); border-radius: 14px 18px 12px 20px / 18px 12px 20px 14px; cursor: pointer;
+}
+.geo-mode .ic { font-size: 1.6rem; }
+.geo-mode .tx { display: grid; line-height: 1.7; }
+.geo-mode small { font-size: .74rem; color: var(--ink-soft); }
+.geo-mode.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 3px rgba(239, 91, 76, .25); }
+.geo-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.geo-opt {
+  flex: 1 1 0; min-width: 4.2em; padding: 5px 8px; font: inherit; color: var(--ink); line-height: 1.8;
+  background: #fff; border: 3px solid var(--ink-soft); border-radius: 12px; cursor: pointer;
+}
+.geo-opt.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 3px rgba(239, 91, 76, .25); }
+.geo-credits { list-style: none; margin: 0; padding: 0; font-size: .78rem; line-height: 1.7; text-align: left; }
+.geo-credits li { padding: 3px 0; border-bottom: 1px dashed rgba(122, 90, 30, .35); word-break: break-all; }
+
+/* 対戦画面 */
+.geo-top { display: flex; justify-content: space-between; align-items: baseline; font-size: .95rem; line-height: 1.8; }
+.geo-timer { margin-bottom: 6px; }
+.geo-timer-num { font-size: 1.05rem; }
+.geo-players { margin-bottom: 4px; }
+.geo-chip.is-me { border-color: var(--blue); }
+.geo-chip.is-done { background: #e6f7e6; }
+.geo-chip .sc em { margin-left: 3px; font-size: .75rem; font-style: normal; }
+.geo-chip .sc em.up { color: #2e8b3e; }
+.geo-chip .sc em.down { color: #c0392b; }
+.geo-chip .ok-mark { position: absolute; right: 4px; top: 0; font-size: .7rem; color: #2e8b3e; }
+.geo-chip { position: relative; }
+
+.geo-stage { text-align: center; }
+.geo-wait { padding: 30px 0; font-size: 1.3rem; }
+.geo-q { margin: 2px 0 6px; font-size: 1rem; line-height: 1.8; }
+.geo-material { margin-bottom: 8px; }
+
+/* 雨温図 */
+.geo-climate { width: 100%; max-width: 360px; height: auto; background: #fff; border: 3px solid var(--ink); border-radius: 14px; }
+.geo-climate .grid { stroke: #ddd; stroke-width: 1; }
+.geo-climate .axis { font-size: 9px; fill: var(--ink-soft); }
+.geo-climate .axis.t { fill: #c0392b; }
+.geo-climate .axis.p { fill: #2a6fb5; }
+.geo-climate .axis.unit { font-weight: bold; }
+.geo-climate .bar { fill: #6aa9e6; }
+.geo-climate .line { fill: none; stroke: #e0452f; stroke-width: 2; }
+.geo-climate .dot { fill: #e0452f; }
+
+/* 表 */
+.geo-table { width: 100%; max-width: 360px; margin: 0 auto 6px; border-collapse: collapse; font-size: .78rem; background: #fff; }
+.geo-table th, .geo-table td { padding: 2px 3px; border: 2px solid var(--ink-soft); text-align: center; line-height: 1.5; }
+.geo-table th { background: #fff3c4; font-weight: normal; }
+.geo-rank th { width: 4em; } .geo-rank td { font-size: 1rem; text-align: left; padding-left: 12px; }
+
+/* 写真 */
+.geo-figure { margin: 0; }
+.geo-photo { display: block; width: 100%; max-width: 420px; max-height: 38vh; margin: 0 auto; object-fit: contain; background: #fff; border: 3px solid var(--ink); border-radius: 12px; }
+.geo-figure figcaption { margin-top: 2px; font-size: .62rem; color: var(--ink-soft); line-height: 1.4; }
+
+/* 4択 */
+.geo-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.geo-choice {
+  position: relative; display: flex; align-items: center; gap: 6px; min-height: 58px; padding: 6px 8px; text-align: left; font: inherit; font-size: .95rem; line-height: 1.4; color: var(--ink); background: #fff;
+  border: 3px solid var(--ink); border-radius: 14px; box-shadow: 2px 3px 0 rgba(74, 52, 16, .3); cursor: pointer; touch-action: manipulation;
+}
+.geo-choice .no { flex: none; font-size: .8rem; width: 1.5em; height: 1.5em; line-height: 1.5em; text-align: center; border-radius: 50%; background: #ffe9a3; }
+.geo-choice .tx { flex: 1 1 auto; word-break: break-all; }
+.geo-choice .who { position: absolute; right: 4px; bottom: 0; font-size: .85rem; }
+.geo-choice:active { transform: translateY(2px); box-shadow: none; }
+.geo-choice.is-picked { background: #ffe9a3; border-color: var(--red); }
+.geo-choice.is-correct { background: #d8f5d8; border-color: #2e8b3e; box-shadow: 0 0 0 3px rgba(46, 139, 62, .3); }
+.geo-choice.is-wrong { background: #ffe1dc; border-color: #c0392b; }
+.geo-choice[disabled]:not(.is-correct):not(.is-wrong):not(.is-picked) { opacity: .75; }
+
+/* 答え合わせ */
+.geo-reveal { margin: 6px 0; padding: 6px 12px; text-align: center; background: #fff; border: 3px solid var(--ink); border-radius: 16px; }
+.geo-reveal-head { font-size: 1.15rem; line-height: 1.8; }
+.geo-reveal-body { font-size: .95rem; line-height: 1.8; }
+.geo-reveal-body small { color: var(--ink-soft); font-size: .78rem; }
+.geo-say { min-height: 1.4rem; margin: 2px 0; }

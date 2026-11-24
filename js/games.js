@@ -41,6 +41,15 @@ window.GAMES = [
     unmount() { window.NepGame.unmount(); }
   },
   {
+    id: "geo",
+    title: "地理{ちり}クイズ",
+    icon: "🌏",
+    desc: "早押{はやお}し・地図{ちず}・資料{しりょう}で世界{せかい}と日本{にほん}を学{まな}ぼう！",
+    ready: true,
+    mount(root) { window.GeoGame.mount(root); },
+    unmount() { window.GeoGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",

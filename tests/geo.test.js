@@ -1,0 +1,341 @@
+// 地理クイズ: 文字処理・出題・進行(3形式)・CPU・保存
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+let Text, Qm, Core, Cpu, Store, D, Q, E, C;
+test.before(() => {
+  globalThis.window = globalThis.window || globalThis;
+  delete require.cache[require.resolve("../data/geo.js")];
+  require("../data/geo.js");
+  D = globalThis.GEO_DATA;
+  Text = require("../js/games/geo/text.js");
+  Qm = require("../js/games/geo/questions.js");
+  Core = require("../js/games/geo/core.js");
+  Cpu = require("../js/games/geo/cpu.js");
+  Store = require("../js/games/geo/store.js");
+  Q = Qm.create(D);
+  E = Core.create(Q);
+  C = Cpu.create(D);
+});
+
+function seeded(seed) { let s = seed; return () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648); }
+const T0 = 1_000_000;
+const P = (n) => Array.from({ length: n }, (_, i) => ({ id: "p" + (i + 1), name: "P" + (i + 1) }));
+function game(mode, n = 2, o = {}) {
+  const rng = seeded(o.seed || 5);
+  const st = E.newGame(Object.assign({ players: P(n), mode, difficulty: "normal", scope: "both", rounds: 3, now: T0, rng }, o));
+  return { st, rng };
+}
+function start(g) { E.tick(g.st, T0 + Core.START_MS, g.rng); return T0 + Core.START_MS; }
+
+// ---------- データ ----------
+test("データ: 問題数・形式・読みの形", () => {
+  assert.ok(D.buzz.length >= 200 && D.map.length >= 200 && D.choice.length >= 200, `${D.buzz.length}/${D.map.length}/${D.choice.length}`);
+  assert.equal(D.countries.length, 194);
+  assert.equal(D.prefs.length, 47);
+  for (const b of D.buzz) { assert.ok(b.yomi.length >= 1 && b.yomi.every((y) => /^[ぁ-んー]+$/.test(y)), b.id); assert.ok(["world", "japan"].includes(b.sc)); assert.match(b.text, /[？。]$/); }
+  for (const m of D.map) assert.ok(Q.isValidTarget(m.map, m.target), m.id);
+  for (const c of D.choice) { assert.equal(c.c.length, 4); assert.equal(new Set(c.c).size, 4, c.id); assert.equal(c.a, 0); }
+  const kinds = new Set(D.choice.map((c) => c.k));
+  for (const k of ["graph", "table", "type", "photo", "stat"]) assert.ok(kinds.has(k), k);
+  assert.ok(D.choice.filter((c) => c.k === "photo").length >= 50);
+});
+
+test("データ: 雨温図は12か月・写真ファイルと出典がある", () => {
+  const fs = require("node:fs");
+  for (const c of Object.values(D.climate)) { assert.equal(c.t.length, 12); assert.equal(c.p.length, 12); }
+  for (const p of D.photos) {
+    assert.ok(fs.existsSync(`${__dirname}/../assets/geo/${p.id}.webp`), p.id);
+    assert.ok(p.credit && p.credit.license && p.credit.page, p.id);
+    assert.ok(!/NC|ND/i.test(p.credit.license), p.id + " " + p.credit.license);
+  }
+});
+
+// ---------- 文字 ----------
+test("文字: 読みの照合はかな・カタカナ・空白・記号の違いを無視", () => {
+  assert.equal(Text.normalize("ナイル かわ"), "ないるかわ");
+  assert.equal(Text.normalize("ニューヨーク"), "にゅーよーく");
+  assert.ok(Text.matches("ナイルがわ", ["ないるがわ", "ないる"]));
+  assert.ok(Text.matches("ないる", ["ないるがわ", "ないる"]));
+  assert.ok(Text.matches("ワシントン・ディーシー", ["わしんとんでぃーしー"]));
+  assert.equal(Text.matches("", ["あ"]), false);
+  assert.equal(Text.matches("ないるかわ", ["ないるがわ"]), false);        // 濁点の違いは辞書では不正解(AIが判断)
+});
+
+test("文字: 流れる時刻の表。「、」「。」で間があく", () => {
+  const at = Text.schedule("あ、い。う");
+  assert.equal(at.length, 5);
+  assert.equal(at[0], Text.LEAD_MS);
+  assert.ok(at[2] - at[1] >= Text.CHAR_MS + 400, "読点のあとは間があく");
+  assert.ok(at[4] - at[3] >= Text.CHAR_MS + 600, "句点のあとは長めに間があく");
+  assert.ok(at[1] - at[0] === Text.CHAR_MS, "ふつうの文字は一定");
+  assert.equal(Text.visible(at, 0), 0);
+  assert.equal(Text.visible(at, at[2]), 3);
+  assert.equal(Text.visible(at, 999999), 5);
+  assert.ok(Text.totalMs(at) > at[4]);
+});
+
+// ---------- 出題 ----------
+test("出題: 範囲(世界/日本)と、使った問題を避ける。答えと問題を分ける", () => {
+  const rng = seeded(3);
+  for (let i = 0; i < 40; i++) {
+    const j = Q.pick("map", { scope: "japan", rng });
+    assert.equal(j.pub.map, "japan"); assert.ok(Q.isValidTarget("japan", j.priv.target));
+    const w = Q.pick("choice", { scope: "world", rng });
+    assert.ok(!/^s-.*japan/.test(w.pub.id));
+    assert.equal(w.pub.c.length, 4);
+    assert.equal(w.pub.target, undefined);
+  }
+  const used = D.map.filter((m) => m.sc === "japan").slice(0, -1).map((m) => m.id);
+  assert.equal(Q.pick("map", { scope: "japan", rng, used }).pub.id, D.map.filter((m) => m.sc === "japan").slice(-1)[0].id);
+  const exhausted = D.map.filter((m) => m.sc === "japan").map((m) => m.id);
+  assert.ok(Q.pick("map", { scope: "japan", rng, used: exhausted }));       // 出し尽くしたら最初から
+  const b = Q.pick("buzz", { rng });
+  assert.ok(b.pub.at.length > 10 && b.priv.yomi.length >= 1 && b.pub.ans === undefined);
+});
+
+test("出題: 資料選択は、シャッフルしても priv.a が正解の位置を指す", () => {
+  const rng = seeded(9);
+  for (let i = 0; i < 60; i++) {
+    const { pub, priv } = Q.pick("choice", { rng });
+    const orig = D.choice.find((c) => c.id === pub.id);
+    assert.equal(pub.c[priv.a], orig.c[0]);
+    assert.deepEqual([...pub.c].sort(), [...orig.c].sort());
+  }
+  const pos = new Set(); for (let i = 0; i < 40; i++) pos.add(Q.pick("choice", { rng }).priv.a);
+  assert.equal(pos.size, 4, "正解の位置がばらける");
+});
+
+// ---------- 資料選択 ----------
+test("資料選択: 全員が答えると締め切り・採点。答えの中身は開示まで見えない", () => {
+  const g = game("choice"); const t0 = start(g);
+  assert.equal(g.st.phase, "play");
+  const a = g.st.priv.a, wrongI = (a + 1) % 4;
+  assert.ok(E.choose(g.st, "p1", a, t0 + 2000).ok);
+  assert.equal(E.choose(g.st, "p1", wrongI, t0 + 2500).reason, "already");
+  const v = E.view(g.st);
+  assert.equal(v.priv, undefined);
+  assert.deepEqual(Object.keys(v.answers), ["p1"]);
+  assert.equal(v.answers.p1.i, undefined, "他の人の選んだ中身は見えない");
+  const r = E.choose(g.st, "p2", wrongI, t0 + 3000);
+  assert.ok(r.ok);
+  assert.equal(g.st.phase, "between");
+  assert.ok(g.st.players[0].score >= Core.POINT && g.st.players[0].score <= Core.POINT + 5);
+  assert.equal(g.st.players[1].score, 0);
+  assert.equal(g.st.reveal.a, a);
+  assert.deepEqual(g.st.reveal.picks, { p1: a, p2: wrongI });
+  assert.equal(E.view(g.st).priv, undefined);
+});
+
+test("資料選択: 時間切れで締め切り。早く答えるほど点が高い。ラウンドが終わるとゲーム終了", () => {
+  const g = game("choice", 2, { rounds: 2 }); let now = start(g);
+  const total = g.st.endsAt - g.st.startedAt;
+  E.choose(g.st, "p1", g.st.priv.a, now + 1000);
+  E.choose(g.st, "p2", g.st.priv.a, now + total - 1000);
+  // p1 と p2 は全員答えたので終了済み
+  assert.ok(g.st.players[0].score > g.st.players[1].score, "早いほうが高い");
+  const g2 = game("choice", 2); now = start(g2);
+  assert.deepEqual(E.tick(g2.st, now + 1000, g2.rng), []);
+  const ev = E.tick(g2.st, g2.st.endsAt, g2.rng);
+  assert.equal(ev[0].type, "reveal");
+  assert.equal(g2.st.reveal.reason, "time");
+  assert.equal(E.choose(g2.st, "p1", 0, g2.st.endsAt + 1).ok, false);
+  // 最後まで
+  let n = 0;
+  while (g2.st.phase !== "over" && n++ < 10) { E.tick(g2.st, g2.st.nextAt, g2.rng); if (g2.st.phase === "play") E.tick(g2.st, g2.st.endsAt, g2.rng); }
+  assert.equal(g2.st.phase, "over");
+  assert.equal(g2.st.round, 3);
+  assert.equal(E.nextDeadline(g2.st), 0);
+});
+
+// ---------- 地図 ----------
+test("地図: 決定できるのは正しい場所だけ・1回だけ。全員決定で締め切り、一斉に開示", () => {
+  const g = game("map", 3, { scope: "world" }); const t0 = start(g);
+  const target = g.st.priv.target;
+  assert.equal(E.lock(g.st, "p1", "ZZZ", t0 + 1000).reason, "bad_answer");
+  assert.equal(E.lock(g.st, "p1", "JP-13", t0 + 1000).reason, "bad_answer", "世界の問題で日本の県は選べない");
+  assert.ok(E.lock(g.st, "p1", target, t0 + 2000).ok);
+  assert.equal(E.lock(g.st, "p1", "FRA", t0 + 2500).reason, "already");
+  assert.equal(E.view(g.st).answers.p1.id, undefined);
+  const other = D.countries.find((c) => c[0] !== target)[0];
+  E.lock(g.st, "p2", other, t0 + 3000);
+  assert.equal(g.st.phase, "play", "まだ p3 が決定していない");
+  E.lock(g.st, "p3", target, t0 + 4000);
+  assert.equal(g.st.phase, "between");
+  assert.deepEqual(g.st.reveal.picks, { p1: target, p2: other, p3: target });
+  assert.equal(g.st.reveal.target, target);
+  assert.ok(g.st.players[0].score >= 10 && g.st.players[1].score === 0 && g.st.players[2].score >= 10);
+});
+
+test("地図: 日本の問題は都道府県で答える。時間切れで未決定は0点", () => {
+  const g = game("map", 2, { scope: "japan" }); const t0 = start(g);
+  assert.equal(g.st.q.map, "japan");
+  assert.equal(E.lock(g.st, "p1", "FRA", t0 + 100).reason, "bad_answer");
+  E.lock(g.st, "p1", g.st.priv.target, t0 + 100);
+  E.tick(g.st, g.st.endsAt + 1, g.rng);
+  assert.equal(g.st.phase, "between");
+  assert.equal(g.st.reveal.reason, "time");
+  assert.ok(g.st.players[0].score >= 10);
+  assert.equal(g.st.players[1].score, 0);
+  assert.equal(g.st.reveal.picks.p2, undefined);
+});
+
+// ---------- 早押し ----------
+test("早押し: 押すと文が止まる。1人だけ押せる。答え(読み)が合えば正解・早いほど高得点", () => {
+  const g = game("buzz", 2); const t0 = start(g);
+  const at = g.st.q.at;
+  const early = t0 + at[3] + 10;                       // 数文字出たところで押す
+  const r = E.press(g.st, "p1", early);
+  assert.ok(r.ok);
+  assert.equal(r.events[0].idx, Text.visible(at, early - t0));
+  assert.equal(E.press(g.st, "p2", early + 50).reason, "taken");
+  assert.equal(E.answer(g.st, "p2", "あ", early + 100).reason, "not_your_turn");
+  assert.equal(E.answer(g.st, "p1", "  ", early + 100).reason, "empty");
+  const ans = g.st.priv.yomi[0].replace(/[ぁ-ん]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60));   // カタカナで入力しても正解
+  const a = E.answer(g.st, "p1", ans, early + 2000);
+  assert.equal(a.verdict, "correct");
+  assert.equal(g.st.phase, "between");
+  assert.equal(g.st.reveal.by, "p1");
+  assert.ok(g.st.players[0].score > 10 + 5, "早押しボーナスつき: " + g.st.players[0].score);
+  assert.equal(g.st.reveal.ans, g.st.priv.ans);
+});
+
+test("早押し: まちがい・時間切れは -5点で解答権を失い、文はつづきから流れる。全員まちがえたら終了", () => {
+  const g = game("buzz", 2); const t0 = start(g);
+  const at = g.st.q.at;
+  g.st.players[0].score = 20;
+  const p1 = t0 + at[5];
+  E.press(g.st, "p1", p1);
+  const r = E.answer(g.st, "p1", "ぜんぜんちがう", p1 + 1000);
+  assert.equal(r.verdict, "unsure");                   // 辞書に合わない → AI の確認待ち
+  assert.equal(E.answer(g.st, "p1", "あ", p1 + 1100).reason, "judging");
+  assert.deepEqual(E.judged(g.st, "p1", false, p1 + 1500).events.map((e) => e.type), ["wrong"]);
+  assert.equal(g.st.buzz.by, null);
+  assert.deepEqual(g.st.buzz.lockedOut, ["p1"]);
+  assert.equal(E.press(g.st, "p1", p1 + 1600).reason, "locked_out");
+  // 止まっていた間(1500ms)ぶん、文の進みがずれる
+  assert.equal(g.st.buzz.pauseMs, 1500);
+  const later = p1 + 2000;
+  assert.equal(E.press(g.st, "p2", later).events[0].idx, Text.visible(at, later - t0 - 1500));
+  // p2 は時間切れ
+  const ev = E.tick(g.st, g.st.buzz.answerEndsAt + 1, g.rng);
+  assert.equal(ev[0].type, "wrong");
+  assert.equal(ev[0].why, "timeout");
+  assert.equal(g.st.phase, "between");
+  assert.equal(g.st.reveal.reason, "allwrong");
+  assert.equal(g.st.players[0].score, 15);
+  assert.equal(g.st.players[1].score, 0, "0点より下がらない");
+});
+
+test("早押し: AI が「正解」と判定すれば正解。誰も押さずに文が終わると終了", () => {
+  const g = game("buzz", 2); const t0 = start(g);
+  E.press(g.st, "p2", t0 + g.st.q.at[10]);
+  assert.equal(E.answer(g.st, "p2", "べつめい", t0 + g.st.q.at[10] + 1000).verdict, "unsure");
+  assert.ok(E.judged(g.st, "p2", true, t0 + g.st.q.at[10] + 2000).ok);
+  assert.equal(g.st.reveal.by, "p2");
+  assert.equal(E.judged(g.st, "p2", true, 1).ok, false);
+  const g2 = game("buzz", 2); const s2 = start(g2);
+  const end = s2 + Text.totalMs(g2.st.q.at) + Text.GRACE_MS;
+  assert.deepEqual(E.tick(g2.st, end - 10, g2.rng), []);
+  assert.equal(E.tick(g2.st, end + 10, g2.rng)[0].type, "reveal");
+  assert.equal(g2.st.reveal.reason, "none");
+  assert.equal(g2.st.reveal.by, null);
+});
+
+test("早押し: AI の判定が来ない時は、待ちすぎるとまちがい扱い。nextDeadline / shift / view", () => {
+  const g = game("buzz", 2); const t0 = start(g);
+  assert.equal(E.nextDeadline(g.st), t0 + Text.totalMs(g.st.q.at) + Text.GRACE_MS + 1);
+  E.press(g.st, "p1", t0 + 3000);
+  assert.equal(E.nextDeadline(g.st), t0 + 3000 + Core.ANSWER_MS + 1);
+  E.answer(g.st, "p1", "ふめい", t0 + 5000);
+  assert.equal(E.nextDeadline(g.st), t0 + 5000 + Core.AI_WAIT_MS + 1);
+  const f = g.st.startedAt; E.shift(g.st, 700);
+  assert.equal(g.st.startedAt, f + 700);
+  const ev = E.tick(g.st, t0 + 5700 + Core.AI_WAIT_MS + 2, g.rng);
+  assert.equal(ev[0].why, "ai_timeout");
+  const v = E.view(g.st);
+  assert.equal(v.priv, undefined);
+  assert.equal(JSON.stringify(v).includes("yomi"), false);
+});
+
+// ---------- CPU ----------
+test("CPU: 計画は問題に合った形で、難しさで正解率が変わる", () => {
+  const rng = seeded(21);
+  for (const mode of ["choice", "map", "buzz"]) {
+    const g = game(mode, 2, { scope: mode === "map" ? "japan" : "both" }); start(g);
+    for (let i = 0; i < 20; i++) {
+      const p = C.plan(g.st, rng);
+      if (mode === "choice") { assert.ok(p.i >= 0 && p.i <= 3 && p.delayMs > 1000); }
+      if (mode === "map") { assert.ok(Q.isValidTarget(g.st.q.map, p.id)); assert.ok(p.delayMs > 1000); }
+      if (mode === "buzz") { assert.ok(p.pressIdx === null || (p.pressIdx >= 1 && p.pressIdx <= g.st.q.at.length)); }
+    }
+  }
+  const rate = (difficulty) => {
+    const g = game("choice", 2, { difficulty }); start(g);
+    let ok = 0; for (let i = 0; i < 400; i++) ok += C.plan(g.st, rng).i === g.st.priv.a ? 1 : 0;
+    return ok / 400;
+  };
+  const e = rate("easy"), h = rate("hard");
+  assert.ok(h > e + 0.2, `hard ${h} > easy ${e}`);
+});
+
+test("CPU: 地図のまちがいは同じ大陸/地方のどこか(でたらめな国ではない)", () => {
+  const rng = seeded(4);
+  const g = game("map", 2, { scope: "world", difficulty: "easy" }); start(g);
+  const cont = D.countries.find((c) => c[0] === g.st.priv.target)[3];
+  let wrong = 0;
+  for (let i = 0; i < 100; i++) {
+    const p = C.plan(g.st, rng);
+    if (p.id !== g.st.priv.target) { wrong++; assert.equal(D.countries.find((c) => c[0] === p.id)[3], cont); }
+  }
+  assert.ok(wrong > 20);
+});
+
+test("CPU対戦のシミュレーション: 3形式とも最後まで終わる(CPU 3人・全難易度)", () => {
+  for (const mode of ["choice", "map", "buzz"]) {
+    for (const difficulty of ["easy", "normal", "hard"]) {
+      const rng = seeded(mode.length * 7 + difficulty.length);
+      const players = P(4).map((p) => ({ ...p, cpu: true }));
+      const st = E.newGame({ players, mode, difficulty, scope: "both", rounds: 4, now: T0, rng });
+      let now = T0, steps = 0;
+      let plans = {}, key = "";
+      while (st.phase !== "over" && steps++ < 20000) {
+        now += 100;
+        E.tick(st, now, rng);
+        if (st.phase !== "play") { plans = {}; key = ""; continue; }
+        if (key !== st.q.id) { key = st.q.id; plans = {}; for (const p of st.players) plans[p.id] = Object.assign(C.plan(st, rng), { done: false }); }
+        for (const p of st.players) {
+          const pl = plans[p.id]; if (!pl || pl.done) continue;
+          if (mode === "choice" && now - st.startedAt >= pl.delayMs) { E.choose(st, p.id, pl.i, now); pl.done = true; }
+          else if (mode === "map" && now - st.startedAt >= pl.delayMs) { E.lock(st, p.id, pl.id, now); pl.done = true; }
+          else if (mode === "buzz" && st.buzz && !st.buzz.by && pl.pressIdx !== null && !st.buzz.lockedOut.includes(p.id) && require("../js/games/geo/text.js").visible(st.q.at, now - st.startedAt - st.buzz.pauseMs) >= pl.pressIdx) {
+            if (E.press(st, p.id, now).ok) { pl.pressedAt = now; }
+          }
+          if (mode === "buzz" && st.buzz && st.buzz.by === p.id && pl.pressedAt && now - pl.pressedAt >= pl.answerMs && !st.buzz.judging) {
+            const r = E.answer(st, p.id, pl.text, now);
+            if (r.verdict === "unsure") E.judged(st, p.id, false, now);
+            pl.done = true;
+          }
+        }
+      }
+      assert.equal(st.phase, "over", `${mode}/${difficulty} が終わる (steps ${steps})`);
+      assert.equal(st.round, 4);
+      assert.ok(st.result.winners.length >= 1);
+    }
+  }
+});
+
+// ---------- 保存 ----------
+test("保存: 設定の既定値と範囲チェック・戦績", () => {
+  const mem = () => { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = v; } }; };
+  const s = Store.create(mem());
+  assert.deepEqual(s.settings.get(), { mode: "choice", scope: "both", difficulty: "normal", rounds: 10, cpus: 2 });
+  s.settings.set({ mode: "buzz", cpus: 0, rounds: 5 });
+  assert.deepEqual(s.settings.get(), { mode: "buzz", scope: "both", difficulty: "normal", rounds: 5, cpus: 0 });
+  s.settings.set({ mode: "bogus", rounds: 7, cpus: 9, difficulty: "x" });
+  const g = s.settings.get();
+  assert.equal(g.mode, "choice"); assert.equal(g.rounds, 10); assert.equal(g.cpus, 3); assert.equal(g.difficulty, "normal");
+  s.stats.add("map", true, 80); s.stats.add("map", false, 120);
+  assert.deepEqual(s.stats.get("map"), { played: 2, wins: 1, best: 120 });
+  assert.deepEqual(Store.create(null).stats.get("map"), { played: 0, wins: 0, best: 0 });
+});
