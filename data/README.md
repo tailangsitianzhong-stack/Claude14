@@ -33,6 +33,14 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - カテゴリ・穴うめ・慣用句・反対語・過去形は手作りです。「日本語→英語」のお題は `words.js` の子ども向けの語で、漢字の表記は JMdict から引いています（どちらも JMdict 由来・CC BY-SA 4.0）。
 - 詳しくは `docs/nep.md`。
 
+## geo-map.js / geo.js / assets/geo（地理クイズ）
+`tools/build-geo-map.mjs` と `tools/build-geo.mjs` が生成します（直接編集しないでください。元は `tools/geo-source/`）。
+- 地図の図形: Natural Earth（パブリックドメイン）。world-atlas（ISC）経由の世界の国と、admin-1 の日本の都道府県。
+- 国の隣接・面積・位置: world-countries（ODbL。出典表記が必要です。ゲーム内の「出典・クレジット」に載せています）。
+- 雨温図の気温・降水量: NASA POWER の気候値（約50km四方の平均）。ずれの大きい都市は気温を補正しています。
+- 写真: Wikimedia Commons（パブリックドメイン・CC0・CC BY・CC BY-SA）。写真ごとの作者・ライセンス・元ページは `geo.js` の `photos[].credit` にあり、ゲーム内に表示します。
+- 詳しくは `docs/geo.md`。
+
 ## kanji.js（ミニ漢字検定）
 `tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
 
