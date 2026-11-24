@@ -82,3 +82,32 @@
 .geo-reveal-body { font-size: .95rem; line-height: 1.8; }
 .geo-reveal-body small { color: var(--ink-soft); font-size: .78rem; }
 .geo-say { min-height: 1.4rem; margin: 2px 0; }
+
+/* 地図で選ぶ */
+.geo-mapbox { position: relative; height: min(46vh, 380px); overflow: hidden; background: #bde0f5; border: 3px solid var(--ink); border-radius: 14px; touch-action: none; -webkit-user-select: none; user-select: none; }
+.geo-svg { display: block; width: 100%; height: 100%; }
+.geo-svg .sea { fill: #bde0f5; }
+.geo-svg .sh { fill: #dcdcdc; stroke: #6b6b6b; stroke-width: .6px; vector-effect: non-scaling-stroke; }
+.geo-svg .sh.ok { fill: #b9dc92; }
+.geo-svg .sh.sel, .geo-svg .mk.sel { fill: #ffb347; }
+.geo-svg .sh.locked, .geo-svg .mk.locked { fill: #ff9a3d; }
+.geo-svg .sh.target, .geo-svg .mk.target { fill: #43a047; stroke: #1b5e20; stroke-width: 2px; }
+.geo-svg .mk { fill: #e0452f; stroke: #fff; opacity: .92; }
+.geo-svg .pin { pointer-events: none; }
+.geo-zoom { position: absolute; right: 6px; top: 6px; display: grid; gap: 4px; }
+.geo-zoom button { width: 34px; height: 34px; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--ink); background: rgba(255, 255, 255, .92); border: 3px solid var(--ink); border-radius: 10px; cursor: pointer; touch-action: manipulation; }
+.geo-pop { position: absolute; left: 6px; right: 48px; bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; padding: 4px 8px; background: #fff; border: 3px solid var(--ink); border-radius: 12px; font-size: .95rem; line-height: 1.5; }
+.geo-pop .nm { font-weight: bold; }
+.geo-regions { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; }
+.geo-region { flex: 1 1 0; padding: 1px 6px; font: inherit; font-size: .72rem; line-height: 1.8; color: var(--ink); white-space: nowrap; background: #fff; border: 2px solid var(--ink-soft); border-radius: 10px; cursor: pointer; touch-action: manipulation; }
+.geo-maphelp { margin: 2px 0 0; font-size: .7rem; }
+.geo-pickline { white-space: nowrap; }
+.geo-pop { padding: 2px 8px; gap: 2px 6px; font-size: .9rem; line-height: 1.4; }
+.geo-pop .btn { padding: 1px 12px; font-size: .85rem; line-height: 1.6; box-shadow: 1px 2px 0 rgba(74, 52, 16, .3); }
+
+.geo-svg .mh { fill: transparent; stroke: none; pointer-events: all; }
+.geo-mapbox.world { height: clamp(200px, 30vh, 260px); }
+.geo-mapbox.japan { height: min(52vh, 440px); }
+.geo-pop { right: 6px; }
+.geo-regions { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.geo-region { min-width: 0; padding: 1px 0; font-size: .62rem; }
