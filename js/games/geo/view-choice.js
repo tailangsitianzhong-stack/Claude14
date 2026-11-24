@@ -61,6 +61,14 @@
         return `<figure class="geo-figure"><img class="geo-photo" src="assets/geo/${esc(m.file)}.webp" alt="写真" decoding="async">
           <figcaption>写真: ${esc(cr ? cr.author : "")}（${esc(cr ? cr.license : "")}）</figcaption></figure>`;
       }
+      if (q.k === "indic") return `<table class="geo-table geo-ind"><tbody>${m.rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>`;
+      if (q.k === "pop") {
+        const seg = (cls, label, v) => `<span class="seg ${cls}" style="width:${Math.max(v, 1)}%"></span>`;
+        const row = (cls, label, v) => `<tr><th><i class="sw ${cls}"></i>${label}</th><td>${v} %</td></tr>`;
+        return `<div class="geo-popbar" role="img" aria-label="人口構成">${seg("y", "年少", m.y)}${seg("w", "生産年齢", m.w)}${seg("o", "老年", m.o)}</div>
+          <table class="geo-table geo-ind"><tbody>${row("y", "年少人口（0〜14歳）", m.y)}${row("w", "生産年齢人口（15〜64歳）", m.w)}${row("o", "老年人口（65歳以上）", m.o)}
+          <tr><th>出生率（人口1000人あたり）</th><td>${m.b} 人</td></tr></tbody></table>`;
+      }
       return `<table class="geo-table geo-rank"><tbody>${m.rows.map((r, i) => `<tr><th>${i + 1}位{い}</th><td>${esc(r)}</td></tr>`).join("")}</tbody></table>`;
     }
 

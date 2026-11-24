@@ -12,11 +12,13 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const MODES = [
+    { key: "mix", icon: "🎲", name: "ミックス", desc: "早押{はやお}し・地図{ちず}・資料選択{しりょうせんたく}が、1問{もん}ごとにまざって出{で}るよ！" },
     { key: "buzz", icon: "⚡", name: "早押{はやお}し", desc: "問題文{もんだいぶん}が1文字{もじ}ずつ流{なが}れる！わかったらすぐ押{お}して、かなで答{こた}えよう" },
     { key: "map", icon: "🗺️", name: "地図{ちず}で選{えら}ぶ", desc: "首都{しゅと}や有名{ゆうめい}な都市{とし}がある国{くに}（県{けん}）を、地図{ちず}からタップして選{えら}ぼう" },
     { key: "choice", icon: "🖼️", name: "資料{しりょう}選択{せんたく}", desc: "雨温図{うおんず}・表{ひょう}・写真{しゃしん}などを見{み}て、4択{たく}で答{こた}えよう" }
   ];
   const SCOPES = [{ key: "both", label: "どちらも" }, { key: "world", label: "世界{せかい}" }, { key: "japan", label: "日本{にほん}" }];
+  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }];
   const DIFFS = [{ key: "easy", label: "やさしい" }, { key: "normal", label: "ふつう" }, { key: "hard", label: "むずかしい" }];
   const AVATARS = ["🐶", "🐱", "🐰", "🐻"];
 
@@ -74,7 +76,7 @@
       render(`
         <div class="panel shiri-menu">
           <h3 class="menu-title">🌏 地理{ちり}クイズ</h3>
-          <p class="note">世界{せかい}と日本{にほん}の地理{ちり}を、3つの形{かたち}で楽{たの}しもう！CPUや友達{ともだち}（最大{さいだい}4人{にん}）と点数{てんすう}をきそえるよ。</p>
+          <p class="note">世界{せかい}と日本{にほん}の地理{ちり}を、3つの形{かたち}（まぜて遊{あそ}ぶミックスも）で楽{たの}しもう！小学{しょうがく}・中学{ちゅうがく}から高校{こうこう}の地理{ちり}まで。CPUや友達{ともだち}（最大{さいだい}4人{にん}）と点数{てんすう}をきそえるよ。</p>
           <h4 class="menu-sub">形式{けいしき}</h4>
           <div class="geo-modes" role="radiogroup" aria-label="形式">
             ${MODES.map((m) => `
@@ -84,6 +86,10 @@
           <h4 class="menu-sub">範囲{はんい}</h4>
           <div class="geo-opts" role="radiogroup" aria-label="範囲">
             ${SCOPES.map((o) => `<button type="button" class="geo-opt${o.key === s.scope ? " is-on" : ""}" data-scope="${o.key}">${o.label}</button>`).join("")}
+          </div>
+          <h4 class="menu-sub">学年{がくねん}</h4>
+          <div class="geo-opts" role="radiogroup" aria-label="学年">
+            ${GRADES.map((o) => `<button type="button" class="geo-opt${o.key === s.grade ? " is-on" : ""}" data-grade="${o.key}">${o.label}</button>`).join("")}
           </div>
           <h4 class="menu-sub">難{むずか}しさ</h4>
           <div class="geo-opts" role="radiogroup" aria-label="難しさ">
@@ -106,14 +112,14 @@
           <p class="note" id="geo-note">データを読{よ}み込{こ}み中{ちゅう}…</p>
         </div>`);
       const bind = (sel, attr, key, conv) => view.querySelectorAll(sel).forEach((b) => b.addEventListener("click", () => { store.settings.set({ [key]: conv ? conv(b.dataset[attr]) : b.dataset[attr] }); showMenu(); }));
-      bind(".geo-mode", "mode", "mode"); bind("[data-scope]", "scope", "scope"); bind("[data-diff]", "diff", "difficulty");
+      bind(".geo-mode", "mode", "mode"); bind("[data-scope]", "scope", "scope"); bind("[data-grade]", "grade", "grade"); bind("[data-diff]", "diff", "difficulty");
       bind("[data-rounds]", "rounds", "rounds", Number); bind("[data-cpus]", "cpus", "cpus", Number);
       const fr = view.querySelector("#geo-friends");
       if (fr) fr.addEventListener("click", () => getOnline().showFriends());
       view.querySelector("#geo-credits").addEventListener("click", showCredits);
       const start = view.querySelector("#geo-start"), note = view.querySelector("#geo-note");
       start.addEventListener("click", playSolo);
-      loadData(s.mode === "map").then((data) => {
+      loadData(s.mode === "map" || s.mode === "mix").then((data) => {
         if (!alive) return;
         makeTools(data);
         if (view.querySelector("#geo-start")) { start.disabled = false; note.textContent = ""; }
@@ -128,7 +134,7 @@
       loadData(false).then((data) => {
         if (!alive || !view.querySelector("#geo-cr")) return;
         view.querySelector("#geo-cr").outerHTML = `
-          <p class="note">地図: Natural Earth（パブリックドメイン）／ 国{くに}のデータ: world-countries（ODbL）／ 雨温図{うおんず}: NASA POWER の気候値{きこうち}（約50km四方{しほう}の平均{へいきん}。気象台{きしょうだい}の値{あたい}とは少{すこ}しちがいます）</p>
+          <p class="note">地図: Natural Earth（パブリックドメイン）／ 国{くに}のデータ: world-countries（ODbL）／ 雨温図{うおんず}: NASA POWER の気候値{きこうち}（約50km四方{しほう}の平均{へいきん}。気象台{きしょうだい}の値{あたい}とは少{すこ}しちがいます）／ 国{くに}の統計{とうけい}: World Bank Open Data（CC BY 4.0）</p>
           <h4 class="menu-sub">写真{しゃしん}</h4>
           <ul class="geo-credits">${data.photos.map((p) => `<li><b>${esc(p.answer)}</b>: ${esc(p.credit.author)} / <a href="${esc(p.credit.page)}" target="_blank" rel="noopener">${esc(p.credit.title)}</a> / ${p.credit.licenseUrl ? `<a href="${esc(p.credit.licenseUrl)}" target="_blank" rel="noopener">${esc(p.credit.license)}</a>` : esc(p.credit.license)}</li>`).join("")}</ul>`;
         Ruby.apply(view);
@@ -143,7 +149,7 @@
       const s = store.settings.get();
       const players = [{ id: "me", name: "あなた", avatar: AVATARS[0] }];
       for (let i = 0; i < s.cpus; i++) players.push({ id: "c" + (i + 1), name: "CPU" + (i + 1), cpu: true, avatar: AVATARS[i + 1] });
-      const st = E.newGame({ players, mode: s.mode, difficulty: s.difficulty, scope: s.scope, rounds: s.rounds, now: Date.now() });
+      const st = E.newGame({ players, mode: s.mode, difficulty: s.difficulty, scope: s.scope, grade: s.grade, rounds: s.rounds, now: Date.now() });
       const avatarOf = (id) => (st.players.find((p) => p.id === id) || {}).avatar || "";
       const asView = () => E.view(st);
       const judgeFn = root.GeoJudge ? root.GeoJudge.create({ endpoint: (root.APP_CONFIG || {}).judgeEndpoint || "", storage }) : null;
@@ -199,9 +205,9 @@
         if (planKey !== st.q.id) { planKey = st.q.id; plans = {}; for (const p of st.players.filter((x) => x.cpu)) plans[p.id] = Object.assign(Cpu.plan(st, Math.random), { done: false }); }
         for (const p of st.players.filter((x) => x.cpu)) {
           const pl = plans[p.id]; if (!pl || pl.done || st.phase !== "play") continue;
-          if (st.mode === "choice" && now - st.startedAt >= pl.delayMs) { events.push(...E.choose(st, p.id, pl.i, now).events); pl.done = true; }
-          else if (st.mode === "map" && now - st.startedAt >= pl.delayMs) { events.push(...E.lock(st, p.id, pl.id, now).events); pl.done = true; }
-          else if (st.mode === "buzz") {
+          if (st.rmode === "choice" && now - st.startedAt >= pl.delayMs) { events.push(...E.choose(st, p.id, pl.i, now).events); pl.done = true; }
+          else if (st.rmode === "map" && now - st.startedAt >= pl.delayMs) { events.push(...E.lock(st, p.id, pl.id, now).events); pl.done = true; }
+          else if (st.rmode === "buzz") {
             const b = st.buzz;
             if (!b.by && pl.pressIdx !== null && !b.lockedOut.includes(p.id) && !pl.pressedAt && Text.visible(st.q.at, now - st.startedAt - b.pauseMs) >= pl.pressIdx) {
               const r = E.press(st, p.id, now); if (r.ok) { pl.pressedAt = now; events.push(...r.events); }
@@ -228,7 +234,7 @@
         else if (hiddenAt) { const d = Date.now() - hiddenAt; E.shift(st, d); for (const pl of Object.values(plans)) if (pl.pressedAt) pl.pressedAt += d; hiddenAt = 0; }
       }
       document.addEventListener("visibilitychange", onVis);
-      timer = setInterval(step, s.mode === "buzz" ? 100 : 250);
+      timer = setInterval(step, s.mode === "buzz" || s.mode === "mix" ? 100 : 250);
       const stop = () => { clearInterval(timer); document.removeEventListener("visibilitychange", onVis); board.destroy(); };
       stopSolo = stop;
       board.update(asView(), []);

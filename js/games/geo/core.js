@@ -3,7 +3,8 @@
  * ひとり用(CPU対戦)も、友達対戦(サーバー)も、これを共通で使う。3つの形式を1つの仕組みで扱う。
  *
  *   const E = GeoCore.create(GeoQuestions.create(GEO_DATA));
- *   const st = E.newGame({ players:[{id,name}], mode:"choice|map|buzz", difficulty, scope, rounds:10, now, rng });
+ *   const st = E.newGame({ players:[{id,name}], mode:"choice|map|buzz|mix", difficulty, scope, grade:"all|junior|high", rounds:10, now, rng });
+ *     mix = ラウンドごとに3つの形式がまざる。今のラウンドの形式は st.rmode(単独の形式なら mode と同じ)
  *   E.tick(st, now, rng)                 // 時間が来たら次のラウンド開始 / 締め切り。起きたことを events で返す
  *   E.choose(st, pid, i, now)            // 資料選択: 選択肢 i を選ぶ
  *   E.lock(st, pid, id, now)             // 地図: 選んだ場所を「決定」する(取り消しは端末側。決定後は変えられない)
@@ -32,8 +33,9 @@
   const AI_WAIT_MS = 12000;     // AI の判定を待つ上限(これを過ぎたら、まちがい扱い)
   const POINT = 10;
   const PENALTY = 5;
-  const MODES = ["choice", "map", "buzz"];
-  const ROUNDS = [5, 10, 15];
+  const MODES = ["choice", "map", "buzz", "mix"];     // mix = ラウンドごとに、3つの形式がまざる
+  const RMODES = ["choice", "map", "buzz"];
+  const ROUNDS = [5, 10, 15, 30];
   const DIFFICULTIES = ["easy", "normal", "hard"];
 
   function create(Q) {
@@ -44,11 +46,11 @@
       return out;
     };
 
-    function newGame({ players, mode = "choice", difficulty = "normal", scope = "both", rounds = 10, now, rng = Math.random }) {
+    function newGame({ players, mode = "choice", difficulty = "normal", scope = "both", grade = "all", rounds = 10, now, rng = Math.random }) {
       if (!MODES.includes(mode)) throw new Error("bad mode");
       if (players.length < 1 || players.length > 4) throw new Error("bad players");
       return {
-        game: "geo", mode, difficulty, scope, rounds,
+        game: "geo", mode, rmode: mode === "mix" ? null : mode, bag: [], difficulty, scope, grade, rounds,
         players: players.map((p) => ({ id: p.id, name: p.name || "", cpu: !!p.cpu, avatar: p.avatar || "", score: 0, correct: 0 })),
         round: 0, phase: "between", nextAt: now + START_MS,
         q: null, priv: null, startedAt: 0, endsAt: 0,
@@ -58,8 +60,20 @@
       };
     }
 
+    /** ミックス: 3つの形式を1周ずつシャッフルして出す(同じ形式が続きすぎない) */
+    function nextRoundMode(st, rng) {
+      if (st.mode !== "mix") return st.mode;
+      if (!st.bag.length) {
+        let bag;
+        do { bag = RMODES.slice().sort(() => rng() - 0.5); } while (bag[0] === st.rmode);   // 前の周の最後と同じ形式で始めない
+        st.bag = bag;
+      }
+      return st.bag.shift();
+    }
+
     function startRound(st, now, rng) {
-      const picked = Q.pick(st.mode, { difficulty: st.difficulty, scope: st.scope, rng, used: st.usedIds, lastK: st.lastK });
+      st.rmode = nextRoundMode(st, rng);
+      const picked = Q.pick(st.rmode, { difficulty: st.difficulty, scope: st.scope, grade: st.grade, rng, used: st.usedIds, lastK: st.rmode === "choice" ? st.lastK : null });
       st.round += 1;
       st.q = picked.pub; st.priv = picked.priv;
       st.usedIds.push(picked.pub.id);
@@ -67,10 +81,10 @@
       st.answers = {}; st.reveal = null;
       st.phase = "play"; st.startedAt = now;
       st.buzz = null; st.endsAt = 0;
-      if (st.mode === "choice") st.endsAt = now + (CHOICE_MS[st.q.k] || 25000);
-      else if (st.mode === "map") st.endsAt = now + MAP_MS;
+      if (st.rmode === "choice") st.endsAt = now + (CHOICE_MS[st.q.k] || 25000);
+      else if (st.rmode === "map") st.endsAt = now + MAP_MS;
       else st.buzz = { by: null, lockedOut: [], pauseMs: 0, at: 0, idx: 0, answerEndsAt: 0, judging: null, wrong: {} };
-      return [{ type: "round", round: st.round, mode: st.mode }];
+      return [{ type: "round", round: st.round, mode: st.rmode }];
     }
 
     function finish(st, now) {
@@ -88,14 +102,14 @@
       const gains = {};
       for (const p of st.players) gains[p.id] = 0;
       const rv = { reason, gains, round: st.round };
-      if (st.mode === "choice") {
+      if (st.rmode === "choice") {
         rv.a = st.priv.a;
         rv.picks = {};
         for (const [pid, a] of Object.entries(st.answers)) {
           rv.picks[pid] = a.i;
           if (a.i === st.priv.a) gains[pid] = POINT + bonus(st, a.at, 5);
         }
-      } else if (st.mode === "map") {
+      } else if (st.rmode === "map") {
         rv.target = st.priv.target;
         rv.name = Q.nameOf(st.q.map, st.priv.target);
         rv.picks = {};
@@ -135,7 +149,7 @@
         return st.round >= st.rounds ? [finish(st, now)] : startRound(st, now, rng);
       }
       if (st.phase !== "play") return [];
-      if (st.mode !== "buzz") return now >= st.endsAt ? endRound(st, now, "time") : [];
+      if (st.rmode !== "buzz") return now >= st.endsAt ? endRound(st, now, "time") : [];
       const b = st.buzz;
       if (b.by) {
         if (b.judging) return now > b.judging.since + AI_WAIT_MS ? wrong(st, b.by, now, "ai_timeout") : [];
@@ -149,7 +163,7 @@
     function allDone(st) { return st.players.every((p) => st.answers[p.id]); }
 
     function choose(st, pid, i, now) {
-      if (st.phase !== "play" || st.mode !== "choice") return { ok: false, reason: "not_playing", events: [] };
+      if (st.phase !== "play" || st.rmode !== "choice") return { ok: false, reason: "not_playing", events: [] };
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
       if (st.answers[pid]) return { ok: false, reason: "already", events: [] };
       if (now > st.endsAt) return { ok: false, reason: "timeout", events: [] };
@@ -161,7 +175,7 @@
     }
 
     function lock(st, pid, id, now) {
-      if (st.phase !== "play" || st.mode !== "map") return { ok: false, reason: "not_playing", events: [] };
+      if (st.phase !== "play" || st.rmode !== "map") return { ok: false, reason: "not_playing", events: [] };
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
       if (st.answers[pid]) return { ok: false, reason: "already", events: [] };
       if (now > st.endsAt) return { ok: false, reason: "timeout", events: [] };
@@ -174,7 +188,7 @@
 
     /* ---------- 早押し ---------- */
     function press(st, pid, now) {
-      if (st.phase !== "play" || st.mode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
+      if (st.phase !== "play" || st.rmode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
       const b = st.buzz;
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
       if (b.by) return { ok: false, reason: "taken", events: [] };
@@ -204,7 +218,7 @@
     }
 
     function answer(st, pid, text, now) {
-      if (st.phase !== "play" || st.mode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
+      if (st.phase !== "play" || st.rmode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
       const b = st.buzz;
       if (b.by !== pid) return { ok: false, reason: "not_your_turn", events: [] };
       if (b.judging) return { ok: false, reason: "judging", events: [] };
@@ -220,7 +234,7 @@
 
     /** AI の判定結果。ok=true なら正解 */
     function judged(st, pid, ok, now) {
-      if (st.phase !== "play" || st.mode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
+      if (st.phase !== "play" || st.rmode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
       const b = st.buzz;
       if (b.by !== pid || !b.judging) return { ok: false, reason: "not_judging", events: [] };
       return { ok: true, events: ok ? correct(st, pid, now) : wrong(st, pid, now, "wrong") };
@@ -230,7 +244,7 @@
     function nextDeadline(st) {
       if (st.phase === "between") return st.nextAt;
       if (st.phase !== "play") return 0;
-      if (st.mode !== "buzz") return st.endsAt;
+      if (st.rmode !== "buzz") return st.endsAt;
       const b = st.buzz;
       if (b.by) return b.judging ? b.judging.since + AI_WAIT_MS + 1 : b.answerEndsAt + 1;
       return st.startedAt + b.pauseMs + Text.totalMs(st.q.at) + Text.GRACE_MS + 1;
@@ -256,5 +270,5 @@
     return { newGame, tick, choose, lock, press, answer, judged, nextDeadline, shift, view, byId };
   }
 
-  return { START_MS, BETWEEN_MS, CHOICE_MS, MAP_MS, ANSWER_MS, AI_WAIT_MS, POINT, PENALTY, MODES, ROUNDS, DIFFICULTIES, create };
+  return { START_MS, BETWEEN_MS, CHOICE_MS, MAP_MS, ANSWER_MS, AI_WAIT_MS, POINT, PENALTY, MODES, RMODES, ROUNDS, DIFFICULTIES, create };
 });

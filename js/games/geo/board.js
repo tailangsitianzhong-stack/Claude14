@@ -34,7 +34,7 @@
         <div class="shiri-actions"><span></span><button type="button" class="btn btn-small" id="geo-quit">やめる</button></div>
       </div>`;
     const $ = (s) => el.querySelector(s);
-    const u = { view: null, mv: null, shown: -1, lastQ: "", timerId: null, lastTick: 0, prevPhase: "" };
+    const u = { view: null, mv: null, mvMode: "", shown: -1, lastQ: "", timerId: null, lastTick: 0, prevPhase: "" };
 
     const ctxBase = { myId, avatarOf, serverNow, data: opts.data, actions: opts.actions || {}, say, stage: $("#geo-stage"), extra: $("#geo-extra"), sfx: root.Sfx, fx: root.Fx };
 
@@ -84,14 +84,28 @@
           </ol>`;
     }
 
+    /** 今のラウンドの形式(ミックスは、ラウンドごとに変わる)。まだ決まっていなければ null */
+    const roundMode = (v) => v.rmode || (v.mode !== "mix" ? v.mode : null);
+    const ICON = { buzz: "⚡", map: "🗺️", choice: "🖼️" };
+
+    /** 形式が変わったら、前の形式の表示(キーボードなど)を片づけて、新しい形式の表示に切りかえる */
+    function switchView(rm) {
+      if (u.mvMode === rm) return;
+      if (u.mv && u.mv.destroy) u.mv.destroy();
+      u.mv = null; u.mvMode = rm; u.lastQ = "";
+      ctxBase.stage.innerHTML = ""; ctxBase.extra.innerHTML = "";
+      const V = rm && root.GeoViews && root.GeoViews[rm];
+      u.mv = V ? V.create(ctxBase) : null;
+    }
+
     function update(v, events) {
       u.view = v;
-      if (!u.mv) {
-        const V = root.GeoViews && root.GeoViews[v.mode];
-        u.mv = V ? V.create(ctxBase) : null;
-      }
+      const rm = roundMode(v);
+      switchView(rm);
+      if (!rm) ctxBase.stage.innerHTML = `<div class="geo-wait">${Ruby.html("よーい…")}</div>`;
       const newRound = v.q && v.q.id !== u.lastQ;
-      $("#geo-round").innerHTML = Ruby.html(v.phase === "over" ? "おしまい" : v.round === 0 ? "もうすぐスタート！" : `第${v.round}問{もん} / ${v.rounds}問{もん}`);
+      const label = v.phase === "over" ? "おしまい" : v.round === 0 ? "もうすぐスタート！" : `${v.mode === "mix" && rm ? ICON[rm] + " " : ""}第${v.round}問{もん} / ${v.rounds}問{もん}`;
+      $("#geo-round").innerHTML = Ruby.html(label);
       players(v);
       if (u.mv) u.mv.update(v, events || [], newRound);
       if (newRound) { u.lastQ = v.q.id; u.shown = -1; say("", ""); }

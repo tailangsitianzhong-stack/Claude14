@@ -3,7 +3,7 @@
  * 画面・タイマーに依存しない純粋な関数。いつ実行するかは呼び出し側(game.js)が決める。
  *
  *   const cpu = GeoCpu.create(data);
- *   const plan = cpu.plan(st, rng);   // st.mode に合わせた計画
+ *   const plan = cpu.plan(st, rng);   // 今のラウンドの形式(st.rmode)に合わせた計画
  *     choice: { delayMs, i }                 delayMs 後に、選択肢 i を選ぶ
  *     map   : { delayMs, id }                delayMs 後に、場所 id を決定する
  *     buzz  : { pressIdx, answerMs, text }   問題文が pressIdx 文字まで出たら押し、answerMs 後に text で答える(押さない=null)
@@ -43,14 +43,14 @@
 
     function plan(st, rng = Math.random) {
       const d = st.difficulty, lv = (st.q && st.q.lv) || 2;
-      if (st.mode === "choice") {
+      if (st.rmode === "choice") {
         const p = clamp(KNOW.choice[d] + (st.q.k === "photo" ? 0.05 : 0) + (LV_ADJ[lv] || 0) * 0.5, 0.15, 0.97);
         const right = rng() < p;
         let i = st.priv.a;
         if (!right) { const others = [0, 1, 2, 3].filter((x) => x !== st.priv.a); i = others[Math.floor(rng() * 3)]; }
         return { delayMs: Math.round(between(rng, DELAY.choice[d])), i };
       }
-      if (st.mode === "map") {
+      if (st.rmode === "map") {
         const p = clamp(KNOW.map[d] + (st.q.lv === 1 ? 0.05 : -0.05), 0.15, 0.97);
         const target = st.priv.target;
         let id = target;

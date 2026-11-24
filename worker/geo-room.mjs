@@ -19,6 +19,7 @@ export const MODES = Core.MODES;
 export const DIFFICULTIES = Core.DIFFICULTIES;
 export const ROUNDS = Core.ROUNDS;
 export const SCOPES = Questions.SCOPES;
+export const GRADES = Questions.GRADES;
 const MAX_TEXT = 40;
 
 let engine = null;
@@ -26,7 +27,7 @@ const E = () => engine || (engine = Core.create(Questions.create(globalThis.GEO_
 
 export function createRoom(code, now) {
   const st = L.createRoom(code, now);
-  Object.assign(st, { game: "geo", settings: { mode: "choice", difficulty: "normal", scope: "both", rounds: 10 }, g: null });
+  Object.assign(st, { game: "geo", settings: { mode: "choice", difficulty: "normal", scope: "both", grade: "all", rounds: 10 }, g: null });
   delete st.turnId; delete st.required; delete st.used; delete st.history; delete st.turnEndsAt; delete st.seconds;
   return st;
 }
@@ -39,6 +40,7 @@ export function setSettings(st, id, patch, now) {
     if (MODES.includes(patch.mode)) s.mode = patch.mode;
     if (DIFFICULTIES.includes(patch.difficulty)) s.difficulty = patch.difficulty;
     if (SCOPES.includes(patch.scope)) s.scope = patch.scope;
+    if (GRADES.includes(patch.grade)) s.grade = patch.grade;
     if (ROUNDS.includes(patch.rounds)) s.rounds = patch.rounds;
   }
   st.updatedAt = now;
@@ -57,7 +59,7 @@ export function start(st, id, now, rng) {
   const s = st.settings;
   st.g = E().newGame({
     players: st.players.map((p) => ({ id: p.id, name: p.avatar, avatar: p.avatar })),
-    mode: s.mode, difficulty: s.difficulty, scope: s.scope, rounds: s.rounds, now, rng: rng || Math.random
+    mode: s.mode, difficulty: s.difficulty, scope: s.scope, grade: s.grade, rounds: s.rounds, now, rng: rng || Math.random
   });
   st.phase = "playing";
   st.ranking = [];

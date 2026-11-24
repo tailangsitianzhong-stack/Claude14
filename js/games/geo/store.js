@@ -8,7 +8,7 @@
   "use strict";
 
   const PREFIX = "minigames.geo.";
-  const MODES = ["choice", "map", "buzz"], SCOPES = ["both", "world", "japan"], DIFFS = ["easy", "normal", "hard"], ROUNDS = [5, 10, 15];
+  const MODES = ["choice", "map", "buzz", "mix"], SCOPES = ["both", "world", "japan"], GRADES = ["all", "junior", "high"], DIFFS = ["easy", "normal", "hard"], ROUNDS = [5, 10, 15, 30];
 
   function create(storage) {
     const read = (key, fallback) => {
@@ -19,10 +19,11 @@
 
     const settings = {
       get() {
-        const s = Object.assign({ mode: "choice", scope: "both", difficulty: "normal", rounds: 10, cpus: 2 }, read("settings", {}));
+        const s = Object.assign({ mode: "choice", scope: "both", grade: "all", difficulty: "normal", rounds: 10, cpus: 2 }, read("settings", {}));
         return {
           mode: MODES.includes(s.mode) ? s.mode : "choice",
           scope: SCOPES.includes(s.scope) ? s.scope : "both",
+          grade: GRADES.includes(s.grade) ? s.grade : "all",
           difficulty: DIFFS.includes(s.difficulty) ? s.difficulty : "normal",
           rounds: ROUNDS.includes(s.rounds) ? s.rounds : 10,
           cpus: Math.max(0, Math.min(3, Math.round(Number(s.cpus)))) || (Number(s.cpus) === 0 ? 0 : 2)

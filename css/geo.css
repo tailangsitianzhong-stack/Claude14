@@ -125,3 +125,12 @@
 .geo-press[hidden] { display: none !important; }
 .geo-field { cursor: default; min-height: 0; margin-bottom: 4px; text-align: left; }
 .geo-field .shiri-text { min-height: 2.2rem; }
+
+/* 国の統計・人口構成 */
+.geo-ind th { text-align: left; padding-left: 8px; }
+.geo-ind td { text-align: right; padding-right: 10px; font-size: .95rem; }
+.geo-popbar { display: flex; height: 22px; max-width: 360px; margin: 0 auto 4px; overflow: hidden; border: 3px solid var(--ink); border-radius: 12px; background: #fff; }
+.geo-popbar .seg.y, .sw.y { background: #7ec8e3; }
+.geo-popbar .seg.w, .sw.w { background: #9ccc65; }
+.geo-popbar .seg.o, .sw.o { background: #f6a15c; }
+.sw { display: inline-block; width: .8em; height: .8em; margin-right: 4px; border-radius: 3px; vertical-align: -1px; }

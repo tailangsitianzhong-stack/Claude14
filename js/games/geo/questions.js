@@ -8,7 +8,8 @@
  *   buzz  : pub {id,mode,cat,lv,text,at:[各文字が出る時刻]}  priv {ans,yomi:[…]}
  *   map   : pub {id,mode,map:"world|japan",text}             priv {target}
  *   choice: pub {id,mode,k,q,m,c:[4つ(順番はシャッフル済み)]}  priv {a:正解の位置}
- * 範囲 scope: "world" | "japan" | "both"。難しさ difficulty ごとに、出やすいレベル(1小学〜3高校)が変わる。
+ * 範囲 scope: "world" | "japan" | "both"。学年 grade: "junior"(小・中=レベル1〜2) | "high"(高校=レベル3) | "all"。
+ * 難しさ difficulty ごとに、出やすいレベル(1小学〜3高校)が変わる。
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory(typeof require === "function" ? require("./text.js") : root.GeoText);
@@ -18,6 +19,9 @@
 
   const MODES = ["buzz", "map", "choice"];
   const SCOPES = ["both", "world", "japan"];
+  /** 学年: junior=小学・中学(レベル1〜2) / high=高校(レベル3) / all=すべて */
+  const GRADES = ["all", "junior", "high"];
+  const inGrade = (q, grade) => grade === "junior" ? q.lv <= 2 : grade === "high" ? q.lv === 3 : true;
   /** 難しさごとの、レベル(1〜3)の出やすさ */
   const WEIGHT = {
     easy: { 1: 4, 2: 2, 3: 0.3 },
@@ -45,10 +49,11 @@
 
     /** 問題を1つ選ぶ。used=もう出した問題のid / lastK=直前の資料選択の種類(続けて同じ種類になりにくくする) */
     function pick(mode, o) {
-      const { difficulty = "normal", scope = "both", rng = Math.random, used = [], lastK = null } = o || {};
+      const { difficulty = "normal", scope = "both", grade = "all", rng = Math.random, used = [], lastK = null } = o || {};
       const w = WEIGHT[difficulty] || WEIGHT.normal;
-      let pool = lists[mode].filter((q) => inScope(q, scope) && !used.includes(q.id));
-      if (!pool.length) pool = lists[mode].filter((q) => inScope(q, scope));          // 出し尽くしたら、また最初から
+      let pool = lists[mode].filter((q) => inScope(q, scope) && inGrade(q, grade) && !used.includes(q.id));
+      if (!pool.length) pool = lists[mode].filter((q) => inScope(q, scope) && inGrade(q, grade));   // 出し尽くしたら、また最初から
+      if (!pool.length) pool = lists[mode].filter((q) => inScope(q, scope));                       // 学年に合う問題がなければ、学年は問わない
       if (!pool.length) return null;
       const q = weighted(pool, (x) => (w[x.lv] || 1) * (mode === "choice" && lastK && x.k === lastK ? 0.35 : 1), rng);
       return build(mode, q, rng);
@@ -65,8 +70,8 @@
       return { pub: { id: q.id, mode, k: q.k, q: q.q, m: q.m, c: order.map((i) => q.c[i]) }, priv: { a: order.indexOf(0) } };
     }
 
-    return { MODES, SCOPES, pick, build, isValidTarget, nameOf, lists, countryBy, prefBy };
+    return { MODES, SCOPES, GRADES, pick, build, isValidTarget, nameOf, lists, countryBy, prefBy };
   }
 
-  return { MODES, SCOPES, WEIGHT, create };
+  return { MODES, SCOPES, GRADES, WEIGHT, create };
 });

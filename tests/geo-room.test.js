@@ -29,12 +29,14 @@ const now0 = (st) => st.g.startedAt;
 test("部屋: 作成・設定(ホストだけ・値の検査)・開始条件(2〜4人)", () => {
   const st = lobby(3);
   assert.equal(st.game, "geo");
-  assert.deepEqual(st.settings, { mode: "choice", difficulty: "normal", scope: "both", rounds: 10 });
+  assert.deepEqual(st.settings, { mode: "choice", difficulty: "normal", scope: "both", grade: "all", rounds: 10 });
   assert.equal(R.setSettings(st, ids(st)[1], { mode: "map" }, T0).error, "not_host");
   assert.ok(R.setSettings(st, st.hostId, { mode: "map", scope: "japan", difficulty: "hard", rounds: 5 }, T0).ok);
-  assert.deepEqual(st.settings, { mode: "map", difficulty: "hard", scope: "japan", rounds: 5 });
-  R.setSettings(st, st.hostId, { mode: "bogus", scope: "mars", difficulty: "x", rounds: 7 }, T0);
-  assert.deepEqual(st.settings, { mode: "map", difficulty: "hard", scope: "japan", rounds: 5 });
+  assert.deepEqual(st.settings, { mode: "map", difficulty: "hard", scope: "japan", grade: "all", rounds: 5 });
+  R.setSettings(st, st.hostId, { mode: "bogus", scope: "mars", difficulty: "x", rounds: 7, grade: "kindergarten" }, T0);
+  assert.deepEqual(st.settings, { mode: "map", difficulty: "hard", scope: "japan", grade: "all", rounds: 5 });
+  assert.ok(R.setSettings(st, st.hostId, { mode: "mix", grade: "high", rounds: 30 }, T0).ok);
+  assert.deepEqual(st.settings, { mode: "mix", difficulty: "hard", scope: "japan", grade: "high", rounds: 30 });
   assert.equal(R.canStart(1), false); assert.equal(R.canStart(2), true); assert.equal(R.canStart(4), true); assert.equal(R.canStart(5), false);
   const one = lobby(1);
   assert.equal(R.start(one, one.hostId, T0).error, "need_players");
@@ -156,4 +158,23 @@ test("入室: ゲーム中の途中参加は断るが、再接続はできる。
   R.disconnect(st, id, T0 + 2);
   assert.ok(R.join(st, id, T0 + 3).ok);
   assert.deepEqual(st.players.map((p) => p.slot), [0, 1, 2]);
+});
+
+test("ミックス(部屋): 形式がラウンドごとに変わり、publicState にも rmode が入る。答えは送らない", () => {
+  const st = playing("mix", 3, { scope: "both", grade: "high" });
+  const seen = [];
+  let guard = 0, now = st.g.startedAt;
+  while (st.phase === "playing" && guard++ < 40) {
+    if (st.g.phase === "play") {
+      seen.push(st.g.rmode);
+      const pub = R.publicState(st);
+      assert.equal(pub.g.rmode, st.g.rmode);
+      assert.equal(JSON.stringify(pub).includes('"priv"'), false);
+      assert.equal(JSON.stringify(pub).includes('"yomi"'), false);
+      assert.ok(pub.g.q.mode === st.g.rmode);
+      now = st.g.endsAt || (st.g.startedAt + 120000); R.timeout(st, now + 100000);
+    } else { now = st.g.nextAt; R.timeout(st, now); }
+  }
+  assert.equal(st.phase, "over");
+  assert.deepEqual(seen.slice(0, 3).sort(), ["buzz", "choice", "map"], "最初の3問で3形式がそろう");
 });

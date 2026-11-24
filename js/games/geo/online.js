@@ -10,11 +10,13 @@
 
   const Ruby = root.Ruby;
   const MODES = [
+    { key: "mix", icon: "🎲", name: "ミックス" },
     { key: "choice", icon: "🖼️", name: "資料{しりょう}選択{せんたく}" },
     { key: "map", icon: "🗺️", name: "地図{ちず}で選{えら}ぶ" },
     { key: "buzz", icon: "⚡", name: "早押{はやお}し" }
   ];
   const SCOPES = [{ key: "both", label: "どちらも" }, { key: "world", label: "世界{せかい}" }, { key: "japan", label: "日本{にほん}" }];
+  const GRADES = [{ key: "all", label: "すべて" }, { key: "junior", label: "小学{しょうがく}・中学{ちゅうがく}" }, { key: "high", label: "高校{こうこう}" }];
   const DIFFS = [{ key: "easy", label: "やさしい" }, { key: "normal", label: "ふつう" }, { key: "hard", label: "むずかしい" }];
   const REASONS = {
     not_playing: "もう締{し}め切{き}られたよ", timeout: "間{ま}に合{あ}わなかった…", already: "もう決定{けってい}しているよ", taken: "ほかの人{ひと}が先{さき}に押{お}したよ",
@@ -27,16 +29,16 @@
 
     function lobbySettings(st, isHost) {
       const s = st.settings;
-      const mode = MODES.find((m) => m.key === s.mode), scope = SCOPES.find((o) => o.key === s.scope), diff = DIFFS.find((o) => o.key === s.difficulty);
-      if (!isHost) return `<p class="note">形式{けいしき}: <b>${mode.name}</b> ・ 範囲{はんい}: ${scope.label} ・ 難{むずか}しさ: ${diff.label} ・ ${s.rounds}問{もん}</p>`;
+      const mode = MODES.find((m) => m.key === s.mode), scope = SCOPES.find((o) => o.key === s.scope), diff = DIFFS.find((o) => o.key === s.difficulty), grade = GRADES.find((o) => o.key === (s.grade || "all"));
+      if (!isHost) return `<p class="note">形式{けいしき}: <b>${mode.name}</b> ・ 範囲{はんい}: ${scope.label} ・ 学年{がくねん}: ${grade.label} ・ 難{むずか}しさ: ${diff.label} ・ ${s.rounds}問{もん}</p>`;
       const row = (title, items, cur, attr) => `<h4 class="menu-sub">${title}</h4><div class="geo-opts">${items.map((o) => `<button type="button" class="geo-opt${o.key === cur ? " is-on" : ""}" data-${attr}="${o.key}">${o.icon ? o.icon + " " : ""}${o.name || o.label}</button>`).join("")}</div>`;
-      return row("形式{けいしき}", MODES, s.mode, "gmode") + row("範囲{はんい}", SCOPES, s.scope, "gscope") + row("難{むずか}しさ", DIFFS, s.difficulty, "gdiff") +
-        row("問題数{もんだいすう}", [5, 10, 15].map((n) => ({ key: String(n), label: n + "問{もん}" })), String(s.rounds), "grounds") +
+      return row("形式{けいしき}", MODES, s.mode, "gmode") + row("範囲{はんい}", SCOPES, s.scope, "gscope") + row("学年{がくねん}", GRADES, s.grade || "all", "ggrade") + row("難{むずか}しさ", DIFFS, s.difficulty, "gdiff") +
+        row("問題数{もんだいすう}", [5, 10, 15, 30].map((n) => ({ key: String(n), label: n + "問{もん}" })), String(s.rounds), "grounds") +
         `<p class="note">みんなで同{おな}じ問題{もんだい}に答{こた}えて、点数{てんすう}をきそおう！</p>`;
     }
     function bindLobby(view, send) {
       const bind = (sel, attr, key, conv) => view.querySelectorAll(sel).forEach((b) => b.addEventListener("click", () => send({ t: "settings", settings: { [key]: conv ? conv(b.dataset[attr]) : b.dataset[attr] } })));
-      bind("[data-gmode]", "gmode", "mode"); bind("[data-gscope]", "gscope", "scope"); bind("[data-gdiff]", "gdiff", "difficulty"); bind("[data-grounds]", "grounds", "rounds", Number);
+      bind("[data-gmode]", "gmode", "mode"); bind("[data-gscope]", "gscope", "scope"); bind("[data-ggrade]", "ggrade", "grade"); bind("[data-gdiff]", "gdiff", "difficulty"); bind("[data-grounds]", "grounds", "rounds", Number);
     }
     const startGate = (st, connected) => ({ ok: connected >= 2, note: "友達{ともだち}が入{はい}るまで待{ま}ってね（2人{ふたり}から遊{あそ}べるよ）" });
 
@@ -47,7 +49,7 @@
       loading = true;
       shell.setPlaying(true);
       shell.render('<div class="panel"><p class="note">データを読{よ}み込{こ}み中{ちゅう}…</p></div>');
-      ctx.loadData(st.settings.mode === "map").then((data) => {
+      ctx.loadData(st.settings.mode === "map" || st.settings.mode === "mix").then((data) => {
         loading = false;
         if (!shell.state || shell.state.phase !== "playing") return;
         shell.view.innerHTML = "";

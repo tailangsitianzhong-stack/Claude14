@@ -329,13 +329,110 @@ test("CPU対戦のシミュレーション: 3形式とも最後まで終わる(C
 test("保存: 設定の既定値と範囲チェック・戦績", () => {
   const mem = () => { const m = {}; return { getItem: (k) => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = v; } }; };
   const s = Store.create(mem());
-  assert.deepEqual(s.settings.get(), { mode: "choice", scope: "both", difficulty: "normal", rounds: 10, cpus: 2 });
-  s.settings.set({ mode: "buzz", cpus: 0, rounds: 5 });
-  assert.deepEqual(s.settings.get(), { mode: "buzz", scope: "both", difficulty: "normal", rounds: 5, cpus: 0 });
-  s.settings.set({ mode: "bogus", rounds: 7, cpus: 9, difficulty: "x" });
+  assert.deepEqual(s.settings.get(), { mode: "choice", scope: "both", grade: "all", difficulty: "normal", rounds: 10, cpus: 2 });
+  s.settings.set({ mode: "buzz", cpus: 0, rounds: 5, grade: "high" });
+  assert.deepEqual(s.settings.get(), { mode: "buzz", scope: "both", grade: "high", difficulty: "normal", rounds: 5, cpus: 0 });
+  s.settings.set({ mode: "mix", rounds: 30 });
+  assert.equal(s.settings.get().mode, "mix"); assert.equal(s.settings.get().rounds, 30);
+  s.settings.set({ mode: "bogus", rounds: 7, cpus: 9, difficulty: "x", grade: "x" });
   const g = s.settings.get();
-  assert.equal(g.mode, "choice"); assert.equal(g.rounds, 10); assert.equal(g.cpus, 3); assert.equal(g.difficulty, "normal");
+  assert.equal(g.mode, "choice"); assert.equal(g.grade, "all"); assert.equal(g.rounds, 10); assert.equal(g.cpus, 3); assert.equal(g.difficulty, "normal");
   s.stats.add("map", true, 80); s.stats.add("map", false, 120);
   assert.deepEqual(s.stats.get("map"), { played: 2, wins: 1, best: 120 });
   assert.deepEqual(Store.create(null).stats.get("map"), { played: 0, wins: 0, best: 0 });
+});
+
+// ---------- 高校・ミックス・30問 ----------
+test("データ: 高校(レベル3)の問題が、形式×範囲ごとに30問以上ある。新しい資料(統計・人口構成)も正しい形", () => {
+  const n = (list, sc) => list.filter((q) => q.lv === 3 && (sc === "both" || q.sc === sc)).length;
+  for (const [name, list] of [["buzz", D.buzz], ["map", D.map], ["choice", D.choice]]) {
+    for (const sc of ["both", "world", "japan"]) assert.ok(n(list, sc) >= 30, `${name}/${sc}/高校 ${n(list, sc)}問`);
+  }
+  assert.ok(D.buzz.length >= 280 && D.map.length >= 340 && D.choice.length >= 400);
+  const ind = D.choice.filter((c) => c.k === "indic"), pop = D.choice.filter((c) => c.k === "pop");
+  assert.ok(ind.length >= 40 && pop.length >= 30);
+  for (const c of ind) { assert.equal(c.m.rows.length, 5); assert.ok(c.m.rows.every(([k, v]) => k && /\d/.test(v))); assert.equal(c.c[0], c.c[0]); }
+  for (const c of pop) { assert.ok(Math.abs(c.m.y + c.m.w + c.m.o - 100) < 1.5, c.id); assert.ok(c.m.b > 0); }
+  assert.ok(D.map.some((m) => /世界で第\d位/.test(m.text)) && D.map.some((m) => /全国で/.test(m.text)));
+  assert.ok(Object.values(D.climate).some((c) => c.ty === "熱帯モンスーン気候") && Object.values(D.climate).some((c) => c.ty === "氷雪気候"));
+  // 早押しの読みは、かなキーボードで打てる(数字・英字を含まない)
+  for (const b of D.buzz) for (const y of b.yomi) assert.match(y, /^[ぁ-んー]+$/, b.id);
+});
+
+test("出題: 学年(小中=レベル1〜2 / 高校=レベル3 / すべて)で絞れる。足りなければ学年を問わない", () => {
+  const rng = seeded(8);
+  for (const mode of ["buzz", "map", "choice"]) {
+    for (let i = 0; i < 40; i++) {
+      const hiId = Q.pick(mode, { grade: "high", rng }).pub.id, jrId = Q.pick(mode, { grade: "junior", rng }).pub.id;
+      assert.equal(Q.lists[mode].find((q) => q.id === hiId).lv, 3, mode);
+      assert.ok(Q.lists[mode].find((q) => q.id === jrId).lv <= 2, mode);
+    }
+  }
+  assert.deepEqual(Qm.GRADES, ["all", "junior", "high"]);
+  // 高校×日本の問題を出し尽くした後も、止まらない
+  const used = D.map.filter((m) => m.sc === "japan" && m.lv === 3).map((m) => m.id);
+  assert.ok(Q.pick("map", { scope: "japan", grade: "high", rng, used }));
+});
+
+test("ミックス: ラウンドごとに形式が変わる(3問で3形式がそろう)。rmode が今の形式。view にも入る", () => {
+  const g = game("mix", 2, { rounds: 9, grade: "high" });
+  assert.equal(g.st.mode, "mix"); assert.equal(g.st.rmode, null);
+  assert.equal(E.view(g.st).rmode, null);
+  const modes = [];
+  let now = start(g);
+  for (let r = 0; r < 9; r++) {
+    assert.equal(g.st.phase, "play");
+    modes.push(g.st.rmode);
+    assert.equal(g.st.q.mode, g.st.rmode);
+    assert.equal(E.view(g.st).rmode, g.st.rmode);
+    // その形式で全員が答える
+    if (g.st.rmode === "choice") { E.choose(g.st, "p1", 0, now + 100); E.choose(g.st, "p2", 1, now + 200); }
+    else if (g.st.rmode === "map") { E.lock(g.st, "p1", g.st.priv.target, now + 100); E.lock(g.st, "p2", g.st.priv.target, now + 200); }
+    else { E.press(g.st, "p1", now + 3000); E.answer(g.st, "p1", g.st.priv.yomi[0], now + 4000); }
+    assert.equal(g.st.phase, "between");
+    now = g.st.nextAt; E.tick(g.st, now, g.rng);
+  }
+  assert.equal(g.st.phase, "over");
+  for (let i = 0; i < 9; i += 3) assert.deepEqual(modes.slice(i, i + 3).sort(), ["buzz", "choice", "map"], `${i + 1}〜${i + 3}問目`);
+  for (let i = 1; i < modes.length; i++) assert.notEqual(modes[i], modes[i - 1], "同じ形式が続かない");
+});
+
+test("30問: ROUNDS に 30 がある。ミックスの30問をCPU 3人で最後まで遊べる", () => {
+  assert.deepEqual(Core.ROUNDS, [5, 10, 15, 30]);
+  assert.ok(Core.MODES.includes("mix"));
+  const rng = seeded(77);
+  const players = P(4).map((p) => ({ ...p, cpu: true }));
+  const st = E.newGame({ players, mode: "mix", difficulty: "normal", scope: "both", grade: "all", rounds: 30, now: T0, rng });
+  let now = T0, steps = 0, plans = {}, key = "";
+  const seen = new Set();
+  while (st.phase !== "over" && steps++ < 200000) {
+    now += 100;
+    E.tick(st, now, rng);
+    if (st.phase !== "play") { plans = {}; key = ""; continue; }
+    seen.add(st.rmode);
+    if (key !== st.q.id) { key = st.q.id; plans = {}; for (const p of st.players) plans[p.id] = Object.assign(C.plan(st, rng), { done: false }); }
+    for (const p of st.players) {
+      const pl = plans[p.id]; if (!pl || pl.done) continue;
+      if (st.rmode === "choice" && now - st.startedAt >= pl.delayMs) { E.choose(st, p.id, pl.i, now); pl.done = true; }
+      else if (st.rmode === "map" && now - st.startedAt >= pl.delayMs) { E.lock(st, p.id, pl.id, now); pl.done = true; }
+      else if (st.rmode === "buzz" && st.buzz) {
+        const b = st.buzz;
+        if (!b.by && pl.pressIdx !== null && !b.lockedOut.includes(p.id) && !pl.pressedAt && Text.visible(st.q.at, now - st.startedAt - b.pauseMs) >= pl.pressIdx) { if (E.press(st, p.id, now).ok) pl.pressedAt = now; }
+        else if (b.by === p.id && pl.pressedAt && !b.judging && now - pl.pressedAt >= pl.answerMs) { const r = E.answer(st, p.id, pl.text, now); if (r.verdict === "unsure") E.judged(st, p.id, false, now); pl.done = true; }
+      }
+    }
+  }
+  assert.equal(st.phase, "over");
+  assert.equal(st.round, 30);
+  assert.deepEqual([...seen].sort(), ["buzz", "choice", "map"]);
+  assert.equal(new Set(st.usedIds).size, st.usedIds.length, "30問のあいだ、同じ問題が出ない");
+});
+
+test("高校×日本×30問: 各形式で、同じ問題が出ずに30問そろえられる", () => {
+  const rng = seeded(5);
+  for (const mode of ["buzz", "map", "choice"]) {
+    const used = [];
+    for (let i = 0; i < 30; i++) used.push(Q.pick(mode, { scope: "japan", grade: "high", rng, used }).pub.id);
+    assert.equal(new Set(used).size, 30, mode);
+  }
 });
