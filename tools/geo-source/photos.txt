@@ -1,0 +1,71 @@
+# 写真クイズの候補。形式: id|Commonsの検索語|答え(日本語)|種類(world-monument/world-nature/japan)|ヒント(任意)
+eiffel|Eiffel Tower Paris|エッフェル塔|world-monument|フランスの首都パリにある塔
+pisa|Leaning Tower of Pisa|ピサの斜塔|world-monument|イタリアにある傾いた塔
+colosseum|Colosseum Rome exterior|コロッセオ|world-monument|ローマにある古代の闘技場
+parthenon|Parthenon Athens Acropolis|パルテノン神殿|world-monument|ギリシャのアテネにある神殿
+bigben|Big Ben Elizabeth Tower London|ビッグ・ベン|world-monument|ロンドンの時計塔
+sagrada|Sagrada Familia Nativity facade exterior|サグラダ・ファミリア|world-monument|スペインのバルセロナにある教会
+brandenburg|Brandenburg Gate Berlin|ブランデンブルク門|world-monument|ドイツの首都ベルリンにある門
+stbasil|Saint Basil's Cathedral Moscow|聖ワシリイ大聖堂|world-monument|ロシアのモスクワ、赤の広場
+tajmahal|Taj Mahal Agra|タージ・マハル|world-monument|インドにある白い霊廟
+greatwall|Great Wall of China Badaling|万里の長城|world-monument|中国にある長大な城壁
+forbidden|Forbidden City Hall of Supreme Harmony Taihedian|紫禁城（故宮）|world-monument|中国の北京にある宮殿
+angkor|Angkor Wat temple Cambodia|アンコールワット|world-monument|カンボジアの寺院遺跡
+borobudur|Borobudur temple Java|ボロブドゥール|world-monument|インドネシアの仏教遺跡
+burj|Burj Khalifa Dubai|ブルジュ・ハリファ|world-monument|アラブ首長国連邦の超高層ビル
+pyramids|Great Pyramids of Giza|ギザのピラミッド|world-monument|エジプトにある古代の王の墓
+sphinx|Great Sphinx of Giza|スフィンクス|world-monument|エジプトにある人面獣身の像
+petra|Petra Al-Khazneh Treasury facade Jordan|ペトラ遺跡|world-monument|ヨルダンにある岩をくりぬいた遺跡
+hagia|Hagia Sophia Istanbul|アヤソフィア|world-monument|トルコのイスタンブールにある建物
+alhambra|Alhambra Granada Spain|アルハンブラ宮殿|world-monument|スペインのグラナダにある宮殿
+stonehenge|Stonehenge Wiltshire|ストーンヘンジ|world-monument|イギリスにある巨石の遺跡
+opera|Sydney Opera House|シドニー・オペラハウス|world-monument|オーストラリアの貝殻のような建物
+liberty|Statue of Liberty New York|自由の女神像|world-monument|アメリカのニューヨークにある像
+machu|Machu Picchu Peru|マチュピチュ|world-monument|ペルーのアンデス山中にある空中都市
+christ|Christ the Redeemer Rio de Janeiro|コルコバードのキリスト像|world-monument|ブラジルのリオデジャネイロにある像
+moai|Ahu Tongariki moai Easter Island|モアイ像|world-monument|チリ領のイースター島にある石像
+venice|Venice Grand Canal|ヴェネツィア|world-monument|イタリアの水の都
+victoria|Victoria Falls Zambia Zimbabwe|ビクトリアの滝|world-nature|アフリカのザンビアとジンバブエの国境にある滝
+kilimanjaro|Mount Kilimanjaro Tanzania|キリマンジャロ|world-nature|アフリカ最高峰の山
+sahara|Erg Chebbi Sahara dunes Merzouga Morocco|サハラ砂漠|world-nature|アフリカ北部の世界最大級の砂漠
+uluru|Uluru Ayers Rock sunset Northern Territory|ウルル（エアーズロック）|world-nature|オーストラリア中央部にある巨大な岩
+canyon|Grand Canyon Yavapai Point sunset|グランドキャニオン|world-nature|アメリカのアリゾナ州にある大渓谷
+niagara|Niagara Falls Horseshoe Falls|ナイアガラの滝|world-nature|アメリカとカナダの国境にある滝
+iguazu|Iguazu Falls Argentina Brazil|イグアスの滝|world-nature|アルゼンチンとブラジルの国境にある滝
+uyuni|Salar de Uyuni Bolivia|ウユニ塩湖|world-nature|ボリビアにある世界最大の塩の湖
+amazon|Amazon river rainforest aerial|アマゾン川|world-nature|南アメリカの熱帯雨林を流れる大河
+fjord|Geirangerfjord Norway|フィヨルド|world-nature|氷河がけずった細長い入り江(ノルウェー)
+aurora|Aurora borealis Iceland|オーロラ|world-nature|北極に近い夜空に現れる光
+everest|Mount Everest Himalaya|エベレスト|world-nature|ヒマラヤ山脈にある世界最高峰
+halong|Ha Long Bay Vietnam|ハロン湾|world-nature|ベトナムの海に多くの岩の島が並ぶ景色
+bali|Tegallalang rice terraces Bali|バリ島の棚田|world-nature|インドネシアの島の段々畑
+galapagos|Galapagos giant tortoise|ガラパゴスゾウガメ|world-nature|エクアドル領の島にすむゾウガメ
+nile|Nile River Aswan felucca|ナイル川|world-nature|エジプトを流れる世界最長級の川
+fuji|Mount Fuji Lake Kawaguchi|富士山|japan|日本一高い山
+himeji|Himeji Castle|姫路城|japan|兵庫県にある白い城
+itsukushima|Itsukushima Shrine torii|厳島神社|japan|広島県の海に立つ大鳥居
+kinkaku|Kinkaku-ji Kyoto|金閣寺|japan|京都にある金色の建物
+todaiji|Todai-ji Great Buddha Hall Nara|東大寺|japan|奈良の大仏がある寺
+shirakawa|Shirakawa-go gassho-zukuri village|白川郷|japan|岐阜県の合掌造りの集落
+genbaku|Atomic Bomb Dome Hiroshima|原爆ドーム|japan|広島県にある世界遺産
+shuri|Shuri Castle Okinawa|首里城|japan|沖縄県にある城
+aso|Mount Aso caldera Kumamoto|阿蘇山|japan|熊本県にある巨大なカルデラの火山
+sakurajima|Sakurajima volcano Kagoshima|桜島|japan|鹿児島県の湾にある火山
+yakushima|Yakushima Jomon Sugi|屋久島|japan|鹿児島県の島。縄文杉で有名
+shiretoko|Shiretoko peninsula Hokkaido|知床|japan|北海道の世界自然遺産
+naruto|Naruto whirlpools|鳴門の渦潮|japan|徳島県と淡路島の間の海峡
+tokyotower|Tokyo Tower|東京タワー|japan|東京にある赤と白の電波塔
+tottori|Tottori Sand Dunes|鳥取砂丘|japan|鳥取県の日本最大級の砂丘
+matsumoto|Matsumoto Castle|松本城|japan|長野県にある黒い国宝の城
+nikko|Nikko Toshogu shrine Yomeimon|日光東照宮|japan|栃木県にある徳川家康をまつる神社
+kegon|Kegon Falls waterfall Nikko -elevator -station|華厳滝|japan|栃木県の日光にある滝
+biwa|Lake Biwa Shiga|琵琶湖|japan|滋賀県にある日本最大の湖
+kamikochi|Kamikochi Azusa River Hotaka|上高地|japan|長野県の山あいの景勝地
+hakone|Hakone Ashi lake torii|箱根|japan|神奈川県の温泉と湖で有名な地
+oirase|Oirase mountain stream Aomori|奥入瀬渓流|japan|青森県の渓流
+kushiro|Kushiro wetland Hokkaido|釧路湿原|japan|北海道にある日本最大の湿原
+amanohashidate|Amanohashidate Kyoto|天橋立|japan|京都府の海にのびる砂州
+kenrokuen|Kenrokuen garden Kanazawa|兼六園|japan|石川県にある日本三名園の一つ
+okinawa|Churaumi Aquarium Okinawa|美ら海水族館|japan|沖縄県にある水族館
+sapporo|Sapporo Clock Tower Hokkaido|札幌時計台|japan|北海道の札幌にある古い時計台
+dotonbori|Dotonbori Osaka Glico sign|道頓堀|japan|大阪の繁華街
