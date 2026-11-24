@@ -164,9 +164,10 @@
             if (!r.ok) return board.rejected(r.reason === "empty" ? "答{こた}えを入力{にゅうりょく}してね" : "うまく送{おく}れなかったよ");
             if (r.verdict === "unsure") {
               board.update(asView(), r.events);                                       // 「確認中…」
-              let ok = false;
-              try { ok = judgeFn ? (await judgeFn.check({ question: st.q.text, answer: st.priv.ans, yomi: st.priv.yomi, input: text })) === true : false; } catch (_) { ok = false; }
-              if (st.phase === "play" && st.buzz && st.buzz.judging) push(E.judged(st, "me", ok, Date.now()).events);
+              let res = null;
+              try { res = judgeFn ? await judgeFn.check({ question: st.q.text, answer: st.priv.ans, yomi: st.priv.yomi, input: text }) : null; } catch (_) { res = null; }
+              if (st.phase === "play" && st.buzz && st.buzz.judging) push(E.judged(st, "me", res === true, Date.now()).events);
+              if (res === null) board.say("AIで確認{かくにん}できなかったよ（不正解{ふせいかい}になるよ）", "ng");
             } else push(r.events);
           },
           quit: showMenu

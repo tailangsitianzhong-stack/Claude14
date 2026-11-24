@@ -111,3 +111,17 @@
 .geo-pop { right: 6px; }
 .geo-regions { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
 .geo-region { min-width: 0; padding: 1px 0; font-size: .62rem; }
+
+/* 早押し */
+.geo-q.small { font-size: .85rem; color: var(--ink-soft); }
+.geo-btext { min-height: 8.5em; margin: 4px 0; padding: 10px 12px; font-size: 1.15rem; line-height: 1.9; text-align: left; background: #fff; border: 4px solid var(--ink); border-radius: 18px; word-break: break-all; }
+.geo-btext .inv { color: transparent; }
+.geo-bstatus { min-height: 1.8em; margin: 2px 0 4px; font-size: .95rem; line-height: 1.8; }
+.geo-press {
+  display: block; width: 100%; min-height: 76px; margin: 2px 0 6px; font: inherit; font-size: 1.8rem; color: #fff; background: var(--red);
+  border: 4px solid var(--ink); border-radius: 22px; box-shadow: 0 5px 0 rgba(74, 52, 16, .45); cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none;
+}
+.geo-press:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(74, 52, 16, .45); }
+.geo-press[hidden] { display: none !important; }
+.geo-field { cursor: default; min-height: 0; margin-bottom: 4px; text-align: left; }
+.geo-field .shiri-text { min-height: 2.2rem; }

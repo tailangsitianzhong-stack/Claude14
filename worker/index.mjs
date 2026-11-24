@@ -7,7 +7,8 @@
  *   POST /judge   {"reading":"ぬいぐるみ","english":"plush"}
  *     → {"ok":true|false|null, "reason":"none|spelling|wrong_english|unavailable|config",
  *        "suggestion":"..."|null, "cached":true|false}
- *   POST /room/new[?game=kanken|nep] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
+ *   POST /geo/judge {"question","answer","yomi":[…],"input"}   地理クイズ(早押し)の答えの確認。→ {"ok":true|false|null,…}(worker/geo-judge.mjs)
+ *   POST /room/new[?game=kanken|nep|geo] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
  *   GET  /room/12345?cid=…  (WebSocket)     部屋に入る。進行は room-do.mjs
  *   GET  /health  → {"ok":true,"keySet":true,"model":"...","kv":true}（Origin不要。設定の確認用）
  *
@@ -19,6 +20,8 @@
  *   ALLOWED_ORIGINS  (var)    許可するオリジン(カンマ区切り)。"*" で全許可
  *   CACHE            (KV)     判定結果のキャッシュ（なくても動く）
  */
+
+import { judge as geoJudge } from "./geo-judge.mjs";
 
 const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
@@ -194,13 +197,25 @@ export async function handle(request, env, deps) {
   // ---- 友達対戦の部屋 ----
   if (request.method === "POST" && url.pathname === "/room/new") {
     const g = url.searchParams.get("game");
-    const game = g === "kanken" || g === "nep" ? g : "shiritori";   // 知らない値はしりとり
+    const game = g === "kanken" || g === "nep" || g === "geo" ? g : "shiritori";   // 知らない値はしりとり
     return newRoom(env, origin, game);
   }
   const roomMatch = url.pathname.match(/^\/room\/(\d{5})$/);
   if (roomMatch && request.headers.get("Upgrade") === "websocket") {
     if (!env.ROOMS) return json({ error: "rooms_unavailable" }, 501, origin);
     return env.ROOMS.get(env.ROOMS.idFromName(roomMatch[1])).fetch(request);   // 部屋へつなぐ
+  }
+
+  // ---- 地理クイズ(早押し)の答えの確認 ----
+  if (request.method === "POST" && url.pathname === "/geo/judge") {
+    let payload;
+    try {
+      const raw = await request.text();
+      if (raw.length > MAX_BODY_CHARS) return json({ error: "too_large" }, 413, origin);
+      payload = JSON.parse(raw);
+    } catch (_) { return json({ error: "bad_json" }, 400, origin); }
+    const r = await geoJudge(env, payload, doFetch);
+    return json(r, r.reason === "invalid_input" ? 400 : 200, origin);
   }
 
   if (request.method !== "POST" || url.pathname !== "/judge") {
