@@ -70,3 +70,34 @@ test("部屋: 抜けた人を待たない。戻っても、その問題は答え
   L.join(st, c, st.g.startedAt + 20); C.returned(st, c, st.g.startedAt + 20);
   assert.equal(C.calc(st, c, { text: "1" }, st.g.startedAt + 30).error, "sit_out");
 });
+
+// アラームの再現(room-do.mjs の alarm() と同じ手順)。だれも接続していない部屋で、アラームが鳴り続けないこと
+function alarmFires(st, mod, hours) {
+  let now = T0 + 4000, fires = 0, alarm = L.safeAlarm(st, now, mod.nextAlarm(st, now));
+  const end = T0 + hours * 3600e3;
+  for (let alive = true; alive && fires < 100000;) {
+    now = Math.max(now, alarm); if (now > end) break; fires++;
+    if (st.phase === "playing") {
+      const r = mod.timeout(st, now, seeded(fires));
+      if (r.ok) alarm = L.safeAlarm(st, now, mod.nextAlarm(st, now));
+      else if (L.abandoned(st, now)) alive = false;
+      else alarm = L.safeAlarm(st, now, mod.nextAlarm(st, now));
+    } else if (L.expired(st, now)) alive = false;
+    else alarm = L.safeAlarm(st, now, mod.nextAlarm(st, now));
+  }
+  return fires;
+}
+
+test("アラーム: ゲーム中に全員の通信が切れても、アラームが鳴り続けない(無料枠を使い切った原因の再発防止)", () => {
+  for (const mode of ["mix", "choice", "calc", "buzz"]) {
+    const st = playing(mode, 2);
+    for (const id of ids(st)) { L.disconnect(st, id, T0 + 4000); C.left(st, id, T0 + 4000); }
+    const fires = alarmFires(st, C, 3);
+    assert.ok(fires <= 3, `${mode}: 3時間で ${fires} 回`);
+    assert.equal(st.phase, "playing");                              // 片づけは alarm() が deleteAll する
+    assert.ok(L.abandoned(st, L.safeAlarm(st, T0 + 4000, C.nextAlarm(st, T0 + 4000))));   // 片づける時刻にアラームが来る
+  }
+  // 期限が過去のままでも、5秒より短い間隔では鳴らさない
+  assert.equal(L.safeAlarm({ phase: "lobby", players: [{ connected: true }] }, 1000, 0), 1000 + L.MIN_ALARM_GAP_MS);
+  assert.equal(L.safeAlarm({ phase: "lobby", players: [{ connected: true }] }, 1000, 1500), 1500);   // 近い期限はそのまま
+});

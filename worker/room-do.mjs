@@ -24,8 +24,9 @@ import { judge as chemJudge } from "./chem-judge.mjs";
 
 const MAX_MESSAGE = 2000;
 
-/** 次にアラームを鳴らす時刻。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
-const nextAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : st.game === "chem" ? C.nextAlarm(st, now) : L.nextAlarm(st, now));
+/** 次にアラームを鳴らす時刻(生の値)。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
+const rawAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : st.game === "chem" ? C.nextAlarm(st, now) : L.nextAlarm(st, now));
+const nextAlarmOf = (st, now) => L.safeAlarm(st, now, rawAlarmOf(st, now));
 
 /** ゲーム中に通信が切れた / 戻ったときの進め方(待たずに進める。戻ってもその問題の解答権はない) */
 const onLeft = (st, id, now) => (st.game === "chem" ? C.left(st, id, now) : st.game === "geo" ? G.left(st, id, now) : st.game === "nep" ? N.left(st, id, now) : st.game === "kanken" ? K.left(st, id, now) : L.left(st, id, now));

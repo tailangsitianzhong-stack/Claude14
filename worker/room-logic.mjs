@@ -266,7 +266,7 @@ export function returned(st, id, now) {
 
 /** ゲーム中なのに、だれも戻らないまま長く(30分)たった部屋 */
 export function abandoned(st, now) {
-  return st.phase === "playing" && !st.players.some((p) => p.connected) && now >= st.updatedAt + 30 * 60 * 1000;
+  return st.phase === "playing" && !st.players.some((p) => p.connected) && now >= st.updatedAt + ABANDON_MS;
 }
 
 /** ゲーム終了後に、同じメンバーでもう一度(ロビーへ戻る) */
@@ -286,6 +286,21 @@ export function nextAlarm(st, now) {
   if (st.phase === "playing" && st.turnEndsAt != null) return st.turnEndsAt;
   const anyone = st.players.some((p) => p.connected);
   return st.updatedAt + (anyone ? 2 * 60 * 60 * 1000 : 10 * 60 * 1000);
+}
+
+export const ABANDON_MS = 30 * 60 * 1000;      // abandoned() と同じ
+export const MIN_ALARM_GAP_MS = 5000;           // アラームの最短の間隔
+
+/**
+ * 実際にセットするアラーム時刻。
+ * ・ゲーム中にだれも接続していない(時計が止まっている)部屋は、片づける時刻まで鳴らさない。
+ *   以前は、止まった時計の「期限」が過去のまま返り、アラームが即座に鳴り続けて(30分間)、
+ *   Durable Objects の無料枠(1日のリクエスト数)を使い切る原因になった。
+ * ・期限が過去のまま(進めない状態)でも、すぐには鳴らさない(安全装置)。
+ */
+export function safeAlarm(st, now, raw) {
+  if (st.phase === "playing" && !st.players.some((p) => p.connected)) return st.updatedAt + ABANDON_MS;
+  return raw > now ? raw : now + MIN_ALARM_GAP_MS;
 }
 
 /** 部屋を片づけてよいか(アラーム時) */
