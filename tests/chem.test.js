@@ -59,7 +59,7 @@ test("計算テンプレート: 何度つくっても、正解の数と途中式
     for (let i = 0; i < 120; i++) {
       const q = Calc.build(t, rng);
       assert.ok(Number.isFinite(q.priv.ans), t.id);
-      assert.ok(q.pub.text.length > 10 && !/NaN|undefined|Infinity/.test(q.pub.text + q.priv.steps.join("")), t.id + q.pub.text);
+      assert.ok(q.pub.text.length > 10 && !/\bNaN\b|undefined|Infinity/.test(q.pub.text + q.priv.steps.join("")), t.id + q.pub.text);
       assert.ok(q.priv.steps.length >= 1);
       assert.ok(Calc.check(Calc.show(q.priv.ans, q.priv.sig), q.priv), `${t.id}: ${q.priv.ans}`);
       assert.equal(Calc.check("xyz", q.priv), false);
@@ -152,4 +152,43 @@ test("進行: 通信が切れた人は待たない(地理クイズと同じ)。�
   E.back(st, "c", 5000);
   E.tick(st, 99999, rng);
   assert.equal(E.calc(st, "c", "1", 100000).ok, true);        // 次の問題からは答えられる
+});
+
+test("計算の検算: 問題文の数字だけを取り出して、別の式で計算しなおした答えと、テンプレートの正解が一致する(代表的な問題)", () => {
+  const num = (s) => Number(String(s).replace(/,/g, ""));
+  const rng = seeded(77);
+  const get = (id) => Calc.TEMPLATES.find((t) => t.id === id);
+  const near = (a, b, rel = 1e-3) => Math.abs(a - b) <= Math.abs(b) * rel + 1e-9;
+  for (let i = 0; i < 60; i++) {
+    let q = Calc.build(get("heat-capacity"), rng), m = /水 (\d+) g .* ([\d.]+) ℃/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[1]) * 4.2 * num(m[2]) / 1000), "heat-capacity");
+    q = Calc.build(get("rate-average"), rng); m = /([\d]+) 秒間に ([\d.]+) mol\/L から ([\d.]+) mol\/L/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, (num(m[2]) - num(m[3])) / num(m[1])), "rate-average");
+    q = Calc.build(get("ideal-gas-pressure"), rng); m = /([\d.]+) mol の理想気体を、([\d.]+) L の容器に入れて (\d+) K/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[1]) * 8.3 * num(m[3]) / num(m[2])), "ideal-gas");
+    q = Calc.build(get("boyle-charles"), rng); m = /圧力 ([\d.]+)×10\^5 Pa、温度 (\d+) K で体積 ([\d.]+) L の気体を、圧力 ([\d.]+)×10\^5 Pa、温度 (\d+) K/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[3]) * num(m[1]) * num(m[5]) / (num(m[4]) * num(m[2]))), "boyle-charles");
+    q = Calc.build(get("half-life"), rng); m = /半減期が (\d+) 分.*最初 ([\d.]+) mol\/L であった。(\d+) 分後/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[2]) * 0.5 ** (num(m[3]) / num(m[1]))), "half-life");
+    q = Calc.build(get("faraday-mass"), rng); m = /([\d.]+) A の電流で (\d+) 秒間.*原子量 (\w+)=(\d+)/.exec(q.pub.text);
+    const nE = { Cu: 2, Ag: 1, Ni: 2 }[m[3]];
+    assert.ok(near(q.priv.ans, num(m[1]) * num(m[2]) / 9.65e4 / nE * num(m[4])), "faraday");
+    q = Calc.build(get("dilution"), rng); m = /([\d.]+) mol\/L の水溶液 (\d+) mL に水を加えて、([\d.]+) mol\/L/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[1]) * num(m[2]) / num(m[3]) - num(m[2])), "dilution");
+    q = Calc.build(get("neutralization-volume"), rng); m = /([\d.]+) mol\/L の(.+?)（\[\[(\w+)\]\]）(\d+) mL を中和するのに、([\d.]+) mol\/L の(.+?)（\[\[([\w()]+)\]\]）/.exec(q.pub.text);
+    const val = { HCl: 1, H2SO4: 2, CH3COOH: 1, HNO3: 1, NaOH: 1, "Ba(OH)2": 2, KOH: 1 };
+    assert.ok(near(q.priv.ans, val[m[3]] * num(m[1]) * num(m[4]) / (val[m[7]] * num(m[5]))), "neutralization");
+    q = Calc.build(get("ph-strong-base"), rng); m = /([\d.]+) mol\/L の.*?（\[\[(\S+?)\]\]）水溶液/.exec(q.pub.text);
+    const k = { NaOH: 1, "Ca(OH)2": 2, KOH: 1 }[m[2]];
+    assert.ok(Math.abs(q.priv.ans - (14 + Math.log10(num(m[1]) * k))) < 0.01, "ph-strong-base");
+    q = Calc.build(get("solubility-crystals"), rng); m = /高温で (\d+) g\/100 g 水、低温で (\d+) g\/100 g 水.*飽和水溶液 (\d+) g/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[3]) * (num(m[1]) - num(m[2])) / (100 + num(m[1]))), "solubility");
+    q = Calc.build(get("osmotic-pressure"), rng); m = /([\d.]+) mol\/L の非電解質水溶液の、(\d+) K/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[1]) * 8.3 * num(m[2])), "osmotic");
+    q = Calc.build(get("lattice-density"), rng); m = /一辺は ([\d.]+)×10\^−8 cm.*原子の数は (\d+)、原子量は (\d+)/.exec(q.pub.text);
+    assert.ok(near(q.priv.ans, num(m[2]) * num(m[3]) / (6.0e23 * (num(m[1]) * 1e-8) ** 3)), "lattice");
+    q = Calc.build(get("freezing-point"), rng); m = /水 (\d+) g に (\S+?)（\[\[(\S+?)\]\]、式量 ([\d.]+)）([\d.]+) g/.exec(q.pub.text);
+    const iF = { C6H12O6: 1, C12H22O11: 1, NaCl: 2, CaCl2: 3 }[m[3]];
+    assert.ok(near(q.priv.ans, 1.85 * (num(m[5]) / num(m[4])) / (num(m[1]) / 1000) * iF, 0.02), "freezing");
+  }
 });
