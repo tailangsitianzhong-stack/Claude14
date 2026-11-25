@@ -1,0 +1,60 @@
+# 英語(受動態・分詞・助動詞・冠詞・代名詞・会話表現・アクセント・和訳)  id|大学入試|問題文|正解|まちがい|解説
+en-m001|1|次の英文の（　）に入れるのに適切なのは？ This room（　）every day.|is cleaned|cleans|主語 This room は「掃除される」側なので、受動態（is cleaned）です。
+en-m002|2|次の英文の（　）に入れるのに適切なのは？ The bridge（　）in 1990.|was built|built|「建設された」という受動態で、過去の年を示しています。
+en-m003|2|次の英文の（　）に入れるのに適切なのは？ The window（　）by someone last night.|was broken|broke|窓は「割られた」側なので受動態です。
+en-m004|2|次の英文の（　）に入れるのに適切なのは？ English（　）all over the world.|is spoken|speaks|言語は「話される」側なので受動態です。
+en-m005|3|次の英文の（　）に入れるのに適切なのは？ The new school is（　）built next year.|going to be|going to|未来の受動態は be going to be + 過去分詞 です。
+en-m006|3|次の英文の（　）に入れるのに適切なのは？ The problem is（　）discussed now.|being|been|現在進行形の受動態は be being + 過去分詞 です。
+en-m007|2|次の英文の（　）に入れるのに適切なのは？ She was seen（　）into the room.|to enter|enter|知覚動詞の受動態では、原形不定詞が to 不定詞になります。
+en-m008|2|次の英文の（　）に入れるのに適切なのは？ The girl（　）on the stage is my sister.|singing|sung|「歌っている」（能動・進行）の意味なので現在分詞です。
+en-m009|2|次の英文の（　）に入れるのに適切なのは？ This is a book（　）by a famous writer.|written|writing|本は「書かれた」ので過去分詞です。
+en-m010|3|次の英文の（　）に入れるのに適切なのは？ （　）from a distance, the island looks like a whale.|Seen|Seeing|主語 the island は「見られる」側なので、過去分詞の分詞構文です。
+en-m011|3|次の英文の（　）に入れるのに適切なのは？ （　）his homework, he went out to play.|Having finished|Finishing|主節より前に終えているので、完了形の分詞構文です。
+en-m012|3|次の英文の（　）に入れるのに適切なのは？ Weather（　）, we will go on a picnic.|permitting|permitted|独立分詞構文です。天気が「許せば」の意味で、現在分詞を使います。
+en-m013|2|次の英文の（　）に入れるのに適切なのは？ You（　）smoke here. It is forbidden.|must not|don't have to|must not は禁止（〜してはいけない）、don't have to は不必要（〜しなくてよい）です。
+en-m014|2|次の英文の（　）に入れるのに適切なのは？ You（　）come tomorrow. It is a holiday.|don't have to|must not|don't have to は「〜する必要はない」です。
+en-m015|2|次の英文の（　）に入れるのに適切なのは？ She（　）be at home. I saw her at the station just now.|can't|must|can't は「〜のはずがない」、must は「〜に違いない」です。
+en-m016|2|次の英文の（　）に入れるのに適切なのは？ He（　）be tired. He has been working all day.|must|can't|must は「〜に違いない」です。
+en-m017|3|次の英文の（　）に入れるのに適切なのは？ You（　）have told me the truth.|should|can|should have + 過去分詞 は「〜すべきだったのに（しなかった）」です。
+en-m018|3|次の英文の（　）に入れるのに適切なのは？ He（　）have forgotten the key. I saw it in his bag.|can't|must|過去の推量です。「〜したはずがない」は can't have + 過去分詞 です。
+en-m019|2|次の英文の（　）に入れるのに適切なのは？ I'd（　）stay home than go out in the rain.|rather|better|would rather ~ than ... は「…するより〜したい」です。
+en-m020|2|次の英文の（　）に入れるのに適切なのは？ You'd better（　）a doctor.|see|to see|had better + 動詞の原形 です。
+en-m021|1|次の英文の（　）に入れるのに適切なのは？ I have（　）apple in my bag.|an|a|apple は母音で始まるので an を使います。
+en-m022|2|次の英文の（　）に入れるのに適切なのは？ （　）sun rises in the east.|The|A|太陽は1つしかないので the を使います。
+en-m023|2|次の英文の（　）に入れるのに適切なのは？ She plays（　）piano very well.|the|a|楽器の前には the をつけます。
+en-m024|2|次の英文の（　）に入れるのに適切なのは？ I usually go to school（　）bus.|by|in a|交通手段は by + 無冠詞の名詞です。
+en-m025|3|次の英文の（　）に入れるのに適切なのは？ He caught me by（　）arm.|the|my|体の一部をつかむ表現では、the をつけます（catch + 人 + by the + 体の部分）。
+en-m026|1|次の英文の（　）に入れるのに適切なのは？ This pen is（　）.|mine|my|名詞の前ではなく単独で使うので、所有代名詞 mine です。
+en-m027|2|次の英文の（　）に入れるのに適切なのは？ She looked at（　）in the mirror.|herself|her|主語と同じ人を指すときは再帰代名詞（herself）です。
+en-m028|2|次の英文の（　）に入れるのに適切なのは？ I don't like this shirt. Please show me（　）.|another|other|「別のもの（1つ）」は another です。
+en-m029|2|次の英文の（　）に入れるのに適切なのは？ I have two brothers. One is a doctor, and（　）is a teacher.|the other|another|2人のうち、残りの1人は the other です。
+en-m030|3|次の英文の（　）に入れるのに適切なのは？ I lost my pen, so I have to buy（　）.|one|it|不特定の「ペン（1本）」は one、同一のものは it です。
+en-m031|2|次の会話の（　）に入れるのに適切なのは？ A: Would you like some more tea? B:（　）|No, thank you. I'm full.|Yes, I'm full.|もうけっこうです、と断る返答です。
+en-m032|2|次の会話の（　）に入れるのに適切なのは？ A: Thank you very much. B:（　）|You're welcome.|Please.|お礼への返事は You're welcome. です。
+en-m033|2|次の会話の（　）に入れるのに適切なのは？ A: I'm sorry I'm late. B:（　）|That's all right.|Thank you.|謝罪への返事は That's all right. です。
+en-m034|2|次の会話の（　）に入れるのに適切なのは？ A: How about going to the movies? B:（　）|Sounds good.|Yes, I do.|提案への返事は Sounds good. などです。
+en-m035|2|次の会話の（　）に入れるのに適切なのは？ A: May I speak to Ms. Brown? B:（　）|Speaking.|It's me speaking is.|電話で「私です」は Speaking. です。
+en-m037|3|次の会話の（　）に入れるのに適切なのは？ A: I'm afraid I can't come to the party. B:（　）|That's too bad.|That's good.|断られたことへの残念な気持ちは That's too bad. です。
+en-m038|1|アクセントが第2音節にあるのは？|decide|image|decide は de-CIDE（第2音節）、image は IM-age（第1音節）です。
+en-m039|2|アクセントが第2音節にあるのは？|photography|photograph|photography は pho-TOG-ra-phy（第2音節）、photograph は PHO-to-graph（第1音節）です。
+en-m040|2|アクセントが第3音節にあるのは？|economic|economy|economic は ec-o-NOM-ic（第3音節）、economy は e-CON-o-my（第2音節）です。
+en-m041|2|アクセントが第2音節にあるのは？|political|politics|political は po-LIT-i-cal（第2音節）、politics は POL-i-tics（第1音節）です。
+en-m042|2|アクセントが第2音節にあるのは？|prefer|preference|prefer は pre-FER（第2音節）、preference は PREF-er-ence（第1音節）です。
+en-m043|2|アクセントが第3音節にあるのは？|volunteer|company|volunteer は vol-un-TEER（第3音節）、company は COM-pa-ny（第1音節）です。
+en-m044|2|アクセントが第3音節にあるのは？|engineer|chocolate|engineer は en-gi-NEER（第3音節）、chocolate は CHOC-o-late（第1音節）です。
+en-m045|2|アクセントが第2音節にあるのは？|environment|necessary|environment は en-VI-ron-ment（第2音節）、necessary は NEC-es-sar-y（第1音節）です。
+en-m046|2|アクセントが第3音節にあるのは？|education|dictionary|education は ed-u-CA-tion（第3音節）、dictionary は DIC-tion-ar-y（第1音節）です。
+en-m047|2|アクセントが第2音節にあるのは？|career|capital|career は ca-REER（第2音節）、capital は CAP-i-tal（第1音節）です。
+en-m048|2|アクセントが第3音節にあるのは？|Japanese|Canada|Japanese は Jap-a-NESE（第3音節）、Canada は CAN-a-da（第1音節）です。
+en-m049|3|アクセントが第2音節にあるのは？|important|interesting|important は im-POR-tant（第2音節）、interesting は IN-ter-est-ing（第1音節）です。
+en-m050|3|アクセントが第3音節にあるのは？|generation|relative|generation は gen-er-A-tion（第3音節）、relative は REL-a-tive（第1音節）です。
+en-m051|2|次の日本語の意味を表す英文として適切なのは？ 私は彼が来るかどうか知りません。|I don't know if he will come.|I don't know if will he come.|間接疑問は、if + 主語 + 動詞 の語順です。名詞節の if（〜かどうか）には未来形も使えます。
+en-m052|2|次の日本語の意味を表す英文として適切なのは？ 彼は私に、いつ帰るのかと尋ねた。|He asked me when I would go home.|He asked me when would I go home.|間接疑問の語順は、疑問詞 + 主語 + 動詞 です。
+en-m053|3|次の日本語の意味を表す英文として適切なのは？ 私が駅に着いたときには、電車はもう出てしまっていた。|When I got to the station, the train had already left.|When I got to the station, the train already left.|着いた時点より前に出発していたので過去完了です。
+en-m054|3|次の日本語の意味を表す英文として適切なのは？ 彼女は、私がそれを知っているかのように話した。|She talked as if I knew it.|She talked as if I know it.|as if + 仮定法過去で「まるで〜であるかのように」です（主節が過去なので、時制もそろえます）。
+en-m055|2|次の日本語の意味を表す英文として適切なのは？ 私は毎朝、散歩する習慣がある。|I am in the habit of taking a walk every morning.|I am in the habit of take a walk every morning.|be in the habit of -ing で「〜する習慣がある」です（of は前置詞）。
+en-m056|3|次の日本語の意味を表す英文として適切なのは？ 彼はあまりに疲れていて、歩くことができなかった。|He was so tired that he could not walk.|He was so tired that he could not to walk.|so ~ that ... の that 節の中では、助動詞のあとに動詞の原形を使います。
+en-m057|3|次の日本語の意味を表す英文として適切なのは？ 彼がそんなことを言うなんて、ばかなことだ。|It was foolish of him to say such a thing.|It was foolish for him to say such a thing.|人の性質を表す形容詞（foolish）のあとは of + 人 + to 不定詞 です。
+en-m058|3|次の日本語の意味を表す英文として適切なのは？ 彼女はピアノの先生になるために、ドイツへ行った。|She went to Germany to become a piano teacher.|She went to Germany for become a piano teacher.|目的を表す to 不定詞です（for のあとに動詞は続きません）。
+en-m059|2|次の日本語の意味を表す英文として適切なのは？ 窓が開いたままだった。|The window was left open.|The window was left opening.|leave + O + C の受動態です。C は形容詞の open。
+en-m060|2|次の日本語の意味を表す英文として適切なのは？ 私は、自分の名前を呼ばれた。|I had my name called.|I had called my name.|have + もの + 過去分詞 で「〜される」（受け身の被害・経験）を表します。

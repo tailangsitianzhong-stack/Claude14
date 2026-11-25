@@ -1,0 +1,22 @@
+/* ===== 二択クイズ(メニュー・対戦画面は css/geo.css の .geo-* を共通で使う) ===== */
+.duo-subj { margin: 2px 0 4px; font-weight: bold; color: var(--ink-soft); text-align: center; font-size: .95rem; }
+.duo-subj small { font-weight: normal; padding: 1px 8px; border-radius: 999px; background: #ffe9a3; }
+.duo-q { min-height: 3.6em; display: flex; align-items: center; justify-content: center; text-align: center; }
+.duo-mat { margin-bottom: 6px; }
+.duo-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; max-height: 36vh; margin: 4px 0 8px; border: 4px solid var(--ink-soft); border-radius: 16px; overflow: hidden; background: #8fb4ff; }
+.duo-stage[hidden] { display: none; }
+.duo-stage canvas { width: 100%; height: 100%; display: block; touch-action: manipulation; }
+.duo-ready { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: bold; color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, .4); pointer-events: none; }
+.duo-ready[hidden] { display: none; }
+.duo-choices { margin: 6px 0; }
+.duo-choice { min-height: 64px; font-size: 1rem; line-height: 1.5; }
+.duo-choice:disabled { opacity: 1; }
+.duo-choice.is-picked { box-shadow: 0 0 0 3px rgba(239, 91, 76, .35); }
+.duo-explain { margin: 4px 0 0; font-size: .92rem; color: var(--ink-soft); }
+.duo-lives { color: #e5484d; font-size: .75rem; letter-spacing: -1px; margin-left: 2px; }
+.duo-streak { font-size: .75rem; margin-left: 3px; }
+.mp-chip.is-out { opacity: .45; filter: grayscale(.8); }
+.duo-subjects .geo-opt { min-width: 5.2em; }
+.duo-q:has(.duo-sent) { flex-direction: column; gap: 4px; }
+.duo-ins { font-size: .85rem; color: var(--ink-soft); }
+.duo-sent { font-size: 1.15rem; font-weight: bold; line-height: 1.6; }

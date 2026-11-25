@@ -1,0 +1,23 @@
+# 英語(不定詞・時制の一致・強調・倒置・話法など)  id|大学入試|問題文|正解|まちがい|解説
+en-n001|2|次の英文の（　）に入れるのに適切なのは？ I have a lot of work（　）.|to do|doing|名詞を修飾する形容詞用法の不定詞です（する「べき」仕事）。
+en-n002|2|次の英文の（　）に入れるのに適切なのは？ She has a friend（　）with.|to talk|talking|a friend to talk with は「話し相手」です。with の目的語は friend なので、talk with が成り立つ形です。
+en-n003|3|次の英文の（　）に入れるのに適切なのは？ He studied hard,（　）to fail the exam.|only|but|only to ~ は「（結局）〜するだけだった」という結果を表します。
+en-n004|2|次の英文の（　）に入れるのに適切なのは？ I think（　）he is right.|that|what|think の目的語になる名詞節を導く that です（省略可）。
+en-n005|2|次の英文の（　）に入れるのに適切なのは？ He said that he（　）busy.|was|is|主節が過去（said）なので、従属節も過去形にそろえます（時制の一致）。
+en-n006|3|次の英文の（　）に入れるのに適切なのは？ The teacher said that the earth（　）round.|is|was|不変の真理は、主節が過去でも現在形で表します。
+en-n007|3|次の英文の（　）に入れるのに適切なのは？ It was Tom（　）broke the window.|who|what|It was ~ that/who ... は強調構文です。人を強調するときは who（または that）。
+en-n008|3|次の英文の（　）に入れるのに適切なのは？ Never（　）I seen such a beautiful sight.|have|I have|否定語が文頭に出ると、疑問文と同じ語順（助動詞 + 主語）の倒置になります。
+en-n009|3|次の英文の（　）に入れるのに適切なのは？ Only then（　）I realize my mistake.|did|I did|only + 副詞語句が文頭に出ると倒置が起こります。
+en-n011|2|次の英文を間接話法にしたとき（　）に入るのは？ He said to me, "I am hungry." → He told me that he（　）hungry.|was|am|間接話法では、人称と時制を、伝える側に合わせて変えます。
+en-n012|2|次の英文の（　）に入れるのに適切なのは？ I couldn't（　）his name.|remember|remembering|助動詞 could のあとは動詞の原形です。
+en-n013|1|次の英文の（　）に入れるのに適切なのは？ She（　）English every day.|studies|study|主語が三人称単数で現在の習慣なので、studies です。
+en-n014|1|次の英文の（　）に入れるのに適切なのは？ （　）you like some tea?|Would|Do|Would you like ~? は丁寧な申し出の表現です。
+en-n016|3|次の英文の（　）に入れるのに適切なのは？ I wish I（　）taken your advice then.|had|have|過去の事実に反する願望は I wish + 過去完了（had + 過去分詞）です。
+en-n017|3|次の英文の（　）に入れるのに適切なのは？ （　）it not for water, nothing could live.|Were|Was|If it were not for ~ の倒置形は Were it not for ~ です。
+en-n018|3|次の英文の（　）に入れるのに適切なのは？ If you should（　）any trouble, please call me.|have|had|If ... should ~ は、起こりそうにないことを仮定する形で、動詞は原形です。
+en-n019|2|次の英文の（　）に入れるのに適切なのは？ The girl（　）to me is my cousin.|talking|talked|「話しかけている」（能動・進行）なので現在分詞です。
+en-n020|2|次の英文の（　）に入れるのに適切なのは？ The letter（　）in English was hard to read.|written|writing|手紙は「書かれた」ので過去分詞です。
+en-n021|3|次の英文の（　）に入れるのに適切なのは？ Tom, together with his friends,（　）going to the museum.|is|are|together with ~ はつけ足しで、動詞は主語（Tom）に合わせます。
+en-n022|3|次の英文の（　）に入れるのに適切なのは？ The teacher, as well as the students,（　）tired.|was|were|A as well as B では、動詞は A に合わせます。
+en-n023|2|次の英文の（　）に入れるのに適切なのは？ It takes two hours（　）the airport.|to get to|getting|It takes + 時間 + to 不定詞 の形です。
+en-n024|2|次の英文の（　）に入れるのに適切なのは？ He is（　）to be a good doctor.|likely|probable|be likely to ~ は「〜しそうだ」です。probable は人を主語にできません。

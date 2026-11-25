@@ -19,18 +19,19 @@ import * as K from "./kanken-room.mjs";
 import * as N from "./nep-room.mjs";
 import * as G from "./geo-room.mjs";
 import * as C from "./chem-room.mjs";
+import * as D from "./duo-room.mjs";
 import { judge as geoJudge } from "./geo-judge.mjs";
 import { judge as chemJudge } from "./chem-judge.mjs";
 
 const MAX_MESSAGE = 2000;
 
 /** 次にアラームを鳴らす時刻(生の値)。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
-const rawAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : st.game === "chem" ? C.nextAlarm(st, now) : L.nextAlarm(st, now));
+const rawAlarmOf = (st, now) => (st.game === "duo" ? D.nextAlarm(st, now) : st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : st.game === "chem" ? C.nextAlarm(st, now) : L.nextAlarm(st, now));
 const nextAlarmOf = (st, now) => L.safeAlarm(st, now, rawAlarmOf(st, now));
 
 /** ゲーム中に通信が切れた / 戻ったときの進め方(待たずに進める。戻ってもその問題の解答権はない) */
-const onLeft = (st, id, now) => (st.game === "chem" ? C.left(st, id, now) : st.game === "geo" ? G.left(st, id, now) : st.game === "nep" ? N.left(st, id, now) : st.game === "kanken" ? K.left(st, id, now) : L.left(st, id, now));
-const onReturned = (st, id, now) => (st.game === "chem" ? C.returned(st, id, now) : st.game === "geo" ? G.returned(st, id, now) : st.game === "nep" ? N.returned(st, id, now) : st.game === "kanken" ? K.returned(st, id, now) : L.returned(st, id, now));
+const onLeft = (st, id, now) => (st.game === "duo" ? D.left(st, id, now) : st.game === "chem" ? C.left(st, id, now) : st.game === "geo" ? G.left(st, id, now) : st.game === "nep" ? N.left(st, id, now) : st.game === "kanken" ? K.left(st, id, now) : L.left(st, id, now));
+const onReturned = (st, id, now) => (st.game === "duo" ? D.returned(st, id, now) : st.game === "chem" ? C.returned(st, id, now) : st.game === "geo" ? G.returned(st, id, now) : st.game === "nep" ? N.returned(st, id, now) : st.game === "kanken" ? K.returned(st, id, now) : L.returned(st, id, now));
 
 export class Room extends DurableObject {
   constructor(ctx, env) {
@@ -52,7 +53,7 @@ export class Room extends DurableObject {
 
   broadcast(st, events) {
     // 漢字検定・ネプリーグの部屋は、答えを取り除いた状態だけを端末に送る
-    const view = st.game === "kanken" ? K.publicState(st) : st.game === "nep" ? N.publicState(st) : st.game === "geo" ? G.publicState(st) : st.game === "chem" ? C.publicState(st) : st;
+    const view = st.game === "duo" ? D.publicState(st) : st.game === "kanken" ? K.publicState(st) : st.game === "nep" ? N.publicState(st) : st.game === "geo" ? G.publicState(st) : st.game === "chem" ? C.publicState(st) : st;
     const msg = JSON.stringify({ t: "state", state: view, events: events || [], now: Date.now() });
     for (const ws of this.ctx.getWebSockets()) {
       try { ws.send(msg); } catch (_) { /* 切れかけの接続は無視 */ }
@@ -67,7 +68,7 @@ export class Room extends DurableObject {
       if (await this.load()) return Response.json({ ok: false });
       const code = url.searchParams.get("code") || "";
       const game = url.searchParams.get("game");
-      const room = game === "kanken" ? K.createRoom(code, Date.now()) : game === "nep" ? N.createRoom(code, Date.now()) : game === "geo" ? G.createRoom(code, Date.now()) : game === "chem" ? C.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
+      const room = game === "duo" ? D.createRoom(code, Date.now()) : game === "kanken" ? K.createRoom(code, Date.now()) : game === "nep" ? N.createRoom(code, Date.now()) : game === "geo" ? G.createRoom(code, Date.now()) : game === "chem" ? C.createRoom(code, Date.now()) : L.createRoom(code, Date.now());
       await this.save(room);
       return Response.json({ ok: true });
     }
@@ -110,7 +111,15 @@ export class Room extends DurableObject {
     const now = Date.now();
 
     let res;
-    if (st.game === "chem") {
+    if (st.game === "duo") {
+      switch (m.t) {
+        case "settings": res = D.setSettings(st, id, m.settings, now); break;
+        case "start":    res = D.start(st, id, now); break;
+        case "choose":   res = D.choose(st, id, m, now); break;
+        case "rematch":  res = D.rematch(st, id, now); break;
+        default: return;
+      }
+    } else if (st.game === "chem") {
       switch (m.t) {
         case "settings": res = C.setSettings(st, id, m.settings, now); break;
         case "start":    res = C.start(st, id, now); break;
@@ -220,7 +229,7 @@ export class Room extends DurableObject {
     if (!st) return;
     const now = Date.now();
     if (st.phase === "playing") {
-      const r = st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : st.game === "geo" ? G.timeout(st, now) : st.game === "chem" ? C.timeout(st, now) : L.timeout(st, now);
+      const r = st.game === "duo" ? D.timeout(st, now) : st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : st.game === "geo" ? G.timeout(st, now) : st.game === "chem" ? C.timeout(st, now) : L.timeout(st, now);
       if (r.ok) { await this.save(st); this.broadcast(st, r.events); }
       else if (L.abandoned(st, now)) {                       // だれも戻らないまま長く経った部屋は片づける
         for (const ws of this.ctx.getWebSockets()) { try { ws.close(1000, "expired"); } catch (_) {} }

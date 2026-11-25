@@ -1,0 +1,84 @@
+# 英語(語彙・熟語・前置詞・紛らわしい語)  id|大学入試|問題文|正解|まちがい|解説
+en-v001|2|次の英文の（　）に入れるのに適切なのは？ The weather can（　）our mood.|affect|effect|affect は動詞「影響する」、effect は名詞「影響・効果」です。
+en-v002|2|次の英文の（　）に入れるのに適切なのは？ Smoking has a bad（　）on health.|effect|affect|have an effect on ~ で「〜に影響がある」です。effect は名詞。
+en-v003|3|次の英文の（　）に入れるのに適切なのは？ She（　）on the sofa all afternoon.|lay|laid|lie（横たわる）の過去形は lay です。laid は lay（〜を置く）の過去形です。
+en-v004|2|次の英文の（　）に入れるのに適切なのは？ The sun（　）in the east.|rises|raises|rise は「昇る」（自動詞）、raise は「〜を上げる」（他動詞）です。
+en-v005|1|次の英文の（　）に入れるのに適切なのは？ Can I（　）your pen?|borrow|lend|borrow は「借りる」、lend は「貸す」です。
+en-v006|1|次の英文の（　）に入れるのに適切なのは？ Could you（　）me your pen?|lend|borrow|lend は「貸す」です。
+en-v007|1|次の英文の（　）に入れるのに適切なのは？ He（　）me an interesting story.|told|said|tell + 人 + もの の形をとるのは tell です。say は人を直接目的語にとれません。
+en-v008|1|次の英文の（　）に入れるのに適切なのは？ She can（　）three languages.|speak|talk|言語を話すときは speak を使います。
+en-v009|1|次の英文の（　）に入れるのに適切なのは？ I（　）to music every day.|listen|hear|意識して聞くのは listen to ~、自然に耳に入るのは hear です。
+en-v010|2|次の英文の（　）に入れるのに適切なのは？ I heard my name（　）, but I saw no one.|called|calling|hear + 目的語 + 過去分詞 で「〜されるのが聞こえる」です。
+en-v011|3|次の英文の（　）に入れるのに適切なのは？ This is an（　）car, so it saves gas.|economical|economic|economical は「経済的な・節約になる」、economic は「経済の」です。
+en-v012|3|次の英文の（　）に入れるのに適切なのは？ The government announced a new（　）policy.|economic|economical|economic は「経済の」です。
+en-v013|3|次の英文の（　）に入れるのに適切なのは？ It was a（　）event that changed the world.|historic|historical|historic は「歴史的に重要な」、historical は「歴史に関する」です。
+en-v014|3|次の英文の（　）に入れるのに適切なのは？ He wrote a（　）novel about the Edo period.|historical|historic|historical は「歴史上の・歴史に関する」です。
+en-v015|3|次の英文の（　）に入れるのに適切なのは？ She is very（　）to criticism.|sensitive|sensible|sensitive は「敏感な」、sensible は「分別のある」です。
+en-v016|3|次の英文の（　）に入れるのに適切なのは？ It was a（　）decision to wait.|sensible|sensitive|sensible は「分別のある・賢明な」です。
+en-v017|2|次の英文の（　）に入れるのに適切なのは？ The school（　）welcomed the new students.|principal|principle|principal は「校長・主要な」、principle は「原則」です。
+en-v018|2|次の英文の（　）に入れるのに適切なのは？ He is a man of high moral（　）.|principles|principals|principle（原則・主義）の複数形です。
+en-v019|3|次の英文の（　）に入れるのに適切なのは？ This medicine is very（　）against headaches.|effective|efficient|effective は「効果的な（効き目がある）」、efficient は「効率的な（むだがない）」です。
+en-v021|2|次の英文の（　）に入れるのに適切なのは？ I am（　）in history.|interested|interesting|interested は「興味をもっている」、interesting は「おもしろい」です。
+en-v022|2|次の英文の（　）に入れるのに適切なのは？ The movie was so（　）that I couldn't sleep.|exciting|excited|exciting は「わくわくさせる」、excited は「興奮した」です。
+en-v023|2|次の英文の（　）に入れるのに適切なのは？ The audience was（　）by the speech.|moved|moving|moved は「感動した」、moving は「感動的な」です。
+en-v024|1|次の英文の（　）に入れるのに適切なのは？ He is good（　）English.|at|in|be good at ~ で「〜が得意だ」です。
+en-v025|1|次の英文の（　）に入れるのに適切なのは？ She is afraid（　）spiders.|of|at|be afraid of ~ で「〜をこわがる」です。
+en-v026|2|次の英文の（　）に入れるのに適切なのは？ The meeting was put（　）until next week.|off|on|put off は「延期する」です。
+en-v027|2|次の英文の（　）に入れるのに適切なのは？ The game was called（　）because of the rain.|off|on|call off は「中止する」です。
+en-v028|2|次の英文の（　）に入れるのに適切なのは？ He takes（　）his father.|after|on|take after は「（親など）に似ている」です。
+en-v029|1|次の英文の（　）に入れるのに適切なのは？ Look（　）the word in a dictionary.|up|after|look up は「（辞書などで）調べる」です。
+en-v030|1|次の英文の（　）に入れるのに適切なのは？ We ran（　）of gas.|out|off|run out of ~ で「〜を使い果たす」です。
+en-v031|1|次の英文の（　）に入れるのに適切なのは？ She is looking（　）her baby sister.|after|for|look after は「世話をする」、look for は「探す」です。
+en-v032|2|次の英文の（　）に入れるのに適切なのは？ I can't put up（　）his rudeness.|with|to|put up with ~ は「〜をがまんする」です。
+en-v033|2|次の英文の（　）に入れるのに適切なのは？ Do you get along（　）your classmates?|with|to|get along with ~ は「〜と仲よくやっていく」です。
+en-v034|2|次の英文の（　）に入れるのに適切なのは？ The result depends（　）the weather.|on|in|depend on ~ で「〜しだいだ」です。
+en-v035|2|次の英文の（　）に入れるのに適切なのは？ Water consists（　）hydrogen and oxygen.|of|in|consist of ~ は「〜から成る」です。
+en-v036|3|次の英文の（　）に入れるのに適切なのは？ The talks resulted（　）failure.|in|from|result in ~ は「〜という結果になる」、result from ~ は「〜が原因だ」です。
+en-v037|3|次の英文の（　）に入れるのに適切なのは？ The accident resulted（　）his carelessness.|from|in|result from ~ は「〜の結果として生じる（原因は〜）」です。
+en-v038|2|次の英文の（　）に入れるのに適切なのは？ This book is different（　）that one.|from|than|be different from ~ で「〜と異なる」です。
+en-v039|2|次の英文の（　）に入れるのに適切なのは？ He is married（　）a nurse.|to|with|be married to ~ で「〜と結婚している」です。
+en-v040|3|次の英文の（　）に入れるのに適切なのは？ She apologized（　）him for being late.|to|for|apologize to 人 for ~ の形です。
+en-v041|2|次の英文の（　）に入れるのに適切なのは？ （　）his illness, he went to school.|Despite|Despite of|despite は前置詞で、of はつきません（in spite of ~ と同じ意味）。
+en-v042|2|次の英文の（　）に入れるのに適切なのは？ （　）the heavy rain, the game was cancelled.|Because of|Because|because of ~ は前置詞句（名詞が続く）、because は接続詞（節が続く）です。
+en-v043|2|次の英文の（　）に入れるのに適切なのは？ （　）I know, he is honest.|As far as|As long as|as far as は「〜する範囲では」（知識・範囲）を表します。
+en-v044|2|次の英文の（　）に入れるのに適切なのは？ You can stay here（　）you keep quiet.|as long as|as far as|as long as は「〜しさえすれば（条件）」を表します。
+en-v045|2|次の英文の（　）に入れるのに適切なのは？ I'll be here（　）five o'clock.|until|by|until は「〜までずっと」（継続）、by は「〜までに」（期限）です。
+en-v046|2|次の英文の（　）に入れるのに適切なのは？ Please finish the work（　）five o'clock.|by|until|by は「〜までに」（期限）を表します。
+en-v047|2|次の英文の（　）に入れるのに適切なのは？ （　）the summer vacation, we went to Hokkaido.|During|While|during は前置詞（名詞が続く）、while は接続詞（節が続く）です。
+en-v048|2|次の英文の（　）に入れるのに適切なのは？ （　）I was sleeping, someone called me.|While|During|while は接続詞で、節（主語 + 動詞）が続きます。
+en-v050|2|次の英文の（　）に入れるのに適切なのは？ The treaty was signed（　）the two countries.|between|among|2つ（2者）の間は between を使います。
+en-v051|2|次の英文の（　）に入れるのに適切なのは？ She sat（　）me at the concert.|beside|besides|beside は「〜のそばに」、besides は「〜に加えて」です。
+en-v052|2|次の英文の（　）に入れるのに適切なのは？ （　）English, he speaks French and Spanish.|Besides|Beside|besides は「〜に加えて」です。
+en-v053|1|次の熟語の意味として適切なのは？ call off|中止する|延期する|call off は「中止する」、put off は「延期する」です。
+en-v054|1|次の熟語の意味として適切なのは？ put off|延期する|中止する|put off は「延期する」です。
+en-v055|2|次の熟語の意味として適切なのは？ turn down|断る|受け入れる|turn down は「（申し出などを）断る」です。
+en-v056|2|次の熟語の意味として適切なのは？ look into|調べる|見落とす|look into ~ は「〜を調査する」です。
+en-v057|2|次の熟語の意味として適切なのは？ come across|偶然出会う|渡って来る|come across ~ は「〜に偶然出会う」です。
+en-v058|3|次の熟語の意味として適切なのは？ make up for ~|〜を埋め合わせる|〜を作り上げる|make up for ~ は「〜の埋め合わせをする」です。
+en-v059|2|次の熟語の意味として適切なのは？ carry out|実行する|運び去る|carry out ~ は「〜を実行する」です。
+en-v060|2|次の熟語の意味として適切なのは？ get over|（病気・困難から）立ち直る|乗り換える|get over ~ は「〜を乗り越える・（病気など）から回復する」です。
+en-v061|3|次の熟語の意味として適切なのは？ account for ~|〜を説明する|〜を計算に入れない|account for ~ は「〜を説明する・〜の割合を占める」です。
+en-v062|3|次の熟語の意味として適切なのは？ bring about ~|〜を引き起こす|〜を連れ去る|bring about ~ は「〜を引き起こす」です。
+en-v063|2|次の熟語の意味として適切なのは？ in charge of ~|〜を担当して|〜に対して課金される|in charge of ~ は「〜を担当して・管理して」です。
+en-v064|2|次の熟語の意味として適切なのは？ on the other hand|他方では|その手を使って|on the other hand は「他方では・これに対して」です。
+en-v065|3|次の熟語の意味として適切なのは？ in terms of ~|〜の点から|〜という条件で|in terms of ~ は「〜の観点から・〜の点で」です。
+en-v066|2|次の単語の意味として適切なのは？ reluctant|気が進まない|熱心な|be reluctant to ~ は「〜するのに気が進まない」です。
+en-v067|2|次の単語の意味として適切なのは？ ambiguous|あいまいな|明白な|ambiguous は「あいまいな・2通りに解釈できる」です。
+en-v068|2|次の単語の意味として適切なのは？ inevitable|避けられない|不可能な|inevitable は「避けられない」です。
+en-v069|2|次の単語の意味として適切なのは？ obvious|明らかな|隠れた|obvious は「明らかな」です。
+en-v070|2|次の単語の意味として適切なのは？ vital|きわめて重要な|取るに足らない|vital は「（生命に関わるほど）きわめて重要な」です。
+en-v071|3|次の単語の意味として適切なのは？ mandatory|義務的な|任意の|mandatory は「義務的な・強制の」です。
+en-v072|2|次の単語の意味として適切なのは？ contemporary|現代の|古代の|contemporary は「現代の・同時代の」です。
+en-v073|3|次の単語の意味として適切なのは？ reluctantly|しぶしぶ|すぐに|reluctantly は「しぶしぶ」です。
+en-v074|3|次の単語の意味として適切なのは？ comprehensive|包括的な|理解しにくい|comprehensive は「包括的な・総合的な」です（理解力のある、は comprehensible と区別）。
+en-v075|3|次の単語の意味として適切なのは？ hesitate|ためらう|急ぐ|hesitate は「ためらう」です。
+en-v076|2|次の単語の意味として適切なのは？ eventually|ついには|偶然に|eventually は「ついに・結局は」です（偶然に、は accidentally）。
+en-v077|2|次の単語の意味として適切なのは？ actually|実際には|現在は|actually は「実は・実際には」で、「現在は」ではありません。
+en-v078|3|次の単語の意味として適切なのは？ sympathetic|同情的な|交響的な|sympathetic は「同情的な・思いやりのある」です。
+en-v079|3|次の単語の意味として適切なのは？ considerable|かなりの|思いやりのある|considerable は「かなりの」、considerate は「思いやりのある」です。
+en-v080|3|次の英語の反対の意味を表す語として適切なのは？ ancient|modern|primitive|ancient（古代の）の反対は modern（現代の）です。
+en-v081|2|次の英語の反対の意味を表す語として適切なのは？ accept|reject|expect|accept（受け入れる）の反対は reject（拒絶する）です。
+en-v082|2|次の英語の反対の意味を表す語として適切なのは？ increase|decrease|decorate|increase（増える）の反対は decrease（減る）です。
+en-v083|2|次の英語の反対の意味を表す語として適切なのは？ optimistic|pessimistic|realistic|optimistic（楽観的な）の反対は pessimistic（悲観的な）です。
+en-v084|3|次の英語の反対の意味を表す語として適切なのは？ temporary|permanent|temperate|temporary（一時的な）の反対は permanent（永続的な）です。
+en-v085|3|次の英語の反対の意味を表す語として適切なのは？ voluntary|compulsory|momentary|voluntary（自発的な）の反対は compulsory（強制的な）です。

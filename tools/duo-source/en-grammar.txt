@@ -1,0 +1,81 @@
+# 英語(文法・語法)  id|大学入試(1基礎 2標準 3発展)|問題文|正解|まちがい|解説
+en-g001|1|次の英文の（　）に入れるのに適切なのは？ I look forward to（　）you again.|seeing|see|look forward to の to は前置詞なので、動名詞（-ing）が続きます。
+en-g002|1|次の英文の（　）に入れるのに適切なのは？ She enjoys（　）to music.|listening|to listen|enjoy は動名詞だけを目的語にとります。
+en-g003|1|次の英文の（　）に入れるのに適切なのは？ He decided（　）abroad.|to study|studying|decide は不定詞（to + 動詞の原形）を目的語にとります。
+en-g004|2|次の英文の（　）に入れるのに適切なのは？ I'm used to（　）up early.|getting|get|be used to の to は前置詞なので、動名詞が続きます（慣れている）。
+en-g005|2|次の英文の（　）に入れるのに適切なのは？ I used to（　）in Osaka.|live|living|used to + 動詞の原形は「以前は〜したものだ・〜していた」です。
+en-g006|2|次の英文の（　）に入れるのに適切なのは？ Don't forget（　）the door when you leave.|to lock|locking|forget to ~ は「〜するのを忘れる」（これからすること）。forget -ing は「〜したことを忘れる」です。
+en-g007|2|次の英文の（　）に入れるのに適切なのは？ I remember（　）him at the party last year.|meeting|to meet|remember -ing は「〜したことを覚えている」です。
+en-g008|2|次の英文の意味として適切なのは？ He stopped to talk to her.|立ち止まって彼女に話しかけた|彼女と話すのをやめた|stop to ~ は「〜するために立ち止まる」、stop -ing は「〜するのをやめる」です。
+en-g009|2|次の英文の（　）に入れるのに適切なのは？ It is no use（　）over spilt milk.|crying|to cry|It is no use -ing は「〜しても無駄だ」です。
+en-g010|2|次の英文の（　）に入れるのに適切なのは？ She suggested that we（　）a taxi.|take|took|提案を表す動詞のあとの that 節では、動詞は原形（または should + 原形）です。
+en-g011|3|次の英文の（　）に入れるのに適切なのは？ I cannot help（　）at his joke.|laughing|to laugh|cannot help -ing は「〜せずにはいられない」です。
+en-g012|2|次の英文の（　）に入れるのに適切なのは？ He is said（　）a famous singer when he was young.|to have been|to be|主節より前の時点のことは、完了形の不定詞（to have been）で表します。
+en-g013|1|次の英文の（　）に入れるのに適切なのは？ Would you mind（　）the window?|opening|to open|mind は動名詞を目的語にとります。
+en-g014|3|次の英文の（　）に入れるのに適切なのは？ She was made（　）the room by her mother.|to clean|clean|使役動詞 make の受動態では、原形不定詞が to 不定詞になります。
+en-g015|1|次の英文の（　）に入れるのに適切なのは？ I'd like you（　）me.|to help|help|want / would like + 人 + to 不定詞 の形です。
+en-g016|1|次の英文の（　）に入れるのに適切なのは？ Let me（　）you the way.|show|to show|let + 人 + 動詞の原形 の形です。
+en-g017|1|次の英文の（　）に入れるのに適切なのは？ He is busy（　）his report.|writing|to write|be busy -ing は「〜するのに忙しい」です。
+en-g018|2|次の英文の（　）に入れるのに適切なのは？ I'm looking forward to（　）from you.|hearing|hear|to が前置詞なので、動名詞です。
+en-g019|2|次の英文の（　）に入れるのに適切なのは？ She asked me（　）the window.|to close|close|ask + 人 + to 不定詞 の形です。
+en-g020|2|次の英文の（　）に入れるのに適切なのは？ The teacher made the students（　）hard.|study|to study|使役動詞 make + 人 + 動詞の原形 の形です。
+en-g021|2|次の英文の（　）に入れるのに適切なのは？ She avoided（　）him.|meeting|to meet|avoid は動名詞を目的語にとります。
+en-g022|2|次の英文の（　）に入れるのに適切なのは？ I can't afford（　）a new car.|to buy|buying|afford は不定詞を目的語にとります。
+en-g023|2|次の英文の（　）に入れるのに適切なのは？ He admitted（　）the window.|breaking|to break|admit は動名詞を目的語にとります（認めた）。
+en-g024|3|次の英文の（　）に入れるのに適切なのは？ He seems（　）ill last week.|to have been|to be|過去のことについての推量は、完了形の不定詞（to have been）で表します。
+en-g025|3|次の英文の（　）に入れるのに適切なのは？ He is proud of（　）a doctor.|being|to be|前置詞 of のあとなので動名詞です。
+en-g026|2|次の英文の（　）に入れるのに適切なのは？ It is kind（　）you to help me.|of|for|人の性質を表す形容詞（kind, wise, foolish など）では、for ではなく of を使います。
+en-g027|2|次の英文の（　）に入れるのに適切なのは？ It is important（　）you to study hard.|for|of|人の性質ではなく「〜にとって重要」なので for を使います。
+en-g028|2|次の英文の（　）に入れるのに適切なのは？ He is too tired（　）walk.|to|for|too ~ to ... は「あまりに〜で…できない」です。
+en-g029|2|次の英文の（　）に入れるのに適切なのは？ It was（　）a nice day that we went out.|such|so|such a + 形容詞 + 名詞 + that ... の形です（so は so + 形容詞 + a + 名詞）。
+en-g030|2|次の英文の（　）に入れるのに適切なのは？ He was（　）tired that he fell asleep at once.|so|such|so + 形容詞 + that ... の形です。
+en-g031|2|次の英文の（　）に入れるのに適切なのは？ I had my watch（　）on the train.|stolen|steal|have + もの + 過去分詞 で「〜される（被害）」を表します。
+en-g032|3|次の英文の（　）に入れるのに適切なのは？ She could not make herself（　）in English.|understood|understand|make oneself understood は「自分の考えを理解してもらう」です。
+en-g033|3|次の英文の（　）に入れるのに適切なのは？ The doctor demanded that he（　）smoking.|stop|stops|要求を表す動詞のあとの that 節では、動詞は原形です。
+en-g034|2|次の英文の（　）に入れるのに適切なのは？ I like tennis. — So（　）I.|do|am|前の文の動詞（like）に合わせて do を使います（So + 助動詞 + 主語）。
+en-g035|3|次の英文の（　）に入れるのに適切なのは？ She doesn't smoke. — Neither（　）I.|do|am|否定の文に同意するときは Neither + 助動詞 + 主語。前の文の動詞は一般動詞の否定なので do です。
+en-g036|2|次の英文の（　）に入れるのに適切なのは？ There（　）a lot of students in the room.|were|was|主語は a lot of students（複数）なので were です。
+en-g037|3|次の英文の（　）に入れるのに適切なのは？ A number of students（　）absent today.|are|is|a number of ~ は「たくさんの〜」で複数扱いです。
+en-g038|3|次の英文の（　）に入れるのに適切なのは？ The number of students（　）increasing.|is|are|the number of ~ は「〜の数」で単数扱いです。
+en-g039|2|次の英文の（　）に入れるのに適切なのは？ Each of the students（　）a dictionary.|has|have|each は単数扱いです。
+en-g040|2|次の英文の（　）に入れるのに適切なのは？ The police（　）looking for the thief.|are|is|police は複数扱いです。
+en-g041|2|次の英文の（　）に入れるのに適切なのは？ Mathematics（　）my favorite subject.|is|are|学問名の -ics は単数扱いです。
+en-g042|3|次の英文の（　）に入れるのに適切なのは？ Either you or he（　）wrong.|is|are|either A or B は、動詞を B（近い主語）に合わせます。
+en-g043|2|次の英文の（　）に入れるのに適切なのは？ I have（　）money with me.|little|few|money は数えられない名詞なので little を使います。
+en-g044|2|次の英文の（　）に入れるのに適切なのは？ There were（　）people at the party.|few|little|people は数えられる名詞なので few を使います。
+en-g045|2|次の英文の（　）に入れるのに適切なのは？ This is the book（　）I bought yesterday.|which|what|先行詞 the book があるので関係代名詞 which です。what は先行詞を含みます。
+en-g046|2|次の英文の（　）に入れるのに適切なのは？ I know the man（　）wife is a doctor.|whose|who|「その人の妻」と所有を表すので whose です。
+en-g047|2|次の英文の（　）に入れるのに適切なのは？ This is the house（　）I was born.|where|which|関係副詞 where は in which と同じ働きです（which だけなら in が必要）。
+en-g048|2|次の英文の（　）に入れるのに適切なのは？ This is（　）I wanted to say.|what|that|what は先行詞を含み「〜こと・もの」を表します。
+en-g049|3|次の英文の（　）に入れるのに適切なのは？ He is the only person（　）can solve the problem.|that|which|先行詞が人で、only がついているので that を使います（which は人に使えません）。
+en-g050|2|次の英文の（　）に入れるのに適切なのは？ I'll tell you the reason（　）he was late.|why|what|reason を先行詞とする関係副詞は why です。
+en-g051|2|次の英文の（　）に入れるのに適切なのは？ I'll call you as soon as I（　）home.|get|will get|時を表す副詞節では、未来のことも現在形で表します。
+en-g052|2|次の英文の（　）に入れるのに適切なのは？ If it（　）tomorrow, we will stay home.|rains|will rain|条件を表す副詞節では、未来のことも現在形で表します。
+en-g053|3|次の英文の（　）に入れるのに適切なのは？ Not only he（　）I was surprised.|but also|and also|not only A but also B の形です。
+en-g054|2|次の英文の（　）に入れるのに適切なのは？ He worked hard（　）he might pass the exam.|so that|in order to|so that + 主語 + may / can の形です（in order to のあとは動詞の原形）。
+en-g055|3|次の英文の（　）に入れるのに適切なのは？ Hardly had I arrived（　）it began to rain.|when|than|hardly ... when ... で「〜するとすぐに…」です（no sooner ... than と区別）。
+en-g056|3|次の英文の（　）に入れるのに適切なのは？ No sooner had he left（　）the phone rang.|than|when|no sooner ... than ... です。
+en-g057|3|次の英文の（　）に入れるのに適切なのは？ It was not until midnight（　）he came back.|that|when|It was not until ... that ... は「…して初めて〜」を表す強調構文です。
+en-g058|2|次の英文のほぼ同じ意味になるのは？ Unless you hurry, you will miss the train. = If you（　）hurry, you will miss the train.|don't|do|unless = if ... not です。
+en-g059|1|次の英文の（　）に入れるのに適切なのは？ I have lived here（　）2010.|since|for|起点を表すときは since を使います。
+en-g060|1|次の英文の（　）に入れるのに適切なのは？ I have lived here（　）ten years.|for|since|期間を表すときは for を使います。
+en-g061|2|次の英文の（　）に入れるのに適切なのは？ When（　）you arrive in Tokyo?|did|have|疑問詞 when は現在完了と一緒に使えません。過去形を使います。
+en-g062|1|次の英文の（　）に入れるのに適切なのは？ I（　）him yesterday.|saw|have seen|yesterday は過去を表すので、過去形です。
+en-g063|2|次の英文の（　）に入れるのに適切なのは？ By the time you get there, the train（　）.|will have left|will leave|By the time ... までには、未来完了で「〜してしまっているだろう」を表します。
+en-g064|2|次の英文の（　）に入れるのに適切なのは？ He（　）in Paris when the war broke out.|was living|has lived|過去のある時点で進行中だったことは、過去進行形です。
+en-g065|1|次の英文の（　）に入れるのに適切なのは？ I（　）this book three times.|have read|am reading|three times（3回）という経験は、現在完了で表します。
+en-g066|2|次の英文の（　）に入れるのに適切なのは？ If I（　）you, I would accept the offer.|were|am|現在の事実に反する仮定は、仮定法過去（If + 過去形, 主語 + would + 原形）です。
+en-g067|2|次の英文の（　）に入れるのに適切なのは？ If I（　）harder, I would have passed the exam.|had studied|studied|過去の事実に反する仮定は、仮定法過去完了（If + had + 過去分詞）です。
+en-g068|2|次の英文の（　）に入れるのに適切なのは？ I wish I（　）a bird.|were|am|I wish + 仮定法過去で「〜ならいいのに」です。
+en-g069|3|次の英文の（　）に入れるのに適切なのは？ She talks as if she（　）everything.|knew|knows|as if + 仮定法過去で「まるで〜のように」（実際は知らない）。
+en-g070|3|次の英文の（　）に入れるのに適切なのは？ It is high time you（　）to bed.|went|go|It is (high) time + 主語 + 過去形 で「もう〜する時間だ」です。
+en-g071|3|次の英文の（　）に入れるのに適切なのは？ Had it not been for your help, I（　）failed.|would have|would|仮定法過去完了の倒置です。主節は would have + 過去分詞。
+en-g072|2|次の英文の（　）に入れるのに適切なのは？ The train（　）when we got to the station.|had already left|already left|到着より前に出発済みなので、過去完了（大過去）です。
+en-g073|1|次の英文の（　）に入れるのに適切なのは？ He is（　）than I.|taller|more tall|tall は短い語なので、-er をつけて比較級にします。
+en-g074|1|次の英文の（　）に入れるのに適切なのは？ This is the（　）book I have ever read.|most interesting|more interesting|the + 最上級 + 名詞 + I have ever read の形です。
+en-g075|2|次の英文の（　）に入れるのに適切なのは？ The more you study,（　）you learn.|the more|more|the + 比較級, the + 比較級 で「〜すればするほど…」です。
+en-g076|2|次の英文の（　）に入れるのに適切なのは？ She is（　）taller than I.|much|very|比較級を強めるときは much を使います（very は使えません）。
+en-g077|3|次の英文が「君が愚かでないのと同様に、彼も愚かではない」の意味になるのは？ He is no（　）a fool than you are.|more|less|no more A than B は「Bでないのと同様にAでない」です（no less は「〜と同じくらい〜だ」）。
+en-g078|2|次の英文の（　）に入れるのに適切なのは？ English is spoken（　）many countries.|in|at|国など広い場所には in を使います。
+en-g079|2|次の英文の（　）に入れるのに適切なのは？ I have no idea（　）to do.|what|that|no idea what to do で「何をすべきかわからない」です。
+en-g080|2|次の英文の（　）に入れるのに適切なのは？ Do you know（　）he lives?|where|which|間接疑問は、疑問詞 + 主語 + 動詞 の語順です。

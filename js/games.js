@@ -59,6 +59,15 @@ window.GAMES = [
     unmount() { window.ChemGame.unmount(); }
   },
   {
+    id: "duo",
+    title: "二択{にたく}クイズ",
+    icon: "🚃",
+    desc: "トロッコで分{わ}かれ道{みち}へ！英語{えいご}・化学{かがく}・物理{ぶつり}・地理{ちり}の二択{にたく}に挑戦{ちょうせん}",
+    ready: true,
+    mount(root) { window.DuoGame.mount(root); },
+    unmount() { window.DuoGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",

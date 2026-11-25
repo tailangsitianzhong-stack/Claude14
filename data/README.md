@@ -51,6 +51,13 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 大学入試の問題: `ex`（1=基礎 / 2=標準 / 3=発展）。大学入試だけの問題は `xo`。
 - 詳しくは `docs/chem.md`。
 
+## duo.js（二択クイズ）
+`tools/build-duo.mjs` が生成します（直接編集しないでください。元は `tools/duo-source/` と `tools/geo-source/wb.json`）。
+- 英語・物理は**オリジナルの問題**です（過去問の文章は使っていません）。地理の統計の比較は、World Bank Open Data（CC BY 4.0）の近年の値から自動で作っています。
+- 化学・地理の二択は、`chem.js`・`geo.js` の問題を、ゲームを始める時に変換したものです（データは増えません）。
+- 3D は Three.js r128（MIT License, © 2010-2021 Three.js Authors）を `js/vendor/three.min.js` に同梱しています。
+- 詳しくは `docs/duo.md`。
+
 ## kanji.js（ミニ漢字検定）
 `tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
 

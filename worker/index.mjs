@@ -9,7 +9,7 @@
  *        "suggestion":"..."|null, "cached":true|false}
  *   POST /geo/judge {"question","answer","yomi":[…],"input"}   地理クイズ(早押し)の答えの確認。→ {"ok":true|false|null,…}(worker/geo-judge.mjs)
  *   POST /chem/judge {"question","answer","yomi":[…],"forms":[…],"input"}   化学クイズ(早押し)の答えの確認。→ 同じ形(worker/chem-judge.mjs)
- *   POST /room/new[?game=kanken|nep|geo|chem] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
+ *   POST /room/new[?game=kanken|nep|geo|chem|duo] → {"code":"12345"}   友達対戦の部屋を作る(5桁)。game 省略=しりとり
  *   GET  /room/12345?cid=…  (WebSocket)     部屋に入る。進行は room-do.mjs
  *   GET  /health  → {"ok":true,"keySet":true,"model":"...","kv":true}（Origin不要。設定の確認用）
  *
@@ -207,7 +207,7 @@ export async function handle(request, env, deps) {
   // ---- 友達対戦の部屋 ----
   if (request.method === "POST" && url.pathname === "/room/new") {
     const g = url.searchParams.get("game");
-    const game = g === "kanken" || g === "nep" || g === "geo" || g === "chem" ? g : "shiritori";   // 知らない値はしりとり
+    const game = g === "kanken" || g === "nep" || g === "geo" || g === "chem" || g === "duo" ? g : "shiritori";   // 知らない値はしりとり
     return newRoom(env, origin, game);
   }
   const roomMatch = url.pathname.match(/^\/room\/(\d{5})$/);

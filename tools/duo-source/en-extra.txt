@@ -1,0 +1,41 @@
+# 英語(つなぎ言葉・慣用表現・品詞・書きかえ)  id|大学入試|問題文|正解|まちがい|解説
+en-x001|2|次の英文の（　）に入れるのに適切なのは？ He studied hard.（　）, he failed the exam.|However|Therefore|前後が逆の内容なので、逆接の However（しかし）です。
+en-x002|2|次の英文の（　）に入れるのに適切なのは？ It was raining heavily.（　）, we cancelled the picnic.|Therefore|However|原因と結果の関係なので、Therefore（だから）です。
+en-x003|2|次の英文の（　）に入れるのに適切なのは？ I like coffee;（　）, my sister prefers tea.|on the other hand|as a result|対比を表すので on the other hand（その一方で）です。
+en-x004|2|次の英文の（　）に入れるのに適切なのは？ （　）, I believe that the plan is good. (最後に結論を述べる)|In conclusion|In addition|最後にまとめるときは In conclusion（結論として）です。
+en-x005|2|次の英文の（　）に入れるのに適切なのは？ Many animals are in danger.（　）, pandas and tigers are at risk.|For example|In contrast|具体例を挙げるときは For example（たとえば）です。
+en-x006|3|次の英文の（　）に入れるのに適切なのは？ The test was difficult.（　）, most students passed it.|Nevertheless|Moreover|予想に反する内容なので、逆接の Nevertheless（それにもかかわらず）です。
+en-x007|3|次の英文の（　）に入れるのに適切なのは？ He is kind.（　）, he is very wise.|Moreover|However|情報を付け加えるので Moreover（そのうえ）です。
+en-x008|3|次の英文の（　）に入れるのに適切なのは？ I was tired.（　）, I went to bed early.|So|But|原因と結果なので So（だから）です。
+en-x009|1|次の英語表現の意味として適切なのは？ a piece of cake|朝飯前|ケーキ1切れ|a piece of cake は「とても簡単なこと」を表す慣用表現です。
+en-x010|2|次の英語表現の意味として適切なのは？ break the ice|緊張をほぐす|氷を割る|break the ice は「（初対面の）緊張をほぐす」です。
+en-x011|2|次の英語表現の意味として適切なのは？ once in a blue moon|めったに〜ない|満月の夜に|once in a blue moon は「ごくまれに」です。
+en-x012|3|次の英語表現の意味として適切なのは？ spill the beans|秘密をうっかりもらす|豆をこぼす|spill the beans は「秘密をもらす」です。
+en-x013|3|次の英語表現の意味として適切なのは？ cost an arm and a leg|非常に高くつく|手足を失う|cost an arm and a leg は「（値段が）とても高い」です。
+en-x014|3|次の英語表現の意味として適切なのは？ under the weather|体調が悪い|天気の下で|under the weather は「体調がすぐれない」です。
+en-x015|3|次の英語表現の意味として適切なのは？ beat around the bush|遠回しに言う|茂みをたたく|beat around the bush は「（要点を避けて）遠回しに言う」です。
+en-x016|3|次の英語表現の意味として適切なのは？ kill two birds with one stone|一石二鳥|2羽の鳥を殺す|「1つの行動で2つの目的を果たす」ことを表します。
+en-x017|3|次の英語表現の意味として適切なのは？ hit the books|猛勉強する|本をたたく|hit the books は「猛勉強する」という口語表現です。
+en-x018|3|次の英語表現の意味として適切なのは？ bite the bullet|つらいことをがまんして立ち向かう|弾丸にかみつく|bite the bullet は「（いやなことを）覚悟して受け入れる」です。
+en-x019|2|次の英文の（　）に入れるのに適切なのは？ She spoke（　）, so I could understand her.|slowly|slow|動詞 spoke を修飾するので副詞 slowly です。
+en-x020|2|次の英文の（　）に入れるのに適切なのは？ He works（　）.|hard|hardly|hard は「熱心に」、hardly は「ほとんど〜ない」です。
+en-x021|2|次の英文の（　）に入れるのに適切なのは？ He（　）studies at home.|hardly|hard|hardly は「ほとんど〜ない」を表す準否定語で、全体では「彼はほとんど家で勉強しない」です。
+en-x022|3|次の英文の（　）に入れるのに適切なのは？ （　）students in my class like music.|Most|Almost|most は形容詞として名詞の前に置けますが、almost は副詞なので students の前には置けません（almost all students ならよい）。
+en-x023|2|次の英文の（　）に入れるのに適切なのは？ I haven't seen him（　）.|lately|late|lately は「最近」、late は「遅く」です。
+en-x024|2|次の英文の（　）に入れるのに適切なのは？ He made a wise（　）.|decision|decide|a wise に続くので名詞 decision です（decide は動詞）。
+en-x025|2|次の英文の（　）に入れるのに適切なのは？ He is the（　）boy in his class.|tallest|taller|the + 最上級 の形です。He is taller than any other boy と同じ意味。
+en-x026|2|次の2つの英文がほぼ同じ意味になるように（　）を選ぶと？ He is too busy to help us. = He is so busy that he（　）help us.|can't|can|too ~ to ... は「あまりに〜で…できない」を表します。
+en-x027|2|次の2つの英文がほぼ同じ意味になるように（　）を選ぶと？ She is the smartest girl in the class. = No other girl in the class is（　）smart as she.|as|more|否定語 + as ~ as で最上級の意味を表せます。
+en-x028|3|次の2つの英文がほぼ同じ意味になるように（　）を選ぶと？ I was late because of the heavy snow. = The heavy snow（　）me late.|made|let|無生物主語で「〜が…させた」は made + 人 + 形容詞です。
+en-x029|2|次の英文の（　）に入れるのに適切なのは？ The book（　）I read yesterday was interesting.|which|who|先行詞が物なので which です。who は人に使います。
+en-x030|3|次の英文の（　）に入れるのに適切なのは？ She is the girl（　）I think is the best singer.|who|whom|関係詞が節の主語（is の主語）なので who（主格）です。I think は挿入です。
+en-x031|3|次の英文の（　）に入れるのに適切なのは？ This is the man（　）I talked to yesterday.|whom|which|先行詞が人で、talked to の目的語なので目的格の whom です。
+en-x032|2|次の英文の（　）に入れるのに適切なのは？ I have（　）been to Kyoto.|never|ever|have never been to ~ で「〜に行ったことがない」です。ever は疑問・条件などで使います。
+en-x033|2|次の英文の（　）に入れるのに適切なのは？ Have you（　）been to Kyoto?|ever|never|疑問文で「今までに」は ever です。
+en-x034|2|次の英文の（　）に入れるのに適切なのは？ He has（　）gone to Paris. He is not here now.|gone|been|have gone to ~ は「〜へ行ってしまった（今ここにいない）」、have been to ~ は「〜へ行ったことがある」です。
+en-x035|2|次の英文の（　）に入れるのに適切なのは？ I have（　）finished my homework.|already|yet|肯定文で「もう〜した」は already です（yet は否定・疑問）。
+en-x036|2|次の英文の（　）に入れるのに適切なのは？ I haven't finished my homework（　）.|yet|already|否定文で「まだ」は yet です。
+en-x037|3|次の英文の（　）に入れるのに適切なのは？ She asked me（　）I had finished the work.|whether|that|「〜かどうか」を表す名詞節は whether（または if）です。
+en-x038|3|次の英文の（　）に入れるのに適切なのは？ The fact（　）he was absent surprised me.|that|what|fact の内容を説明する同格の that 節です。
+en-x039|3|次の英文の（　）に入れるのに適切なのは？ （　）he will come or not is not clear.|Whether|If|主語になる名詞節では Whether を使います（If は主語にできません）。
+en-x040|3|次の英文の（　）に入れるのに適切なのは？ I was about to leave（　）he came in.|when|than|be about to ~ when ... で「〜しようとしたとき…」です。
