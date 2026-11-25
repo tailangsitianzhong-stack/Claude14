@@ -38,7 +38,7 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 地図の図形: Natural Earth（パブリックドメイン）。world-atlas（ISC）経由の世界の国と、admin-1 の日本の都道府県。
 - 国の隣接・面積・位置: world-countries（ODbL。出典表記が必要です。ゲーム内の「出典・クレジット」に載せています）。
 - 国の統計（人口構成・人口密度・都市人口率・1人あたり国民総所得・平均寿命など）: World Bank Open Data（CC BY 4.0）。
-- 雨温図の気温・降水量: NASA POWER の気候値（約50km四方の平均）。ずれの大きい都市は気温を補正しています。
+- 雨温図の気温・降水量: 各都市の観測の平年値（気象庁・各国の気象機関。英語版Wikipediaの気候表、CC BY-SA）。取れなかった4都市は NASA POWER の気候値（約50km四方の平均）を補正して使っています。
 - 写真: Wikimedia Commons（パブリックドメイン・CC0・CC BY・CC BY-SA）。写真ごとの作者・ライセンス・元ページは `geo.js` の `photos[].credit` にあり、ゲーム内に表示します。
 - 問題数: 早押し約630・地図約720・資料選択約1260（現地写真約250問を含む）（レベル1〜3がほぼ均等）。有名さの段階は `tools/geo-source/fame.txt`。
 - 大学入試の問題: 早押し261・地図268・資料選択884（`ex`=1〜3）。手書きの元は `tools/geo-source/exam-*.txt`。

@@ -28,7 +28,6 @@ fc-uyuni|3
 fc-halong|3
 fc-galapagos|3
 fc-moai|3
-fc-aurora|3
 fc-kegon|3
 fc-oirase|3
 fc-kamikochi|3

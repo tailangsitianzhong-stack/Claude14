@@ -604,9 +604,9 @@ test("大学入試: 統計の組み合わせ(ア〜ウ)は、国名の並びが�
     assert.equal(c.m.rows.length, 4);
     for (const r of c.m.rows) { assert.equal(r.length, 4); assert.ok(r.slice(1).every((v) => String(v).length > 0)); }
     assert.equal(new Set(c.c).size, 4, c.id);
-    const trio = c.c[0].split("・"); assert.equal(trio.length, 3);
+    const trio = c.c[0].split("／"); assert.equal(trio.length, 3);
     for (const t of trio) { assert.ok(names.has(t), t); assert.ok(c.q.includes(t), c.id); }
-    for (const w of c.c) assert.deepEqual([...w.split("・")].sort(), [...trio].sort(), c.id);        // 3か国の並べかえだけ
+    for (const w of c.c) assert.deepEqual([...w.split("／")].sort(), [...trio].sort(), c.id);        // 3か国の並べかえだけ
   }
 });
 
@@ -648,4 +648,67 @@ test("大学入試: 手書きの問題(早押し・地図・4択)は、答えが
   assert.ok(e.endsAt - e.startedAt === undefined || true);
   assert.ok((e.endsAt - T0) >= (a.endsAt - T0), "大学入試のほうが長い");
   assert.ok(rng() >= 0);
+});
+
+test("品質: 雨温図は観測の平年値にもとづく(NASAの格子データのずれを避ける)。ふだん知られている年降水量と大きく食いちがわない", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const normals = JSON.parse(fs.readFileSync(path.join(__dirname, "../tools/geo-source/normals.json"), "utf8"));
+  assert.ok(Object.keys(normals).length >= 65, "観測の平年値の都市 " + Object.keys(normals).length);
+  const ann = (id) => D.climate[id].p.reduce((a, b) => a + b, 0);
+  const avg = (id) => D.climate[id].t.reduce((a, b) => a + b, 0) / 12;
+  const within = (id, lo, hi, what = ann) => assert.ok(what(id) >= lo && what(id) <= hi, `${id}: ${what(id)}`);
+  within("tokyo", 1400, 1800); within("osaka", 1100, 1500); within("sapporo", 950, 1300); within("matsumoto", 900, 1200);
+  within("singapore", 2000, 2800); within("cairo", 0, 80); within("reykjavik", 700, 1100); within("vancouver", 1000, 1700);
+  within("yangon", 2400, 3200); within("yakutsk", 150, 320); within("verkhoyansk", 100, 260); within("anchorage", 300, 600);
+  within("bogota", 700, 1100); within("quito", 900, 1300); within("tokyo", 15, 17, avg); within("bogota", 12.5, 15, avg); within("quito", 13, 15.5, avg);
+  for (const [id, c] of Object.entries(D.climate)) { assert.equal(c.t.length, 12, id); assert.equal(c.p.length, 12, id); }
+});
+
+test("品質: 地図・早押しの問題文に、答えの名前が入っていない(手書き・自動の両方)", () => {
+  const cName = new Map(D.countries.map((c) => [c[0], c[1]])), pName = new Map(D.prefs.map((p) => [p[0], p[1]]));
+  for (const m of D.map) {
+    if (/^mn[p]?-/.test(m.id)) continue;                                  // 「地図で〇〇を選ぼう」は、名前を見て場所を探す問題
+    const n = (m.map === "japan" ? pName : cName).get(m.target), short = m.map === "japan" ? n.replace(/[都道府県]$/, "") : n;
+    assert.ok(short.length < 2 || !m.text.includes(short), `${m.id}: ${m.text}`);
+  }
+  for (const b of D.buzz) {
+    const a = b.ans.replace(/[（(].*$/, "");
+    if (/^[A-Za-z0-9]+$/.test(a) || a.length < 3) continue;
+    assert.ok(!b.text.includes(a), `${b.id}: ${b.text}`);
+  }
+});
+
+test("品質: 気候の名前を答える問題は、グラフから計算したケッペンの区分と食いちがわない都市だけを使う", () => {
+  const KG_OF = { "熱帯雨林気候": ["Af"], "熱帯モンスーン気候": ["Am"], "サバナ気候": ["Aw"], "砂漠気候": ["BW"], "ステップ気候": ["BS"], "地中海性気候": ["Cs"], "温暖湿潤気候": ["Cfa", "Cw"], "温暖冬季少雨気候": ["Cw"], "西岸海洋性気候": ["Cfb"], "冷帯(亜寒帯)湿潤気候": ["Df"], "冷帯冬季少雨気候": ["Dw"], "ツンドラ気候": ["ET"], "氷雪気候": ["EF"] };
+  const fs = require("node:fs"), path = require("node:path");
+  const lat = {};
+  for (const l of fs.readFileSync(path.join(__dirname, "../tools/geo-source/cities.txt"), "utf8").split("\n")) { if (!l || l[0] === "#") continue; const a = l.split("|"); lat[a[0]] = Number(a[4]); }
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  function kg(t, p, la) {
+    const ann = sum(p), T = sum(t) / 12, tmax = Math.max(...t), tmin = Math.min(...t);
+    const s = la >= 0 ? [3, 4, 5, 6, 7, 8] : [9, 10, 11, 0, 1, 2], w = la >= 0 ? [9, 10, 11, 0, 1, 2] : [3, 4, 5, 6, 7, 8];
+    const ps = s.reduce((a, i) => a + p[i], 0), pw = w.reduce((a, i) => a + p[i], 0);
+    const thr = 20 * T + (ps / ann >= 0.7 ? 280 : pw / ann >= 0.7 ? 0 : 140);
+    if (tmax < 10) return tmax < 0 ? "EF" : "ET";
+    if (ann < thr) return ann < thr / 2 ? "BW" : "BS";
+    if (tmin >= 18) { const pm = Math.min(...p); return pm >= 60 ? "Af" : pm >= 100 - ann / 25 ? "Am" : "Aw"; }
+    const psmin = Math.min(...s.map((i) => p[i])), psmax = Math.max(...s.map((i) => p[i])), pwmin = Math.min(...w.map((i) => p[i])), pwmax = Math.max(...w.map((i) => p[i]));
+    const dry = psmin < 40 && psmin < pwmax / 3 ? "s" : pwmin < psmax / 10 ? "w" : "f";
+    if (tmin > -3) return dry === "s" ? "Cs" : dry === "w" ? "Cw" : tmax >= 22 ? "Cfa" : "Cfb";
+    return dry === "w" ? "Dw" : "Df";
+  }
+  let n = 0;
+  for (const [id, c] of Object.entries(D.climate)) {
+    if (!c.ty || !KG_OF[c.ty]) continue;
+    n++;
+    assert.ok(KG_OF[c.ty].includes(kg(c.t, c.p, lat[id])), `${id}: ${c.ty} / ${kg(c.t, c.p, lat[id])}`);
+  }
+  assert.ok(n >= 50, "気候区分つきの都市 " + n);
+});
+
+test("品質: 国→首都の4択に、よくあるまちがい(オーストラリア→シドニーなど)が入っている", () => {
+  const c = D.choice.find((x) => x.id === "cc-aus");
+  assert.ok(c.c.includes("キャンベラ") && c.c.includes("シドニー"));
+  const g = D.choice.find((x) => x.id === "pc-10");
+  assert.ok(g.c.includes("前橋市") && g.c.includes("高崎市"));
 });

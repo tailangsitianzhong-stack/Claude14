@@ -144,11 +144,10 @@ japan|宇都宮ぎょうざ|JP-09|food
 japan|ほうとう|JP-19|food
 japan|信州そば|JP-20|food
 japan|紀州の梅|JP-30|food
-japan|みかん（生産量が全国上位）|JP-38|food
+japan|みかん（収穫量が全国一）|JP-30|food
 japan|りんご（生産量が全国一）|JP-02|food
 japan|さくらんぼ（佐藤錦）|JP-06|food
 japan|ぶどう（生産量が全国一）|JP-19|food
-japan|お茶（生産量が全国上位）|JP-22|food
 japan|宇治茶|JP-26|food
 japan|明太子|JP-40|food
 japan|有田焼|JP-41|food

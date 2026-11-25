@@ -29,7 +29,6 @@ kilimanjaro|TZA
 uluru|AUS
 canyon|USA
 uyuni|BOL
-aurora|ISL
 halong|VNM
 bali|IDN
 galapagos|ECU

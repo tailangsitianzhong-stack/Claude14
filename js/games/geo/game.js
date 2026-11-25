@@ -134,7 +134,7 @@
       loadData(false).then((data) => {
         if (!alive || !view.querySelector("#geo-cr")) return;
         view.querySelector("#geo-cr").outerHTML = `
-          <p class="note">地図: Natural Earth（パブリックドメイン）／ 国{くに}のデータ: world-countries（ODbL）／ 雨温図{うおんず}: NASA POWER の気候値{きこうち}（約50km四方{しほう}の平均{へいきん}。気象台{きしょうだい}の値{あたい}とは少{すこ}しちがいます）／ 国{くに}の統計{とうけい}: World Bank Open Data（CC BY 4.0）</p>
+          <p class="note">地図: Natural Earth（パブリックドメイン）／ 国{くに}のデータ: world-countries（ODbL）／ 雨温図{うおんず}: 各都市{かくとし}の平年値{へいねんち}（気象庁{きしょうちょう}・各国{かっこく}の気象機関{きしょうきかん}の観測{かんそく}。英語版{えいごばん}Wikipediaの気候表{きこうひょう}より。一部{いちぶ}の都市{とし}は NASA POWER の気候値{きこうち}）／ 国{くに}の統計{とうけい}: World Bank Open Data（CC BY 4.0）</p>
           <h4 class="menu-sub">写真{しゃしん}</h4>
           <ul class="geo-credits">${data.photos.map((p) => `<li><b>${esc(p.answer)}</b>: ${esc(p.credit.author)} / <a href="${esc(p.credit.page)}" target="_blank" rel="noopener">${esc(p.credit.title)}</a> / ${p.credit.licenseUrl ? `<a href="${esc(p.credit.licenseUrl)}" target="_blank" rel="noopener">${esc(p.credit.license)}</a>` : esc(p.credit.license)}</li>`).join("")}</ul>`;
         Ruby.apply(view);

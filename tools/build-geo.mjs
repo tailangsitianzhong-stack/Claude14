@@ -73,20 +73,44 @@ for (const a of prefs) for (const b of prefs) {
 
 /* ---------- 気候(雨温図) ---------- */
 const climRaw = JSON.parse(readFileSync(src("climate.json"), "utf8"));
-const fix = new Map(lines("climate-fix.txt").map((l) => { const [id, off, ty] = l.split("|"); return [id, { off: Number(off), ty: ty === "-" ? "" : ty }]; }));
+const fix = new Map(lines("climate-fix.txt").map((l) => { const [id, off, ty, pm] = l.split("|"); return [id, { off: Number(off), ty: ty === "-" ? "" : ty, pm: pm ? Number(pm) : 1 }]; }));
+// 観測にもとづく月別の平年値(気象庁・WMOなど。tools/fetch-geo-normals.mjs)があれば、NASAの格子データ(約50km四方)より優先する
+const normals = existsSync(src("normals.json")) ? JSON.parse(readFileSync(src("normals.json"), "utf8")) : {};
 const climate = {};
 const cityList = lines("cities.txt").map((l) => { const [id, ja, yomi, country, lat, lon, zone, lv] = l.split("|"); return { id, ja, yomi, country, lat: +lat, lon: +lon, zone: zone || "", lv: lv ? Number(lv) : 0 }; });
 for (const c of cityList) {
-  const raw = climRaw[c.id];
+  const raw = normals[c.id] || climRaw[c.id];
   if (!raw) { warn.push(`climate: ${c.id} のデータがない`); continue; }
-  const f = fix.get(c.id) || { off: 0, ty: "" };
+  const f = Object.assign({ off: 0, ty: "", pm: 1 }, fix.get(c.id));
+  if (normals[c.id]) { f.off = 0; f.pm = 1; }                              // 観測値は、補正しない
   climate[c.id] = {
     n: c.country === "JPN" || !cBy.has(c.country) ? c.ja : `${c.ja}（${cBy.get(c.country).ja}）`, ja: c.ja, y: c.yomi, c: c.country, z: c.zone, ty: f.ty, lv: c.lv,
-    t: raw.t.map((x) => Math.round((x + f.off) * 10) / 10), p: raw.p
+    t: raw.t.map((x) => Math.round((x + f.off) * 10) / 10), p: raw.p.map((x) => Math.round(x * f.pm))
   };
 }
 const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 const sum = (a) => a.reduce((x, y) => x + y, 0);
+
+/** 月別の気温・降水量から、ケッペンの気候区分(記号)を計算する。出題する気候の名前が、グラフから読み取れる内容と食いちがわないか調べるため */
+function koppen(t, p, lat) {
+  const ann = sum(p), T = mean(t), tmax = Math.max(...t), tmin = Math.min(...t);
+  const sumIdx = lat >= 0 ? [3, 4, 5, 6, 7, 8] : [9, 10, 11, 0, 1, 2], winIdx = lat >= 0 ? [9, 10, 11, 0, 1, 2] : [3, 4, 5, 6, 7, 8];
+  const ps = sumIdx.reduce((a, i) => a + p[i], 0), pw = winIdx.reduce((a, i) => a + p[i], 0);
+  const thr = 20 * T + (ps / ann >= 0.7 ? 280 : pw / ann >= 0.7 ? 0 : 140);
+  if (tmax < 10) return tmax < 0 ? "EF" : "ET";
+  if (ann < thr) return ann < thr / 2 ? "BW" : "BS";
+  if (tmin >= 18) { const pmin = Math.min(...p); return pmin >= 60 ? "Af" : pmin >= 100 - ann / 25 ? "Am" : "Aw"; }
+  const psmin = Math.min(...sumIdx.map((i) => p[i])), psmax = Math.max(...sumIdx.map((i) => p[i])), pwmin = Math.min(...winIdx.map((i) => p[i])), pwmax = Math.max(...winIdx.map((i) => p[i]));
+  const dry = psmin < 40 && psmin < pwmax / 3 ? "s" : pwmin < psmax / 10 ? "w" : "f";
+  if (tmin > -3) return dry === "s" ? "Cs" : dry === "w" ? "Cw" : tmax >= 22 ? "Cfa" : "Cfb";
+  return dry === "w" ? "Dw" : "Df";
+}
+const KG_OF = { "熱帯雨林気候": ["Af"], "熱帯モンスーン気候": ["Am"], "サバナ気候": ["Aw"], "砂漠気候": ["BW"], "ステップ気候": ["BS"], "地中海性気候": ["Cs"], "温暖湿潤気候": ["Cfa", "Cw"], "温暖冬季少雨気候": ["Cw"], "西岸海洋性気候": ["Cfb"], "冷帯(亜寒帯)湿潤気候": ["Df"], "冷帯冬季少雨気候": ["Dw"], "ツンドラ気候": ["ET"], "氷雪気候": ["EF"], "高山気候": [] };
+for (const [id, c] of Object.entries(climate)) {
+  if (!c.ty || c.ty === "高山気候") continue;
+  const k = koppen(c.t, c.p, (cityList.find((x) => x.id === id) || {}).lat || 0);
+  if (!(KG_OF[c.ty] || []).includes(k)) warn.push(`気候: ${id}(${c.n}) の区分「${c.ty}」と、データから計算した区分(${k})が合わない`);
+}
 
 /* ---------- 写真 ---------- */
 const creditsFile = src("photo-credits.json");
@@ -110,13 +134,15 @@ for (const l of [...lines("buzz-hand.txt"), ...lines("buzz-high.txt")]) {
 // 国の別名の読み
 const ALIAS = { USA: ["あめりか", "べいこく"], GBR: ["えいこく", "ゆーけー"], ARE: ["ゆーえーいー"], KOR: ["だいかんみんこく"], PRK: ["ちょうせんみんしゅしゅぎじんみんきょうわこく"], CHN: ["ちゅうかじんみんきょうわこく"], RUS: ["ろしあ"], CZE: ["ちぇこきょうわこく"], MMR: ["びるま"], CIV: ["あいぼりーこーすと"], SWZ: ["すわじらんど"], MKD: ["まけどにあ"], TLS: ["とるれすて"], FSM: ["みくろねしあ"], KNA: ["せんときっつねーびす"], DMA: ["どみにか"] };
 const AUTO_COUNTRIES = "RUS CAN USA CHN BRA AUS IND ARG KAZ DZA SAU MEX IDN LBY IRN MNG PER AGO MLI ZAF COL ETH BOL EGY TZA NGA VEN PAK TUR CHL ZMB MMR AFG SOM FRA ESP SWE THA IRQ PNG DEU FIN VNM MYS NOR POL ITA PHL NZL GBR ROU GRC BGD NPL ISL CUB KOR PRT CHE AUT NLD IRL LKA JOR UKR KEN MAR MDG KHM".split(" ");
+const EXCLAVE_BORDER = { "ESP-MAR": 1, "MAR-ESP": 1 };       // 飛び地(セウタ・メリリャ)だけで接している国境は、学校では扱わない
 const areaText = (km2) => (km2 >= 10000 ? `約${(km2 / 10000 >= 10 ? String(Math.round(km2 / 10000)) : (km2 / 10000).toFixed(1).replace(/\.0$/, ""))}万平方キロメートル` : `約${km2 >= 100 ? Math.round(km2 / 10) * 10 : Math.round(km2)}平方キロメートル`);
 for (const c of countries) {
   if (c.id === "JPN") continue;
   const w = wcBy.get(c.id);
-  const nb = (w.borders || []).map((b) => cBy.get(b) && cBy.get(b).ja).filter(Boolean);
+  const nb = (w.borders || []).filter((b) => !(c.id + "-" + b in EXCLAVE_BORDER)).map((b) => cBy.get(b) && cBy.get(b).ja).filter(Boolean);
   const border = nb.length === 0 ? "周りを海に囲まれた島国で、" : nb.length <= 4 ? `${nb.join("、")}と国境を接し、` : `${nb.length}か国と国境を接し、`;
-  const text = `この国は、${c.cont}にあり、${border}面積は${areaText(w.area)}で、首都は${c.cap}です。この国はどこでしょう？`;
+  const capText = c.cap.includes(c.ja) || c.ja.includes(c.cap) ? "首都の名前は国名と同じ(または国名をふくむ)です" : `首都は${c.cap}です`;   // 首都名が答えをふくむときは、答えが出てしまうので言いかえる
+  const text = `この国は、${c.cont}にあり、${border}面積は${areaText(w.area)}で、${capText}。この国はどこでしょう？`;
   buzz.push({ id: "c-" + c.id.toLowerCase(), cat: "world", sc: "world", lv: lvC(c.id), text, ans: c.ja, yomi: [hira(c.yomi), ...(ALIAS[c.id] || [])] });
 }
 const suffix = (ja) => ja.slice(-1);                                         // 都・道・府・県
@@ -124,7 +150,8 @@ const shortYomi = (p) => (p.id === "JP-01" ? [] : [p.yomi.replace(/(けん|ふ|�
 for (const p of prefs) {
   const nb = neighbors.get(p.id).map((n) => pBy.get(n).ja);
   const border = nb.length === 0 ? "他の都道府県と陸でつながっておらず、" : nb.length <= 5 ? `${nb.join("、")}と接し、` : `${nb.slice(0, 4).join("、")}など${nb.length}の都府県と接し、`;
-  const text = `この都道府県は、${p.region}地方にあり、${border}${suffix(p.ja)}庁所在地は${p.cap}です。この都道府県はどこでしょう？`;
+  const regionText = p.ja.startsWith(p.region) ? "日本の最北" : `${p.region}地方`;
+  const text = `この都道府県は、${regionText}にあり、${border}${suffix(p.ja)}庁所在地は${p.cap}です。この都道府県はどこでしょう？`;
   buzz.push({ id: "p-" + p.id.slice(3), cat: "japan", sc: "japan", lv: lvP(p.id), text, ans: p.ja, yomi: [p.yomi, ...shortYomi(p)] });
 }
 // 国の首都・都道府県の県庁所在地を答える(国名・県名がヒント)
@@ -144,6 +171,13 @@ if (new Set(buzz.map((b) => b.id)).size !== buzz.length) warn.push("buzz: id が
 /* ---------- 地図で選ぶ ---------- */
 const map = [];
 const r1 = rng(11);
+/** 問題文に、答えの名前(県は「県」などをのぞいた名前)が入っていないか */
+const leaksAnswer = (text, kind, id) => {
+  const n = kind === "japan" ? (pBy.get(id) || {}).ja : (cBy.get(id) || {}).ja;
+  if (!n) return false;
+  const short = kind === "japan" ? n.replace(/[都道府県]$/, "") : n;
+  return short.length >= 2 && text.includes(short);
+};
 for (const c of countries.filter((c) => c.cap !== c.ja && !c.cap.includes(c.ja) && !c.ja.includes(c.cap))) map.push({ id: "mc-" + c.id.toLowerCase(), map: "world", sc: "world", text: `首都が「${c.cap}」の国はどこでしょう？`, target: c.id, lv: lvC(c.id) });
 for (const c of countries) map.push({ id: "mn-" + c.id.toLowerCase(), map: "world", sc: "world", text: `地図で「${c.ja}」を選ぼう！`, target: c.id, lv: lvC(c.id) });
 for (const p of prefs) map.push({ id: "mnp-" + p.id.slice(3), map: "japan", sc: "japan", text: `地図で「${p.ja}」を選ぼう！`, target: p.id, lv: lvP(p.id) });
@@ -155,6 +189,7 @@ for (const l of lines("map-hand.txt")) {
   } else {
     if (!pBy.has(a[2])) { warn.push(`map-hand: 知らない県 ${a[2]}`); continue; }
     const t = a[3] === "sight" ? `「${a[1]}」がある都道府県はどこでしょう？` : a[3] === "food" ? `「${a[1]}」で有名な都道府県はどこでしょう？` : `「${a[1]}」の産地として有名な都道府県はどこでしょう？`;
+    if (leaksAnswer(t, "japan", a[2])) continue;                              // 名所の名前に県名がふくまれる(鳥取砂丘→鳥取県)と、答えが出てしまう
     map.push({ id: "mj-" + map.length, map: "japan", sc: "japan", text: t, target: a[2], lv: Math.min(2, lvP(a[2])) });
   }
 }
@@ -247,13 +282,18 @@ for (const l of lines("stats.txt")) {
 // 国と首都・都道府県と県庁所在地の4択(国・県の知名度でレベルが変わる)
 const sameCont = (id) => countries.filter((x) => x.cont === cBy.get(id).cont && x.id !== id);
 const r4 = rng(51);
+// 「首都だと思いやすいが、ちがう」大きな都市(よくあるまちがい)。選択肢に1つ入れる
+const LURE_COUNTRY = { AUS: "シドニー", CAN: "トロント", BRA: "リオデジャネイロ", TUR: "イスタンブール", CHE: "チューリッヒ", USA: "ニューヨーク", CHN: "上海", IND: "ムンバイ", NZL: "オークランド", NGA: "ラゴス", MMR: "ヤンゴン", PAK: "カラチ", TZA: "ダルエスサラーム", VNM: "ホーチミン", MAR: "カサブランカ", KAZ: "アルマトイ", ZAF: "ヨハネスブルク", CIV: "アビジャン", SAU: "ジッダ", NLD: "ロッテルダム", DEU: "フランクフルト", ITA: "ミラノ", ESP: "バルセロナ", PRT: "ポルト", SWE: "ヨーテボリ", KOR: "釜山", PHL: "セブ", IDN: "スラバヤ", EGY: "アレクサンドリア", ECU: "グアヤキル", BEL: "アントワープ", POL: "クラクフ", RUS: "サンクトペテルブルク", GBR: "マンチェスター", FRA: "マルセイユ", MEX: "グアダラハラ", ARG: "コルドバ", COL: "メデジン", CHL: "バルパライソ", PER: "クスコ", AUT: "ザルツブルク", TUN: "スファックス", DZA: "オラン", GHA: "クマシ", ETH: "ディレダワ", KEN: "モンバサ", UGA: "ジンジャ", THA: "チェンマイ", MYS: "ペナン", IRN: "イスファハン", IRQ: "バスラ", UZB: "サマルカンド", NOR: "ベルゲン", FIN: "タンペレ", DNK: "オーデンセ" };
+const LURE_PREF = { "JP-01": "函館市", "JP-03": "花巻市", "JP-04": "石巻市", "JP-05": "横手市", "JP-06": "酒田市", "JP-07": "郡山市", "JP-08": "つくば市", "JP-09": "日光市", "JP-10": "高崎市", "JP-11": "川越市", "JP-14": "川崎市", "JP-15": "長岡市", "JP-16": "高岡市", "JP-17": "輪島市", "JP-19": "富士吉田市", "JP-20": "松本市", "JP-21": "高山市", "JP-22": "浜松市", "JP-23": "豊田市", "JP-24": "四日市市", "JP-25": "彦根市", "JP-28": "姫路市", "JP-31": "米子市", "JP-32": "出雲市", "JP-33": "倉敷市", "JP-34": "福山市", "JP-35": "下関市", "JP-36": "鳴門市", "JP-37": "丸亀市", "JP-38": "今治市", "JP-40": "北九州市", "JP-41": "唐津市", "JP-44": "別府市", "JP-46": "指宿市", "JP-47": "名護市" };
 const okCap = (c) => c.cap !== c.ja && !c.cap.includes(c.ja) && !c.ja.includes(c.cap);
 for (const c of countries.filter(okCap)) {
   const pool = sameCont(c.id).filter(okCap);
   const ds = shuffle(pool, r4).slice(0, 3);
   if (ds.length < 3) { warn.push(`cap ${c.id}: 選択肢が足りない`); continue; }
-  choice.push({ id: "cc-" + c.id.toLowerCase(), k: "cap", sc: "world", lv: lvC(c.id) === 3 ? 3 : 1,   // 4択なので、「国→首都」はふつうの知名度でもかんたん
-     q: `${c.ja}の首都は、次のうちどれでしょう？`, m: {}, c: [c.cap, ...ds.map((d) => d.cap)], a: 0 });
+  const lure = LURE_COUNTRY[c.id] && LURE_COUNTRY[c.id] !== c.cap ? LURE_COUNTRY[c.id] : null;
+  const capWrong = lure ? [lure, ...ds.slice(0, 2).map((d) => d.cap)] : ds.map((d) => d.cap);
+  choice.push({ id: "cc-" + c.id.toLowerCase(), k: "cap", sc: "world", lv: lvC(c.id) === 3 ? 3 : lure && lvC(c.id) === 2 ? 2 : 1,   // 4択なので、「国→首都」はふつうの知名度でもかんたん。よくあるまちがい(シドニーなど)を入れた、中くらいの知名度の国は、ふつう
+     q: `${c.ja}の首都は、次のうちどれでしょう？`, m: {}, c: [c.cap, ...capWrong], a: 0 });
   choice.push({ id: "cn-" + c.id.toLowerCase(), k: "cap", sc: "world", lv: lvC(c.id), q: `首都が${c.cap}の国は、次のうちどれでしょう？`, m: {}, c: [c.ja, ...ds.map((d) => d.ja)], a: 0 });
 }
 for (const p of prefs) {
@@ -261,7 +301,9 @@ for (const p of prefs) {
   const pool = near.length >= 3 ? near : prefs.filter((x) => x.id !== p.id);
   const ds = shuffle(pool, r4).slice(0, 3);
   const lv = p.ja.startsWith(p.cap.replace(/[市区]$/, "")) ? 1 : lvP(p.id) === 3 ? 3 : Math.min(2, lvP(p.id));
-  choice.push({ id: "pc-" + p.id.slice(3), k: "pref", sc: "japan", lv, q: `${p.ja}の${suffix(p.ja)}庁所在地は、次のうちどれでしょう？`, m: {}, c: [p.cap, ...ds.map((d) => d.cap)], a: 0 });
+  const pl = LURE_PREF[p.id] && LURE_PREF[p.id] !== p.cap ? LURE_PREF[p.id] : null;
+  const capWrong = pl ? [pl, ...ds.slice(0, 2).map((d) => d.cap)] : ds.map((d) => d.cap);
+  choice.push({ id: "pc-" + p.id.slice(3), k: "pref", sc: "japan", lv, q: `${p.ja}の${suffix(p.ja)}庁所在地は、次のうちどれでしょう？`, m: {}, c: [p.cap, ...capWrong], a: 0 });
   choice.push({ id: "pn-" + p.id.slice(3), k: "pref", sc: "japan", lv, q: `${suffix(p.ja)}庁所在地が${p.cap}の都道府県は、次のうちどれでしょう？`, m: {}, c: [p.ja, ...ds.map((d) => d.ja)], a: 0 });
 }
 // 基本の4択(手書き)
@@ -381,6 +423,8 @@ optLines("exam-choice.txt").forEach((l, i) => {                        // world/
   choice.push({ id: `xc-${i + 1}`, k: "basic", sc, lv: 3, ex: Number(ex), xo: 1, q, m: {}, c, a: 0 });
 });
 for (const list of [buzz, map, choice]) if (new Set(list.map((x) => x.id)).size !== list.length) warn.push("id が重複");
+for (const m of map) if (!/^mn[p]?-/.test(m.id) && leaksAnswer(m.text, m.map, m.target)) warn.push(`map ${m.id}: 問題文に答えの名前がある「${m.text.slice(0, 40)}」`);
+for (const b of buzz) { const a = b.ans.replace(/[（(].*$/, ""); if (!/^[A-Za-z0-9]+$/.test(a) && a.length >= 3 && b.text.includes(a)) warn.push(`buzz ${b.id}: 問題文に答えがある「${b.text.slice(0, 40)}」`); }
 
 /* ---------- 大学入試: 自動で作る資料選択 ---------- */
 {
@@ -429,14 +473,14 @@ for (const list of [buzz, map, choice]) if (new Set(list.map((x) => x.id)).size 
       const cols = shuffle(trio, rx);                                  // ア・イ・ウの国の並び
       const names = [...trio].sort().map((id) => cBy.get(id).ja);
       const L = ["ア", "イ", "ウ"];
-      const label = (perm) => perm.map((id) => cBy.get(id).ja).join("・");               // ア・イ・ウの順
+      const label = (perm) => perm.map((id) => cBy.get(id).ja).join("／");               // ア・イ・ウの順
       const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].map((p) => p.map((i) => cols[i]));
       const right = label(cols);
       const wrongs = shuffle(perms.map(label).filter((t) => t !== right), rx).slice(0, 3);
       trio.forEach((id) => { useCount[id + tier] = (useCount[id + tier] || 0) + 1; });
       choice.push({
         id: `xs-${++made}`, k: "combo", sc: "world", lv: 3, ex: tier, xo: 1,
-        q: `次の表のア〜ウは、${names.join("・")}のいずれかの国の統計です。ア・イ・ウの順に国名を並べた組み合わせとして正しいものを選びましょう。`,
+        q: `次の表のア〜ウは、${names.join("、")}のいずれかの国の統計です。ア・イ・ウの順に国名を並べた組み合わせとして正しいものを選びましょう。`,
         m: { cols: L, rows: inds.map(([k, lab, fmt]) => [lab, ...cols.map((id) => fmt(val(k, id)))]) }, c: [right, ...wrongs], a: 0
       });
       n++;
@@ -481,7 +525,7 @@ for (const list of [buzz, map, choice]) if (new Set(list.map((x) => x.id)).size 
 /* ---------- 出力 ---------- */
 const data = {
   version: 1,
-  source: "Natural Earth(パブリックドメイン)・world-countries(ODbL)・NASA POWER・World Bank Open Data(CC BY 4.0)・Wikimedia Commons(写真ごとの出典は credits)",
+  source: "Natural Earth(パブリックドメイン)・world-countries(ODbL)・各都市の平年値(気象庁など・英語版Wikipediaの気候表)・NASA POWER・World Bank Open Data(CC BY 4.0)・Wikimedia Commons(写真ごとの出典は credits)",
   countries: countries.map((c) => [c.id, c.ja, c.yomi, c.cont, c.cap, c.capYomi]),
   prefs: prefs.map((p) => [p.id, p.ja, p.yomi, p.cap, p.capYomi, p.region]),
   climate,
