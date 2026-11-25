@@ -1,7 +1,7 @@
 /* ===== 二択クイズ(メニュー・対戦画面は css/geo.css の .geo-* を共通で使う) ===== */
 .duo-subj { margin: 2px 0 4px; font-weight: bold; color: var(--ink-soft); text-align: center; font-size: .95rem; }
 .duo-subj small { font-weight: normal; padding: 1px 8px; border-radius: 999px; background: #ffe9a3; }
-.duo-q { min-height: 3.6em; display: flex; align-items: center; justify-content: center; text-align: center; }
+.duo-q { min-height: 3.6em; display: block; text-align: center; line-height: 1.9; overflow-wrap: anywhere; }      /* 文の途中に化学式(インライン)があるので、flex にしてはいけない */
 .duo-mat { margin-bottom: 6px; }
 .duo-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; max-height: 36vh; margin: 4px 0 8px; border: 4px solid var(--ink-soft); border-radius: 16px; overflow: hidden; background: #8fb4ff; }
 .duo-stage[hidden] { display: none; }
@@ -17,6 +17,6 @@
 .duo-streak { font-size: .75rem; margin-left: 3px; }
 .mp-chip.is-out { opacity: .45; filter: grayscale(.8); }
 .duo-subjects .geo-opt { min-width: 5.2em; }
-.duo-q:has(.duo-sent) { flex-direction: column; gap: 4px; }
+.duo-q:has(.duo-sent) { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .duo-ins { font-size: .85rem; color: var(--ink-soft); }
 .duo-sent { font-size: 1.15rem; font-weight: bold; line-height: 1.6; }
