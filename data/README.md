@@ -44,6 +44,13 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 大学入試の問題: 早押し261・地図268・資料選択884（`ex`=1〜3）。手書きの元は `tools/geo-source/exam-*.txt`。
 - 詳しくは `docs/geo.md`。
 
+## chem.js（化学クイズ）
+`tools/build-chem.mjs` が生成します（直接編集しないでください。元は `tools/chem-source/`）。
+- すべて**オリジナルの問題**です（過去問・教科書の文章は使っていません）。グラフ・構造式・周期表は、`js/games/chem/draw.js` が描く自前のSVGで、外部の画像やデータは使っていません。溶解度などの値は、理科年表などにある代表的な値（g/100 g 水）です。原子量は4桁の概数です。
+- 問題数: 早押し691・資料選択605（図の問題61）。計算は `js/games/chem/calc.js` の128テンプレート（数字を毎回変えて出す）。
+- 大学入試の問題: `ex`（1=基礎 / 2=標準 / 3=発展）。大学入試だけの問題は `xo`。
+- 詳しくは `docs/chem.md`。
+
 ## kanji.js（ミニ漢字検定）
 `tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
 
