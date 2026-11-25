@@ -170,14 +170,22 @@ function json(body, status, origin) {
 
 /** 5桁の部屋コードを新しく作る（使われていないコードが見つかるまで数回試す） */
 async function newRoom(env, origin, game) {
-  if (!env.ROOMS) return json({ error: "rooms_unavailable" }, 501, origin);
-  for (let i = 0; i < 10; i++) {
-    const code = String(10000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 90000));
-    const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
-    const res = await stub.fetch(`https://room/claim?code=${code}&game=${game}`, { method: "POST" });
-    if ((await res.json()).ok) return json({ code }, 200, origin);
+  if (!env.ROOMS) return json({ error: "rooms_unavailable", detail: "Durable Object(ROOMS)が設定されていません" }, 501, origin);
+  // 部屋(Durable Object)が例外を投げても、Cloudflare の素の 1101 エラーにせず、理由つきの JSON で返す
+  // (素のエラーには CORS ヘッダーが付かず、画面からは「通信できない」としか見えないため)
+  try {
+    for (let i = 0; i < 10; i++) {
+      const code = String(10000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 90000));
+      const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+      const res = await stub.fetch(`https://room/claim?code=${code}&game=${game}`, { method: "POST" });
+      if ((await res.json()).ok) return json({ code }, 200, origin);
+    }
+    return json({ error: "busy", detail: "空いている部屋番号が見つかりませんでした" }, 503, origin);
+  } catch (e) {
+    const detail = String((e && e.message) || e).slice(0, 300);
+    console.error("room_failed", game, detail);
+    return json({ error: "room_failed", game, detail }, 500, origin);
   }
-  return json({ error: "busy" }, 503, origin);
 }
 
 export async function handle(request, env, deps) {

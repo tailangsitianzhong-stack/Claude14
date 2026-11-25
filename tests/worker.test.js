@@ -200,3 +200,13 @@ test("Geminiへの指示: 地名・月・曜日などは正解にし、人名・
   assert.match(p, /Do NOT accept: names of ordinary people, company or brand names/);
   assert.ok(!/Do NOT accept: proper nouns/.test(p));              // 以前の「固有名詞は全部不可」ではなくなった
 });
+
+test("部屋を作れないとき: 部屋の機能が例外を投げても、理由つきのJSON(CORSつき)で返す", async () => {
+  const ROOMS = { idFromName: (n) => n, get: () => ({ fetch: async () => { throw new Error("storage exploded"); } }) };
+  const r = await W.handle(post({}, ORIGIN, "/room/new?game=chem"), baseEnv({ ROOMS }));
+  assert.equal(r.status, 500);
+  assert.equal(r.headers.get("access-control-allow-origin"), ORIGIN);
+  const j = await r.json();
+  assert.equal(j.error, "room_failed");
+  assert.match(j.detail, /storage exploded/);
+});

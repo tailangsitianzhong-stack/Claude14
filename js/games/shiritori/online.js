@@ -129,16 +129,38 @@
       draw();
     }
 
+    /** 部屋を作れなかった理由を、利用者にわかる言葉にする(detail はサーバーが返した原因の文) */
+    function createFailMessage(kind, status, data) {
+      const detail = data && data.detail ? String(data.detail) : "";
+      const err = data && data.error;
+      let why;
+      if (kind === "network") why = "サーバーにつながりません（ネット接続を確かめてね。サーバーが止まっている、または別のサイトからの接続が許可されていない可能性もあります）";
+      else if (kind === "badjson") why = `サーバーから、読めない返事が返ってきました（HTTP ${status}）。サーバーの内部エラーかもしれません`;
+      else if (err === "forbidden_origin" || (data && data.reason === "forbidden_origin")) why = "このサイトからの接続が、サーバーで許可されていません（ALLOWED_ORIGINS にこのサイトのURLを足す必要があります）";
+      else if (err === "rooms_unavailable" || status === 501) why = "サーバーに、部屋の機能（Durable Object）が設定されていません";
+      else if (err === "busy") why = "空いている部屋番号が見つかりませんでした。もう一度ためしてね";
+      else if (err === "room_failed") why = "サーバーの部屋の機能でエラーが起きました";
+      else why = `サーバーがエラーを返しました（HTTP ${status}）`;
+      return { why, detail: detail || (err ? `${err}` : "") };
+    }
+
     async function createRoom() {
       render(`<div class="panel shiri-menu"><p class="note">${Ruby.html("部屋{へや}を作{つく}っています…")}</p></div>`);
+      const url = ctx.endpoint.replace(/\/+$/, "") + "/room/new" + (game === "shiritori" ? "" : "?game=" + game);
+      let fail = null;
       try {
-        const res = await fetch(ctx.endpoint.replace(/\/+$/, "") + "/room/new" + (game === "shiritori" ? "" : "?game=" + game), { method: "POST" });
-        const data = await res.json();
-        if (!res.ok || !data.code) throw new Error("create failed");
-        enter(data.code);
-      } catch (_) {
-        showFriends(Ruby.html("部屋{へや}を作{つく}れませんでした。あとでもう一度{いちど}試{ため}してね"));
+        const res = await fetch(url, { method: "POST" });
+        let data = null;
+        try { data = await res.json(); } catch (_) { fail = createFailMessage("badjson", res.status, null); }
+        if (!fail && (!res.ok || !data || !data.code)) fail = createFailMessage("http", res.status, data);
+        if (!fail) { enter(data.code); return; }
+      } catch (e) {
+        fail = createFailMessage("network", 0, null);
+        fail.detail = String((e && e.message) || e);
       }
+      try { console.error("部屋を作れませんでした", url, fail); } catch (_) { /* 何もしない */ }
+      const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      showFriends(`部屋を作れませんでした。<br>理由: ${esc(fail.why)}${fail.detail ? `<br><span class="note-detail">くわしく: ${esc(fail.detail)}</span>` : ""}`);
     }
 
     /* ============ 部屋に入る(接続) ============ */
