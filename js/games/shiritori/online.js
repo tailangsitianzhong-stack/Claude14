@@ -139,6 +139,7 @@
       else if (err === "forbidden_origin" || (data && data.reason === "forbidden_origin")) why = "このサイトからの接続が、サーバーで許可されていません（ALLOWED_ORIGINS にこのサイトのURLを足す必要があります）";
       else if (err === "rooms_unavailable" || status === 501) why = "サーバーに、部屋の機能（Durable Object）が設定されていません";
       else if (err === "busy") why = "空いている部屋番号が見つかりませんでした。もう一度ためしてね";
+      else if (/free tier|exceeded allowed volume|quota/i.test(detail)) why = "サーバー(Cloudflare 無料プラン)の、1日に使える部屋のリクエスト数の上限に達しました。毎日、日本時間の午前9時にリセットされるので、それ以降にもう一度ためしてね（有料プランにすると上限がなくなります）";
       else if (err === "room_failed") why = "サーバーの部屋の機能でエラーが起きました";
       else why = `サーバーがエラーを返しました（HTTP ${status}）`;
       return { why, detail: detail || (err ? `${err}` : "") };
