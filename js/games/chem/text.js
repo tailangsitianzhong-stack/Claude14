@@ -48,8 +48,8 @@
   /** 問題文を、1つずつ流れる単位に分ける。[[H2SO4]] のような化学式は、1つの単位(途中で切れない) */
   function units(text) {
     const out = [];
-    for (const part of String(text).split(/(\[\[[^\]]*\]\])/)) {
-      if (/^\[\[[^\]]*\]\]$/.test(part)) out.push(part);
+    for (const part of String(text).split(Fmt.FORMULA_SPLIT)) {
+      if (Fmt.FORMULA_ONLY.test(part)) out.push(part);
       else out.push(...Array.from(part));
     }
     return out;

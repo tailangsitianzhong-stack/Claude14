@@ -12,6 +12,12 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  /** [[ ]] で囲んだ化学式。中に [Cu(NH3)4] のような角かっこが 1 段あってもよい */
+  const FORMULA_INNER = "(?:[^\\[\\]]|\\[[^\\[\\]]*\\])*";
+  const FORMULA_SPLIT = new RegExp("(\\[\\[" + FORMULA_INNER + "\\]\\])");
+  const FORMULA_ONLY = new RegExp("^\\[\\[" + FORMULA_INNER + "\\]\\]$");
+  const FORMULA_ALL = new RegExp("\\[\\[(" + FORMULA_INNER + ")\\]\\]", "g");
+
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const SUB = "₀₁₂₃₄₅₆₇₈₉", SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
@@ -36,9 +42,9 @@
   /** ふつうの文字: 「10^23」「10^−14」の指数を上つきにする */
   const plainHtml = (part) => esc(part).replace(/10\^(−|-)?(\d+)/g, (m, sg, d) => `10<sup>${sg ? "−" : ""}${d}</sup>`);
   function html(text) {
-    return String(text == null ? "" : text).split(/(\[\[[^\]]*\]\])/).map((part) => (/^\[\[[^\]]*\]\]$/.test(part) ? `<span class="chem-f">${formula(part.slice(2, -2))}</span>` : plainHtml(part))).join("");
+    return String(text == null ? "" : text).split(FORMULA_SPLIT).map((part) => (FORMULA_ONLY.test(part) ? `<span class="chem-f">${formula(part.slice(2, -2))}</span>` : plainHtml(part))).join("");
   }
-  const plain = (text) => String(text == null ? "" : text).replace(/\[\[([^\]]*)\]\]/g, "$1");
+  const plain = (text) => String(text == null ? "" : text).replace(FORMULA_ALL, "$1");
 
   /** 入力した式を比較用にそろえる(大文字小文字は、そのまま) */
   function normalize(s) {
@@ -47,5 +53,5 @@
       .replace(/[−–—ー‐]/g, "-").replace(/[\s·・･.]/g, "");
   }
 
-  return { html, plain, normalize, esc };
+  return { html, plain, normalize, esc, FORMULA_SPLIT, FORMULA_ONLY };
 });

@@ -22,7 +22,7 @@ const files = (prefix) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.st
 const lines = (prefix) => files(prefix).flatMap((f) => readFileSync(dir + f, "utf8").split(/\r?\n/).filter((l) => l.trim() && !l.startsWith("#")).map((l) => ({ f, l })));
 const unitIds = new Set(Units.IDS);
 const hira = (s) => s.replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
-const isReading = (s) => /^[ぁ-んーa-z0-9]+$/.test(s);
+const isReading = (s) => /^[ぁ-んーa-z0-9.]+$/.test(s);
 
 /** 学年の印: "0"=高校だけ / "1〜3"=高校にも大学入試にも / "x1〜x3"=大学入試だけ */
 function grade(lvText, exText) {

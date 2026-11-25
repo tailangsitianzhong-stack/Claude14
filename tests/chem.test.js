@@ -192,3 +192,47 @@ test("計算の検算: 問題文の数字だけを取り出して、別の式で
     assert.ok(near(q.priv.ans, 1.85 * (num(m[5]) / num(m[4])) / (num(m[1]) / 1000) * iF, 0.02), "freezing");
   }
 });
+
+test("問題データ: 形式ごとの数と、全単元・全レベルに問題がある。重複や誤りの混入を防ぐ", () => {
+  assert.ok(D.buzz.length >= 400, "早押し " + D.buzz.length);
+  assert.ok(D.choice.length >= 500, "資料選択 " + D.choice.length);
+  for (const [name, list] of [["早押し", D.buzz], ["資料選択", D.choice]]) {
+    assert.equal(new Set(list.map((q) => q.id)).size, list.length, name + " の id");
+    for (const u of Units.IDS) {
+      const us = list.filter((q) => q.u === u);
+      assert.ok(us.length >= 15, `${name} ${u} は ${us.length} 問`);
+      for (const lv of [1, 2, 3]) assert.ok(us.some((q) => q.lv === lv && !q.xo), `${name} ${u} に レベル${lv} の高校の問題`);
+      for (const ex of [1, 2, 3]) assert.ok(us.some((q) => q.ex === ex), `${name} ${u} に 大学入試の ${ex}`);
+    }
+  }
+  // 大学入試の学年でも、高校の学年でも、どの単元・どの形式でも30問を出せるだけの量(出し尽くしても止まらないが、重複を避けたい)
+  for (const grade of ["high", "exam"]) {
+    const pool = (list) => list.filter((q) => (grade === "exam" ? q.ex > 0 : !q.xo));
+    assert.ok(pool(D.buzz).length >= 400 && pool(D.choice).length >= 400, grade);
+  }
+});
+
+test("早押しの答え: 読みはかな、化学式の答えには式の答えがある。答え自身か読みで正解になる", () => {
+  for (const q of D.buzz) {
+    assert.ok(/[？。]$/.test(q.text), q.id + " の終わり");
+    assert.ok(q.yomi.length > 0 && q.yomi.every((y) => /^[ぁ-んーa-z0-9.]+$/.test(y)), q.id + " の読み " + q.yomi);
+    if (/^\[\[[^\]]+\]\]$/.test(q.ans)) {
+      assert.ok(q.f && q.f.length, q.id + " は化学式の答えに式が必要");
+      assert.ok(Text.matchesFormula(Fmt.plain(q.ans), q.f), q.id + " の答えの式が一致しない");
+    }
+    for (const f of q.f || []) assert.ok(Fmt.normalize(f).length > 0, q.id);
+    assert.ok(Text.matches(q.yomi[0], q.yomi), q.id);
+  }
+  // 化学式は大文字・小文字を区別(CO と Co、Na と NA)。下つき文字・全角はそろえる
+  const co = D.buzz.find((q) => q.f && q.f.includes("CO") && q.f.length === 1);
+  assert.ok(co);
+  assert.equal(Text.matchesFormula("Co", co.f), false);
+  assert.equal(Text.matchesFormula("ＣＯ", co.f), true);
+});
+
+test("角かっこの入った錯イオンの式: 問題文でも選択肢でも、ひとつの式として表示・流れる", () => {
+  assert.equal(Fmt.html("[[[Cu(NH3)4]^2+]]"), '<span class="chem-f">[Cu(NH<sub>3</sub>)<sub>4</sub>]<sup>2+</sup></span>');
+  assert.equal(Fmt.plain("[[[Fe(CN)6]^4-]] と [[H2O]]"), "[Fe(CN)6]^4- と H2O");
+  assert.deepEqual(Text.units("[[[Ag(NH3)2]^+]]の配位数は？"), ["[[[Ag(NH3)2]^+]]", ..."の配位数は？"]);
+  for (const q of D.choice.filter((x) => /\[\[\[/.test(x.q + x.c.join("")))) assert.ok(Text.units(q.q).every((u) => u.length === 1 || /^\[\[.*\]\]$/.test(u)), q.id);
+});
