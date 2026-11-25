@@ -34,9 +34,9 @@
     if (m.ylabel) s += `<text class="axis lab" transform="translate(11 ${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(m.ylabel)}</text>`;
     (m.series || []).forEach((se, i) => {
       s += `<polyline class="line s${i}${se.dash ? " dash" : ""}" points="${se.pts.map(([x, y]) => f1(X(x)) + "," + f1(Y(y))).join(" ")}"/>`;
-      if (se.label && se.pts.length) { const [lx, ly] = se.lab || se.pts[se.pts.length - 1]; s += `<text class="slab s${i}" x="${f1(X(lx) + 4)}" y="${f1(Y(ly) - 5)}">${esc(se.label)}</text>`; }
+      if (se.label && se.pts.length) { const [lx, ly] = se.lab || se.pts[se.pts.length - 1]; s += `<text class="slab s${i}" x="${f1(X(lx) - 4)}" y="${f1(Y(ly) + (se.below ? 13 : -6))}" text-anchor="end">${esc(se.label)}</text>`; }
     });
-    for (const k of m.marks || []) s += `<circle class="mark" cx="${f1(X(k.x))}" cy="${f1(Y(k.y))}" r="3.5"/>${k.text ? `<text class="mtxt" x="${f1(X(k.x) + 6)}" y="${f1(Y(k.y) - 6)}">${esc(k.text)}</text>` : ""}`;
+    for (const k of m.marks || []) s += `<circle class="mark" cx="${f1(X(k.x))}" cy="${f1(Y(k.y))}" r="3.5"/>${k.text ? (k.x > xmin + (xmax - xmin) * 0.72 ? `<text class="mtxt" x="${f1(X(k.x) - 6)}" y="${f1(Y(k.y) - 7)}" text-anchor="end">${esc(k.text)}</text>` : `<text class="mtxt" x="${f1(X(k.x) + 6)}" y="${f1(Y(k.y) - 6)}">${esc(k.text)}</text>`) : ""}`;
     return s + "</svg>";
   }
 
