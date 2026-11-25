@@ -1,0 +1,55 @@
+/* ===== 化学クイズ(メニュー・対戦画面は css/geo.css の .geo-* を共通で使う) ===== */
+.chem-f { white-space: nowrap; }
+.chem-f sub, .chem-f sup, .chem-q sub, .chem-q sup { font-size: .72em; line-height: 0; }
+.chem-q { line-height: 1.9; }
+.chem-calcq { text-align: left; font-size: 1rem; }
+.chem-note { margin: 4px 0 0; font-size: .8rem; }
+
+/* 単元えらび */
+.chem-units { border: 3px solid var(--ink-soft); border-radius: 14px; background: #fff; padding: 8px 10px 10px; }
+.chem-units-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.chem-units-sum { font-size: .9rem; }
+.chem-presets { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+.chem-preset { padding: 2px 9px; font: inherit; font-size: .82rem; color: var(--ink); background: #fff7d6; border: 2px solid var(--ink-soft); border-radius: 999px; cursor: pointer; }
+.chem-preset.is-on { border-color: var(--red); background: #ffe9a3; font-weight: bold; }
+.chem-group { margin: 6px 0 2px; font-size: .82rem; font-weight: bold; color: var(--ink-soft); }
+.chem-ulist { display: flex; flex-wrap: wrap; gap: 5px; }
+.chem-unit { padding: 3px 9px; font: inherit; font-size: .86rem; color: var(--ink); background: #fff; border: 2px solid var(--ink-soft); border-radius: 10px; cursor: pointer; line-height: 1.6; }
+.chem-unit.is-on { border-color: var(--red); background: #ffe9a3; box-shadow: 0 0 0 2px rgba(239, 91, 76, .22); }
+.chem-unit.is-anchor { border-style: dashed; outline: 3px solid rgba(239, 91, 76, .45); }
+.chem-rangebar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: .82rem; }
+.chem-warn { margin: 6px 0 0; font-size: .82rem; color: var(--red); }
+
+/* 計算: 入力欄と数字キー */
+.chem-input { min-height: 54px; margin: 8px 0; padding: 8px 12px; text-align: right; font-size: 1.5rem; font-weight: bold; background: #fff; border: 4px solid var(--ink-soft); border-radius: 14px; word-break: break-all; }
+.chem-input.is-locked { background: #eee; color: var(--ink-soft); }
+.chem-input .ph { color: #b8ad92; font-weight: normal; font-size: 1.1rem; }
+.chem-input .unit { font-size: .9rem; font-weight: normal; color: var(--ink-soft); }
+.chem-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.chem-key { padding: 10px 0; font: inherit; font-size: 1.2rem; font-weight: bold; color: var(--ink); background: #fff7d6; border: 3px solid var(--ink-soft); border-radius: 12px; cursor: pointer; touch-action: manipulation; }
+.chem-key:disabled { opacity: .45; }
+.chem-key.is-go { grid-column: span 2; background: #c8f0c8; border-color: #3b8f3b; }
+.chem-steps { margin-top: 8px; font-size: .9rem; text-align: left; }
+.chem-steps ol { margin: 4px 0 0 1.2em; padding: 0; }
+.chem-steps li { line-height: 1.8; }
+
+/* 図(SVG): グラフ・構造式・周期表 */
+.chem-svg { width: 100%; height: auto; max-height: 300px; display: block; margin: 0 auto; background: #fff; border-radius: 8px; }
+.chem-svg .grid { stroke: #e3dcc6; stroke-width: 1; }
+.chem-svg .frame { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; }
+.chem-svg .axis { font-size: 9.5px; fill: var(--ink-soft); }
+.chem-svg .axis.lab { font-size: 10.5px; fill: var(--ink); }
+.chem-svg .line { fill: none; stroke: #d6402f; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.chem-svg .line.s1 { stroke: #2a62c9; } .chem-svg .line.s2 { stroke: #2b8f4e; } .chem-svg .line.s3 { stroke: #b0791a; }
+.chem-svg .line.dash { stroke-dasharray: 5 4; }
+.chem-svg .slab { font-size: 10px; fill: #d6402f; } .chem-svg .slab.s1 { fill: #2a62c9; } .chem-svg .slab.s2 { fill: #2b8f4e; } .chem-svg .slab.s3 { fill: #b0791a; }
+.chem-svg .mark { fill: #fff; stroke: var(--ink); stroke-width: 2; }
+.chem-svg .mtxt { font-size: 10.5px; fill: var(--ink); font-weight: bold; }
+.chem-mol .bond { stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; }
+.chem-mol .bond.dash { stroke-dasharray: 3 3; }
+.chem-mol .ring { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+.chem-mol .atom { font-size: 13px; font-weight: bold; fill: var(--ink); }
+.chem-mol .atom sub, .chem-mol .atom sup { font-size: 9px; }
+.chem-pt .cell { fill: #f4efe0; stroke: #d8cfb4; stroke-width: .8; }
+.chem-pt .cell.on { fill: #ffd34d; stroke: #d6402f; stroke-width: 1.4; }
+.chem-pt .sym { font-size: 7.5px; fill: var(--ink); } .chem-pt .sym.on { font-weight: bold; font-size: 9px; }

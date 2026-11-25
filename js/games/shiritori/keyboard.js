@@ -4,7 +4,7 @@
  * スペルチェック・貼り付けは一切出ない。
  *
  *   const kb = ShiritoriKeyboard.create(rootEl, { onAction });
- *   kb.setMode("kana" | "en" | "num");   // num = 数字(0〜9)。地理クイズの早押しで使う
+ *   kb.setMode("kana" | "en" | "num" | "chem");   // num = 数字(0〜9)。地理クイズの早押しで使う / chem = 化学式(元素記号・数字・＋−・大文字小文字)。化学クイズの早押しで使う
  *   kb.destroy();
  *
  * onAction には ShiritoriInput.applyAction 用の action と
@@ -78,6 +78,7 @@
     let mode = "kana";
     let enLayout = loadLayout();
     let kanaMethod = loadMethod();
+    let chemView = "el";
 
     const wrap = el("div", "kb");
     wrap.setAttribute("role", "group");
@@ -281,6 +282,32 @@
       wrap.appendChild(controls([toggle]));
     }
 
+    /** 化学式キーボード: 元素記号(2文字もひとつのキー)・数字・記号。「A-Z」「a-z」で、1文字ずつも打てる(大文字と小文字は区別される) */
+    function renderChem() {
+      const EL = "H C N O S P F Cl Br I Na K Ca Mg Al Fe Cu Zn Ag Pb Mn".split(" ");
+      const tabs = el("div", "kb-tabs");
+      [["el", "元素{げんそ}"], ["up", "A-Z"], ["lo", "a-z"]].forEach(([id, label]) => {
+        const b = button(label, "kb-tab" + (id === chemView ? " is-on" : ""), () => { chemView = id; render(); });
+        tabs.appendChild(b);
+      });
+      wrap.appendChild(tabs);
+      const box = el("div", "kb-en kb-chem");
+      const rows = chemView === "el" ? [EL.slice(0, 11), EL.slice(11)] : chemView === "up" ? ["ABCDEFGHI", "JKLMNOPQR", "STUVWXYZ"] : ["abcdefghi", "jklmnopqr", "stuvwxyz"];
+      rows.forEach((r) => {
+        const row = el("div", "kb-row");
+        (Array.isArray(r) ? r : r.split("")).forEach((c) => row.appendChild(key(c, c.length > 1 ? "kb-el" : "", { type: "char", value: c }, c)));
+        box.appendChild(row);
+      });
+      const nums = el("div", "kb-row");
+      "0123456789".split("").forEach((c) => nums.appendChild(key(c, "", { type: "char", value: c }, c)));
+      box.appendChild(nums);
+      const sym = el("div", "kb-row");
+      ["+", "-", "(", ")", "="].forEach((c) => sym.appendChild(key(c === "-" ? "−" : c, "kb-mod", { type: "char", value: c }, c)));
+      box.appendChild(sym);
+      wrap.appendChild(box);
+      wrap.appendChild(controls([]));
+    }
+
     /** 数字キー(0〜9) */
     function renderNum() {
       const box = el("div", "kb-en kb-num");
@@ -296,7 +323,7 @@
     function render() {
       wrap.innerHTML = "";
       wrap.dataset.mode = mode;
-      if (mode === "kana") renderKana(); else if (mode === "num") renderNum(); else renderEn();
+      if (mode === "kana") renderKana(); else if (mode === "num") renderNum(); else if (mode === "chem") renderChem(); else renderEn();
     }
 
     render();
@@ -325,6 +352,10 @@
       }
       else if (/^[0-9]$/.test(e.key) && (allowDigits || getMode() === "num")) {
         e.preventDefault();
+        onAction({ type: "char", value: e.key });
+      }
+      else if (getMode() === "chem" && /^[a-zA-Z+\-()=]$/.test(e.key)) {
+        e.preventDefault();                          // 化学式: 大文字と小文字を、そのまま入れる
         onAction({ type: "char", value: e.key });
       }
       else if (getMode() === "en" && /^[a-zA-Z]$/.test(e.key)) {

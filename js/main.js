@@ -88,7 +88,7 @@
   Ruby.apply(document.body);   // index.html にある「漢字{よみ}」をふりがな付きにする
   // 友達のQRコード/リンク(?room=12345&game=…)から開いた時は、そのゲームの部屋へ直接入る
   if (/[?&]room=\d{5}(?:&|$)/.test(location.search)) {
-    const g = /[?&]game=(kanken|nep|geo)(?:&|$)/.exec(location.search);
+    const g = /[?&]game=(kanken|nep|geo|chem)(?:&|$)/.exec(location.search);
     startGame(g ? g[1] : "shiritori");
   }
 })();

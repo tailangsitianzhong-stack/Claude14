@@ -350,3 +350,8 @@
 /* Geminiで確認している間は、時間が止まる(タイマーを青くして、止まっていることを示す) */
 .shiri-timer.is-paused .shiri-timer-bar { background: var(--blue); animation: none; }
 .shiri-timer.is-paused .shiri-timer-num::after { content: " ⏸"; }
+
+/* 化学式キーボード(化学クイズの早押し) */
+.kb-chem .kb-row { flex-wrap: wrap; }
+.kb-chem .kb-key { min-width: 0; flex: 1 1 0; padding-left: 0; padding-right: 0; font-size: .95rem; }
+.kb-chem .kb-el { font-size: .9rem; }

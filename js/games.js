@@ -50,6 +50,15 @@ window.GAMES = [
     unmount() { window.GeoGame.unmount(); }
   },
   {
+    id: "chem",
+    title: "化学{かがく}クイズ",
+    icon: "⚗️",
+    desc: "早押{はやお}し・計算{けいさん}・資料{しりょう}で高校{こうこう}の化学{かがく}を学{まな}ぼう！",
+    ready: true,
+    mount(root) { window.ChemGame.mount(root); },
+    unmount() { window.ChemGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",

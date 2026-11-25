@@ -297,7 +297,7 @@
       if (dak) dak.addEventListener("change", () => net.send({ t: "settings", settings: { ignoreDakuten: dak.checked } }));
       const start = view.querySelector("#mp-start");
       if (start) start.addEventListener("click", () => net.send({ t: "start" }));
-      if (hooks && hooks.bindLobby) hooks.bindLobby(view, (o) => net.send(o));
+      if (hooks && hooks.bindLobby) hooks.bindLobby(view, (o) => net.send(o), state);
     }
 
     /* ============ 対戦 ============ */
