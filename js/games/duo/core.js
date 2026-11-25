@@ -22,7 +22,7 @@
   "use strict";
 
   const START_MS = 2500;          // 開始の「よーい」
-  const BETWEEN_MS = 5200;        // 答え合わせ(トロッコの演出と解説)の時間
+  const BETWEEN_MS = 6800;        // 答え合わせ(ブースト・ぶつかる・落ちる・もどる演出と、解説を読む時間)
   const POINT = 10;
   const SPEED_MAX = 10;
   const STREAK_STEP = 2, STREAK_MAX = 10;

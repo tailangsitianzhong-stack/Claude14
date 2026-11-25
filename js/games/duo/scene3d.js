@@ -254,7 +254,7 @@
       const mark = emojiSprite(""); mark.position.set(0, 3.9, 0); mark.visible = false; g.add(mark);
       g.scale.setScalar(1.25);
       world.add(g);
-      return { id: p.id, g, wheels, lamp, mark, face, beam, x0: laneX[i], lean: 0, state: "wait", t0: 0, side: 0, ok: false, vy: 0, vz: 0, spin: 0, zStart: 0, dur: 1500, sparkT: 0 };
+      return { id: p.id, g, wheels, lamp, mark, face, beam, x0: laneX[i], lean: 0, state: "wait", t0: 0, side: 0, ok: false, vy: 0, vz: 0, spin: 0, zStart: 0, dur: 1500, sparkT: 0, dead: false, skip: false, cr: null, fxT: 0, hz: null };
     });
     const byId = new Map(trolleys.map((t) => [t.id, t]));
     const markTex = {};
@@ -263,21 +263,60 @@
       t.mark.material.map = markTex[ch]; t.mark.material.needsUpdate = true; t.mark.visible = true;
     }
 
-    /* ---------- 流線(スピードライン)・火花・紙ふぶき ---------- */
+    /* ---------- 流線(スピードライン)・火花・紙ふぶき・落ちる演出の粒 ---------- */
     const streakMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
     const streaks = [];
     for (let i = 0; i < 90; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 1), streakMat); m.userData.r = rnd(); scene.add(m); streaks.push(m); }
-    const sparkGeo = new THREE.BoxGeometry(0.16, 0.16, 0.5), sparkMat = new THREE.MeshBasicMaterial({ color: 0xffd34d });
-    const sparks = [];
-    for (let i = 0; i < 36; i++) { const m = new THREE.Mesh(sparkGeo, sparkMat); m.visible = false; m.userData = { t: 9, vx: 0, vy: 0, vz: 0 }; world.add(m); sparks.push(m); }
+    /** 粒のプール: 色ごとに使いまわす。emit(pool, 位置, 速度, 寿命) */
+    function makePool(color, n, geo) {
+      const material = new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false });
+      const arr = [];
+      for (let i = 0; i < n; i++) { const m = new THREE.Mesh(geo, material); m.visible = false; m.userData = { t: 9, life: 1, vx: 0, vy: 0, vz: 0, g: 16 }; world.add(m); arr.push(m); }
+      return { arr, i: 0 };
+    }
+    function emit(pool, x, y, z, vx, vy, vz, life, g) {
+      const m = pool.arr[pool.i++ % pool.arr.length]; m.visible = true; m.position.set(x, y, z); m.scale.setScalar(1);
+      m.userData = { t: 0, life: life || 0.6, vx, vy, vz, g: g == null ? 16 : g };
+    }
+    const sparkPool = makePool(0xffd34d, 36, new THREE.BoxGeometry(0.16, 0.16, 0.5));
+    const lavaPool = makePool(0xff7a1a, 40, new THREE.BoxGeometry(0.28, 0.28, 0.28));
+    const dropPool = makePool(0xa5deff, 46, new THREE.SphereGeometry(0.2, 6, 5));
+    const dustPool = makePool(0x8a8478, 26, new THREE.BoxGeometry(0.55, 0.55, 0.55));
+    const pools = [sparkPool, lavaPool, dropPool, dustPool];
     const confGeo = new THREE.BoxGeometry(0.3, 0.3, 0.05), confetti = [];
     for (let i = 0; i < 48; i++) { const m = new THREE.Mesh(confGeo, new THREE.MeshBasicMaterial({ color: [0xff5d73, 0xffd34d, 0x4ade80, 0x60a5fa, 0xc084fc][i % 5], side: THREE.DoubleSide })); m.visible = false; m.userData = { t: 9 }; world.add(m); confetti.push(m); }
-    let sparkIdx = 0;
-    function spark(x, y, z, vz) { const m = sparks[sparkIdx++ % sparks.length]; m.visible = true; m.position.set(x, y, z); m.userData = { t: 0, vx: (rnd() - 0.5) * 5, vy: 2 + rnd() * 3, vz: vz + 6 + rnd() * 8 }; }
-    function burst(x, y, z) { confetti.forEach((m, i) => { m.visible = true; m.position.set(x, y, z); m.userData = { t: 0, vx: (rnd() - 0.5) * 14, vy: 6 + rnd() * 10, vz: -rnd() * 8 + 2, rx: rnd() * 8, ry: rnd() * 8 }; }); }
+    function spark(x, y, z, vz) { emit(sparkPool, x, y, z, (rnd() - 0.5) * 5, 2 + rnd() * 3, vz + 6 + rnd() * 8, 0.5); }
+    function burst(x, y, z) { confetti.forEach((m) => { m.visible = true; m.position.set(x, y, z); m.userData = { t: 0, vx: (rnd() - 0.5) * 14, vy: 6 + rnd() * 10, vz: -rnd() * 8 + 2, rx: rnd() * 8, ry: rnd() * 8 }; }); }
+
+    /* ---------- 落ちる場所(マグマ・水・穴)。トロッコごとに1組。失敗したとき、足もとにあらわれる ---------- */
+    function hazardTexture(kind) {
+      const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+      const r = g.createRadialGradient(128, 128, 8, 128, 128, 126);
+      if (kind === 0) { r.addColorStop(0, "#fff3a0"); r.addColorStop(0.35, "#ffa21f"); r.addColorStop(0.75, "#d63a00"); r.addColorStop(1, "#5a1200"); }
+      else if (kind === 1) { r.addColorStop(0, "#d6f2ff"); r.addColorStop(0.45, "#3aa0ff"); r.addColorStop(1, "#1450b8"); }
+      else { r.addColorStop(0, "#000"); r.addColorStop(0.7, "#04040a"); r.addColorStop(0.92, "#3a2a1c"); r.addColorStop(1, "#6a5238"); }
+      g.fillStyle = r; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+      if (kind === 0) for (let i = 0; i < 22; i++) { g.fillStyle = `rgba(255,${180 + (i * 17) % 70},60,0.55)`; g.beginPath(); g.arc(30 + rnd() * 196, 30 + rnd() * 196, 6 + rnd() * 16, 0, 7); g.fill(); }
+      if (kind === 1) { g.strokeStyle = "rgba(255,255,255,0.7)"; g.lineWidth = 4; for (const rr of [30, 60, 92]) { g.beginPath(); g.arc(128, 128, rr, 0, 7); g.stroke(); } }
+      const t = new THREE.CanvasTexture(c); return t;
+    }
+    const hazTex = [hazardTexture(0), hazardTexture(1), hazardTexture(2)];
+    const hazGeo = new THREE.CircleGeometry(3.7, 28);
+    for (const t of trolleys) {
+      t.hz = hazTex.map((tx) => { const m = new THREE.Mesh(hazGeo, new THREE.MeshBasicMaterial({ map: tx, transparent: true, opacity: 0, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.y = 0.08; m.visible = false; m.renderOrder = 1; world.add(m); return m; });
+    }
+    const hazKinds = ["lava", "water", "pit"];
+    /** どの落ちかたになるか(問題ごと・人ごとに決まる。全員の画面で同じ) */
+    const kindFor = (round, i) => ((round || 0) * 5 + i * 2) % 3;
+
+    /* ---------- 画面全体の白いフラッシュ(スタート位置へもどるとき、場面のつなぎを隠す) ---------- */
+    const flash = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+    flash.position.z = -0.3; flash.renderOrder = 999; flash.frustumCulled = false; camera.add(flash); scene.add(camera);
 
     /* ---------- 状態 ---------- */
-    const S = { q: null, phase: "idle", revealAt: 0, rv: null, shake: 0, running: false, raf: 0, last: 0, idleAt: 0, camZ: Z0 + 12, lastTz: Z0, lastTx: 0, v: 0, prevCamZ: 0, fov: 58, theme: "en", gap0: 0, T: 1, V0: 0, V1: 0 };
+    const CRUISE = 14;           // 答え合わせのあと、レールの上を走りつづける速さ(m/s)
+    const WARP_GAP = 380;
+    const S = { q: null, phase: "idle", revealAt: 0, rv: null, shake: 0, running: false, raf: 0, last: 0, idleAt: 0, camZ: Z0 + 12, lastTz: Z0, lastTx: 0, v: 0, prevCamZ: 0, fov: 58, theme: "en", gap0: 0, T: 1, V0: 0, V1: 0, flash: 0, firstImpact: 0, snapped: false };
 
     function pathAt(t, z) {                 // 選んだ側へ曲がる道すじ: z での x
       if (!t.side) return t.x0;
@@ -300,13 +339,28 @@
       return Math.max(GAP_END - 8, S.gap0 - d);
     }
 
+    function resetTrolley(t) {
+      t.state = "wait"; t.side = 0; t.lean = 0; t.lamp.visible = false; t.mark.visible = false; t.cr = null; t.skip = false;
+      t.g.rotation.set(0, 0, 0); t.g.scale.setScalar(1.25); t.g.position.y = 0; t.vy = 0; t.vz = 0; t.spin = 0; t.face.visible = true; t.g.visible = !t.dead;
+      for (const m of t.hz) { m.visible = false; m.material.opacity = 0; }
+    }
+
     function question(q) {
-      S.q = q; S.phase = "play"; S.rv = null; S.shake = 0;
+      S.q = q; S.phase = "play"; S.rv = null; S.shake = 0; S.firstImpact = 0;
       setTheme(q.s);
       const th = THEME[S.theme];
       const T = Math.max(3, (q.endsAt - q.startedAt) / 1000);
-      const avg = Math.min(AVG_SPEED, (MAX_GAP - GAP_END) / T);
-      S.T = T; S.V0 = avg * 0.55; S.V1 = avg * 1.45; S.gap0 = GAP_END + T * (S.V0 + (S.V1 - S.V0) / 2);
+      const dT = Math.min(MAX_GAP, AVG_SPEED * T + GAP_END);                 // 分かれ道までの、はじめの距離
+      // ほとんどの場合、前の問題のあと、トロッコは走りつづけている。ゴールの先にいるときだけ、白いフラッシュでスタート位置へもどす
+      const alive = trolleys.filter((t) => !t.dead);
+      const ref = alive.length ? alive[0].g.position.z : Z_FORK + WARP_GAP;
+      let d = ref - Z_FORK;
+      const warp = !alive.length || alive.some((t) => t.g.position.z < Z_FORK - 5) || d < 120;
+      if (warp || d > dT) d = dT;                                            // もどすときと、遠すぎるとき(霧にかくれた所)は、距離をそろえる
+      if (warp && S.started) S.flash = 1;                                    // 最初の問題はフラッシュなし
+      S.started = true;
+      const avg = Math.max(6, (d - GAP_END) / T);
+      S.T = T; S.V0 = avg * 0.55; S.V1 = avg * 1.45; S.gap0 = d;
       panels.forEach((p, i) => {
         const text = pretty(q.labels[i]);
         if (p.mesh.material.map) p.mesh.material.map.dispose();
@@ -314,28 +368,34 @@
         p.mesh.material.needsUpdate = true; p.mesh.visible = true; p.frame.visible = true; p.broken = false;
         for (const s of p.shards) s.visible = false;
       });
-      for (const t of trolleys) {
-        t.state = "wait"; t.side = 0; t.lean = 0; t.lamp.visible = false; t.mark.visible = false;
-        t.g.rotation.set(0, 0, 0); t.g.position.set(t.x0, 0, Z_FORK + S.gap0); t.vy = 0; t.vz = 0; t.spin = 0; t.face.visible = true;
-      }
+      const z0 = Z_FORK + S.gap0;
+      for (const t of trolleys) { resetTrolley(t); if (!t.dead) t.g.position.set(t.x0, 0, z0); }
       for (const c of confetti) c.visible = false;
-      S.camZ = Z_FORK + S.gap0 + 12; S.prevCamZ = S.camZ; S.lastTz = Z_FORK + S.gap0; S.lastTx = 0; S.v = 0;
+      S.camZ = z0 + 12; S.prevCamZ = S.camZ; S.lastTz = z0; S.lastTx = 0; S.v = Math.max(S.v, S.V0 * 0.9);
       start();
     }
 
     function answered(pid, side) {
-      const t = byId.get(pid); if (!t) return;
+      const t = byId.get(pid); if (!t || t.dead) return;
       t.lamp.visible = true;
       if (pid === opts.myId && (side === 0 || side === 1)) t.lean = side === 0 ? -1 : 1;
       start();
     }
 
+    /**
+     * 答え合わせ。rv = { a, picks, ok, dead:{id:true}(ライフがなくなった人), skip:{id:true}(この問題に参加していない人), round }
+     * 結果は、トロッコが壁(柱)にぶつかるまで、画面のどこにも出さない。ぶつかった瞬間に opts.onImpact(pid, ok) を呼ぶ。
+     */
     function reveal(rv) {
-      S.phase = "reveal"; S.revealAt = now(); S.rv = rv; S.snapped = false;
-      for (const t of trolleys) {
+      S.phase = "reveal"; S.revealAt = now(); S.rv = rv; S.snapped = false; S.firstImpact = 0;
+      trolleys.forEach((t, idx) => {
+        if (t.dead) return;
+        if (rv.skip && rv.skip[t.id]) { t.skip = true; t.state = "cruise"; t.lamp.visible = false; return; }
         const pk = rv.picks[t.id];
         t.side = pk === 0 ? -1 : pk === 1 ? 1 : 0;
         t.ok = !!rv.ok[t.id]; t.state = "run"; t.t0 = now(); t.lean = 0; t.lamp.visible = false;
+        t.willDie = !!(rv.dead && rv.dead[t.id]);
+        t.kind = kindFor(rv.round, idx);
         t.zStart = Math.min(t.g.position.z, Z_FORK + 150);                   // 遠くからは、霧にかくれた所までテレポート(見えない)
         const jump = t.g.position.z - t.zStart;
         if (jump > 0 && !S.snapped) { S.snapped = true; S.camZ -= jump; S.prevCamZ -= jump; }
@@ -343,11 +403,11 @@
         const zEnd = t.side ? Z_WALL + 2.3 : Z_FORK - 3.5;
         t.dur = clamp((t.zStart - zEnd) / 85, 1.1, 2.1) * 1000;               // ブースト: 遠いほど速く
         t.vy = 0; t.vz = 0; t.spin = 0;
-      }
+      });
       start();
     }
 
-    function idle() { S.phase = "idle"; for (const t of trolleys) { t.state = "wait"; t.lamp.visible = false; } start(); }
+    function idle() { S.phase = "idle"; for (const t of trolleys) { if (!t.dead) t.state = "wait"; t.lamp.visible = false; } start(); }
 
     function shatter(p, from) {
       p.broken = true; p.mesh.visible = false;
@@ -364,13 +424,74 @@
       S.shake = 1;
     }
 
+    /** ぶつかった瞬間: 成功なら壁を砕いて走りぬける。失敗なら、はね返されて、マグマ・水・穴のどれかに落ちる */
+    function impact(t, tNow) {
+      t.state = t.ok ? "win" : "crash"; t.t0 = tNow;
+      if (!S.firstImpact) S.firstImpact = tNow;
+      const pn = panels[t.side === -1 ? 0 : 1];
+      if (t.ok) {
+        if (t.side && !pn.broken) shatter(pn, t.side);
+        setMark(t, "⭕"); S.shake = Math.max(S.shake, 0.7);
+      } else {
+        t.cr = { kind: t.kind, x: t.g.position.x, z0: t.g.position.z, hz: t.g.position.z + 4.2, rot: (t.x0 > 0 ? 1 : -1), splashed: false };
+        setMark(t, "💥"); t.mark.visible = true; S.shake = Math.max(S.shake, 1);
+        for (let i = 0; i < 10; i++) spark(t.g.position.x, 1, t.g.position.z - 1.5, -5);
+        const h = t.hz[t.kind]; h.position.set(t.cr.x, 0.08, t.cr.hz); h.visible = true; h.material.opacity = 0;
+      }
+      if (opts.onImpact) { try { opts.onImpact(t.id, t.ok); } catch (_) { /* 画面側の失敗で3Dを止めない */ } }
+    }
+
+    /** 失敗の演出(ぶつかってからの経過秒 a)。マグマ・水・穴で、落ちかたが変わる。生き残るなら、レールの上にもどる */
+    function crashStep(t, a, dt) {
+      const c = t.cr, h = t.hz[c.kind];
+      const land = 0.64;
+      if (a < land) {                                                         // はね返されて、宙を舞う
+        t.g.position.y = 7 * a - 11 * a * a; t.g.position.z = c.z0 + 6.6 * a; t.g.position.x = c.x;
+        t.g.rotation.z += c.rot * 5 * dt; t.g.rotation.x += 2.4 * dt;
+        h.material.opacity = clamp(a / 0.4, 0, 1);
+      } else if (a < 1.5) {                                                   // 落ちていく
+        const u = (a - land) / (1.5 - land);
+        t.g.position.y = -4.2 * u * u * (3 - 2 * u) * 1.1; t.g.position.z = c.hz; t.g.scale.setScalar(1.25 * (1 - 0.35 * u));
+        t.g.rotation.z += c.rot * 3 * dt; t.g.rotation.x += 1.4 * dt;
+        if (!c.splashed) {
+          c.splashed = true; S.shake = Math.max(S.shake, 0.8);
+          if (c.kind === 0) { setMark(t, "🔥"); for (let i = 0; i < 22; i++) emit(lavaPool, c.x + (rnd() - 0.5) * 2, 0.3, c.hz + (rnd() - 0.5) * 2, (rnd() - 0.5) * 5, 7 + rnd() * 7, (rnd() - 0.5) * 5, 1.1, 14); }
+          else if (c.kind === 1) { setMark(t, "💦"); for (let i = 0; i < 30; i++) emit(dropPool, c.x + (rnd() - 0.5) * 1.5, 0.3, c.hz + (rnd() - 0.5) * 1.5, (rnd() - 0.5) * 7, 6 + rnd() * 8, (rnd() - 0.5) * 7, 1.2, 18); }
+          else { setMark(t, "😵"); for (let i = 0; i < 14; i++) emit(dustPool, c.x + (rnd() - 0.5) * 3, 0.2, c.hz + (rnd() - 0.5) * 3, (rnd() - 0.5) * 4, 2 + rnd() * 3, (rnd() - 0.5) * 4, 1.0, 6); }
+        }
+        t.fxT -= dt;
+        if (t.fxT <= 0) {                                                     // 落ちている間も、続けて吹き出す
+          t.fxT = 0.07;
+          if (c.kind === 0) emit(lavaPool, c.x + (rnd() - 0.5) * 2.4, 0.2, c.hz + (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 3, 5 + rnd() * 5, (rnd() - 0.5) * 3, 0.9, 12);
+          else if (c.kind === 1) emit(dropPool, c.x + (rnd() - 0.5) * 2.4, 0.1, c.hz + (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 3, 3 + rnd() * 4, (rnd() - 0.5) * 3, 0.9, 14);
+          else emit(dustPool, c.x + (rnd() - 0.5) * 3, 0.1, c.hz + (rnd() - 0.5) * 3, (rnd() - 0.5) * 2, 1 + rnd() * 2, (rnd() - 0.5) * 2, 0.8, 4);
+        }
+      } else if (t.willDie) {                                                 // ライフがなくなった: そのまま戻らない
+        if (t.g.visible) { t.g.visible = false; t.state = "dead"; t.dead = true; S.shake = Math.max(S.shake, 0.5); }
+        h.material.opacity = Math.max(0.55, h.material.opacity - dt * 0.3);
+      } else {                                                                // レールの上にもどる(飛び出して、着地)
+        const u = (a - 1.5) / 0.95;
+        if (u < 1) {
+          const yy = u < 0.5 ? -4.6 + (4.6 + 2.6) * ease(u / 0.5) : 2.6 * (1 - ease((u - 0.5) / 0.5));
+          t.g.position.y = yy; t.g.scale.setScalar(1.25 * (0.65 + 0.35 * clamp(u * 2, 0, 1)));
+          t.g.rotation.x = u * Math.PI * 4; t.g.rotation.z *= 0.9;
+          h.material.opacity = Math.max(0, 1 - u * 1.3);
+        } else {
+          t.g.position.y = 0; t.g.scale.setScalar(1.25); t.g.rotation.set(0, 0, 0);
+          if (h.visible) { h.visible = false; h.material.opacity = 0; for (let i = 0; i < 8; i++) spark(c.x, 0.3, c.hz, 0); }
+          t.state = "back"; t.t0 = now();
+        }
+      }
+    }
+
     function step(dt, tNow) {
       const rv = S.rv;
-      for (const t of trolleys) for (const w of t.wheels) w.rotation.x += dt * (6 + S.v * 0.5);
+      for (const t of trolleys) if (!t.dead) for (const w of t.wheels) w.rotation.x += dt * (6 + S.v * 0.5);
       if (S.phase === "play" && S.q) {
         const tau = clamp((tNow - S.q.startedAt) / Math.max(1, S.q.endsAt - S.q.startedAt), 0, 1);
         const z = Z_FORK + gapAt(tau);
         for (const t of trolleys) {
+          if (t.dead) continue;
           t.g.position.z = z; t.g.position.y = Math.sin(tNow / 60 + t.x0) * 0.04 * (0.4 + S.v / 40);
           t.g.position.x += (t.x0 + t.lean * 0.9 - t.g.position.x) * clamp(dt * 8, 0, 1);
           t.g.rotation.z += (-t.lean * 0.12 + Math.sin(tNow / 130 + t.x0) * 0.02 - t.g.rotation.z) * clamp(dt * 8, 0, 1);
@@ -379,46 +500,49 @@
       } else if (S.phase === "reveal" && rv) {
         const el = tNow - S.revealAt;
         for (const t of trolleys) {
+          if (t.dead) continue;
           if (t.state === "run") {
             const k = clamp((tNow - t.t0) / t.dur, 0, 1), zEnd = t.side ? Z_WALL + 2.3 : Z_FORK - 3.5;     // 壁・中央の柱の手前まで
             const z = t.zStart + (zEnd - t.zStart) * (0.3 * k + 0.7 * k * k);
             t.g.position.z = z; t.g.position.x = pathAt(t, z); t.g.position.y = 0.02;
             t.g.rotation.y = -Math.atan2(pathAt(t, z - 0.5) - pathAt(t, z + 0.5), 1) * 0.9;
             t.sparkT -= dt; if (t.sparkT <= 0) { t.sparkT = 0.03; spark(t.g.position.x + (rnd() < 0.5 ? -1 : 1), 0.25, z + 1.4, 0); }
-            if (k >= 1) {
-              t.state = t.ok ? "win" : "crash"; t.t0 = tNow;
-              const pn = panels[t.side === -1 ? 0 : 1];
-              if (t.ok && t.side && !pn.broken) shatter(pn, t.side);
-              if (t.ok) { setMark(t, "⭕"); S.shake = Math.max(S.shake, 0.7); }
-              else { setMark(t, "💥"); t.vz = 9; t.vy = 7; t.spin = (t.x0 > 0 ? 1 : -1) * 5; S.shake = Math.max(S.shake, 1); for (let i = 0; i < 10; i++) spark(t.g.position.x, 1, t.g.position.z - 1.5, -5); }
-            }
-          } else if (t.state === "win") {
-            const a = tNow - t.t0;
-            t.g.position.z = Math.max(Z_WALL - 22, t.g.position.z - dt * 16 * Math.max(0.15, 1 - a / 1400));
-            t.g.position.y = Math.abs(Math.sin(a / 140)) * 0.45 * Math.max(0, 1 - a / 1200);
-            t.mark.position.y = 3.9 + Math.sin(a / 160) * 0.25;
+            if (k >= 1) impact(t, tNow);
+          } else if (t.state === "win") {                                     // 壁をつき破って、ゴールの床を走りつづける
+            const a = (tNow - t.t0) / 1000;
+            const sp = CRUISE + 26 * Math.max(0, 1 - a / 1.3);
+            t.g.position.z = Math.max(Z_WALL - 38, t.g.position.z - dt * sp);
+            t.g.position.y = Math.abs(Math.sin(a * 7)) * 0.45 * Math.max(0, 1 - a / 1.2);
+            t.g.rotation.y *= 0.9;
+            t.mark.position.y = 3.9 + Math.sin(a * 6) * 0.25;
           } else if (t.state === "crash") {
-            t.vy -= 22 * dt; t.g.position.y += t.vy * dt; t.g.position.z += t.vz * dt; t.vz *= 0.97;
-            t.g.rotation.z += t.spin * dt; t.g.rotation.x += 2.4 * dt;
-            if (t.g.position.y < -9) { t.g.position.y = -9; t.vy = 0; }
+            crashStep(t, (tNow - t.t0) / 1000, dt);
+          } else if (t.state === "back") {                                    // レールにもどって、そのまま少し進む(ゆっくり止まる)
+            const a = (tNow - t.t0) / 1000;
+            t.g.position.y = Math.abs(Math.sin(a * 6)) * 0.18 * Math.max(0, 1 - a / 0.8);
+          } else if (t.state === "cruise") {
+            t.g.position.z -= dt * CRUISE; t.g.position.y = Math.sin(tNow / 70 + t.x0) * 0.03;
           }
         }
-        if (el > 1700) panels.forEach((p, i) => { if (p.mesh.visible && i === (rv.a === 0 ? 0 : 1)) p.mesh.material.emissive.setHex(0x1f8f3a); else if (p.mesh.visible) p.mesh.material.emissive.setHex(0x6a1010); });
-        if (el > REVEAL_MS + 1200) S.idleAt = tNow;
+        if (S.firstImpact && tNow - S.firstImpact > 500) panels.forEach((p, i) => { if (p.mesh.visible) p.mesh.material.emissive.setHex(i === (rv.a === 0 ? 0 : 1) ? 0x1f8f3a : 0x6a1010); });
+        if (el > 6900) S.idleAt = tNow;
       }
-      // 破片・火花・紙ふぶき
+      // 破片・粒・紙ふぶき
       for (const p of panels) for (const s of p.shards) if (s.visible) {
         const u = s.userData; u.t += dt; u.vy -= 20 * dt;
         s.position.x += u.vx * dt; s.position.y += u.vy * dt; s.position.z += u.vz * dt * Math.max(0.1, 1 - u.t);
         s.rotation.x += u.rx * dt * 3; s.rotation.y += u.ry * dt * 3;
         if (s.position.y < -2 || u.t > 2.4) s.visible = false;
       }
-      for (const m of sparks) if (m.visible) { const u = m.userData; u.t += dt; u.vy -= 16 * dt; m.position.x += u.vx * dt; m.position.y = Math.max(0.1, m.position.y + u.vy * dt); m.position.z += u.vz * dt; if (u.t > 0.5) m.visible = false; }
+      for (const pl of pools) for (const m of pl.arr) if (m.visible) {
+        const u = m.userData; u.t += dt; u.vy -= u.g * dt; m.position.x += u.vx * dt; m.position.y = Math.max(0.05, m.position.y + u.vy * dt); m.position.z += u.vz * dt;
+        m.scale.setScalar(Math.max(0.05, 1 - u.t / u.life)); if (u.t > u.life) m.visible = false;
+      }
       for (const m of confetti) if (m.visible) { const u = m.userData; u.t += dt; u.vy -= 14 * dt; m.position.x += u.vx * dt; m.position.y += u.vy * dt; m.position.z += u.vz * dt; m.rotation.x += u.rx * dt; m.rotation.y += u.ry * dt; if (u.t > 2.2 || m.position.y < -1) m.visible = false; }
 
       // カメラ: トロッコを後ろから追う。速いほど遠く・視野が広い
       let zs = 0, xs = 0, cnt = 0;
-      for (const t of trolleys) { if (t.state === "crash" && t.g.position.y < -1) continue; zs += t.g.position.z; xs += t.g.position.x; cnt++; }
+      for (const t of trolleys) { if (t.dead || !t.g.visible || (t.state === "crash" && t.g.position.y < -1)) continue; zs += t.g.position.z; xs += t.g.position.x; cnt++; }
       if (cnt) { S.lastTz = zs / cnt; S.lastTx = xs / cnt; }
       const back = 8.8 + clamp(S.v / 60, 0, 1) * 3.2;
       S.camZ += ((S.lastTz + back) - S.camZ) * clamp(dt * 9, 0, 1);
@@ -431,12 +555,14 @@
       S.shake = Math.max(0, S.shake - dt * 1.8);
       camera.position.set(S.lastTx * 0.35 + sh, 4.3 - vf * 0.5 + sh * 0.6, S.camZ);
       camera.lookAt(S.lastTx * 0.6, 1.6, S.camZ - 20);
+      // フラッシュ(0.4秒でうすれる)
+      if (S.flash > 0) { S.flash = Math.max(0, S.flash - dt * 2.6); flash.material.opacity = S.flash; flash.visible = S.flash > 0; } else if (flash.visible) flash.visible = false;
       // 流線: カメラのまわりに置いて、うしろへ飛びさったら前へ戻す。速いほど長く・濃く
       streakMat.opacity = clamp((S.v - 10) / 38, 0, 0.9);
       const len = 1 + S.v * 0.16;
       for (const m of streaks) {
         const u = m.userData;
-        if (m.position.z > camera.position.z + 6 || !u.init) { u.init = 1; m.position.set((rnd() - 0.5) * 34, 0.3 + rnd() * 9, camera.position.z - 18 - rnd() * 60); }
+        if (m.position.z > camera.position.z + 6 || m.position.z < camera.position.z - 120 || !u.init) { u.init = 1; m.position.set((rnd() - 0.5) * 34, 0.3 + rnd() * 9, camera.position.z - 18 - rnd() * 60); }
         m.scale.z = len;
       }
     }
@@ -450,7 +576,7 @@
         const tNow = now();
         step(dt || 0.025, tNow);
         renderer.render(scene, camera);
-        if (S.phase === "idle" || (S.phase === "reveal" && S.idleAt && tNow - S.idleAt > 2500)) { S.running = false; return; }
+        if (S.phase === "idle" || (S.phase === "reveal" && S.idleAt && tNow - S.idleAt > 300)) { S.running = false; return; }
       }
       S.raf = root.requestAnimationFrame(frame);
     }
