@@ -102,9 +102,11 @@
       const t = el && el.closest && el.closest("[data-id]");
       return t ? t.getAttribute("data-id") : null;
     }
+    /** 通信が切れて戻ったなど、この問題の解答権がない */
+    const sitOut = () => !!(u.v && u.v.phase === "play" && Array.isArray(u.v.sit) && u.v.sit.includes(myId));
     function pick(id) {
       const pop = stage.querySelector("#geo-pop");
-      if (u.locked || !u.v || u.v.phase !== "play") return;
+      if (u.locked || sitOut() || !u.v || u.v.phase !== "play") return;
       if (!id || !names.has(id)) { ctx.say && ctx.say("そこは選{えら}べないよ", ""); return; }
       u.sel = id;
       u.svg.querySelectorAll(".sel").forEach((e) => e.classList.remove("sel"));
@@ -175,6 +177,7 @@
       if (!u.locked && v.answers && v.answers[myId] && v.phase === "play") {   // 再接続などで、すでに決定済み
         u.locked = true; stage.querySelector("#geo-pop").hidden = true;
       }
+      if (sitOut()) { u.locked = true; stage.querySelector("#geo-pop").hidden = true; }   // 途中で戻ったので、この問題は答えられない
       if (v.phase === "between" && v.reveal && !u.revealed) showReveal(v);
       if (v.phase === "play") u.revealed = false;
     }
@@ -215,7 +218,7 @@
     }
 
     function unbusy() {
-      if (u.locked && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play") {
+      if (u.locked && !sitOut() && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play") {
         u.locked = false;
         u.svg.querySelectorAll(".locked").forEach((e) => e.classList.remove("locked"));
         clearSel();

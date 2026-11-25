@@ -142,10 +142,13 @@ function advance(st, fromId, now, events) {
   if (living.length <= 1) return finish(st, living.length ? "last_one" : "all_out", events);
   const order = st.players;
   let i = order.findIndex((p) => p.id === fromId);
-  for (let n = 0; n < order.length; n++) {
+  for (let n = 0; n < order.length; n++) {            // 通信が切れている人の番は、待たずに飛ばす
     i = (i + 1) % order.length;
-    if (order[i].alive) { setTurn(st, order[i].id, now); events.push({ kind: "turn", playerId: order[i].id }); return; }
+    if (order[i].alive && order[i].connected) { setTurn(st, order[i].id, now); events.push({ kind: "turn", playerId: order[i].id }); return; }
   }
+  // 生きている人が全員、通信が切れている: だれかが戻るまで、番も時計も止める
+  st.turnId = null; st.turnEndsAt = null; st.pausedAt = null;
+  events.push({ kind: "waiting" });
 }
 
 function finish(st, reason, events) {
@@ -241,6 +244,29 @@ export function hint(st, id, now) {
   p.score = Math.max(0, p.score - HINT_COST);
   st.updatedAt = now;
   return { ok: true, events: [] };
+}
+
+/** 通信が切れた(ゲーム中)。その人の番なら、待たずに次の人へ(ライフは減らさない) */
+export function left(st, id, now) {
+  if (st.phase !== "playing" || st.turnId !== id) return { ok: false, events: [] };
+  const events = [{ kind: "skipped", playerId: id }];
+  advance(st, id, now, events);
+  st.updatedAt = now;
+  return { ok: true, events };
+}
+
+/** 戻った(ゲーム中)。みんなが切れていて止まっていたなら、その人から再開する */
+export function returned(st, id, now) {
+  const p = player(st, id);
+  if (st.phase !== "playing" || st.turnId !== null || !p || !p.alive) return { ok: false, events: [] };
+  setTurn(st, id, now);
+  st.updatedAt = now;
+  return { ok: true, events: [{ kind: "turn", playerId: id }] };
+}
+
+/** ゲーム中なのに、だれも戻らないまま長く(30分)たった部屋 */
+export function abandoned(st, now) {
+  return st.phase === "playing" && !st.players.some((p) => p.connected) && now >= st.updatedAt + 30 * 60 * 1000;
 }
 
 /** ゲーム終了後に、同じメンバーでもう一度(ロビーへ戻る) */

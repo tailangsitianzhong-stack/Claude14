@@ -76,7 +76,12 @@ function sync(st, events) {
   return events.map((e) => Object.assign({ kind: e.type }, e));
 }
 const bad = (r) => ({ ok: false, error: r.reason, reason: r.reason, events: [] });
-const playing = (st) => st.phase === "playing" && st.g;
+/** 進行中の部屋か。古い形式の状態(切れた人の記録がない)なら、空の記録を足す */
+const playing = (st) => {
+  if (st.phase !== "playing" || !st.g) return false;
+  if (!st.g.away) Object.assign(st.g, { away: [], sit: [], frozenAt: 0 });
+  return true;
+};
 
 export function choose(st, id, m, now) {
   if (!playing(st)) return { ok: false, error: "bad_phase", events: [] };
@@ -132,6 +137,22 @@ export function timeout(st, now, rng) {
   if (!playing(st)) return { ok: false, events: [] };
   const ev = E().tick(st.g, now, rng || Math.random);
   if (!ev.length) return { ok: false, events: [] };
+  st.updatedAt = now;
+  return { ok: true, events: sync(st, ev) };
+}
+
+/** 通信が切れた(ゲーム中)。待たずに進める。戻ってもいまの問題は答えられない */
+export function left(st, id, now) {
+  if (!playing(st)) return { ok: false, events: [] };
+  const ev = E().leave(st.g, id, now);
+  st.updatedAt = now;
+  return { ok: true, events: sync(st, ev) };
+}
+
+/** 戻った(ゲーム中) */
+export function returned(st, id, now) {
+  if (!playing(st)) return { ok: false, events: [] };
+  const ev = E().back(st.g, id, now);
   st.updatedAt = now;
   return { ok: true, events: sync(st, ev) };
 }

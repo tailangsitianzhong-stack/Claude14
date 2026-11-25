@@ -20,7 +20,7 @@
   const DIFFS = [{ key: "easy", label: "やさしい" }, { key: "normal", label: "ふつう" }, { key: "hard", label: "むずかしい" }];
   const REASONS = {
     not_playing: "もう締{し}め切{き}られたよ", timeout: "間{ま}に合{あ}わなかった…", already: "もう決定{けってい}しているよ", taken: "ほかの人{ひと}が先{さき}に押{お}したよ",
-    locked_out: "この問題{もんだい}では押{お}せないよ", not_your_turn: "今{いま}はあなたの番{ばん}じゃないよ", bad_answer: "その答{こた}えは選{えら}べないよ", empty: "答{こた}えを入力{にゅうりょく}してね", judging: "確認中{かくにんちゅう}だよ"
+    locked_out: "この問題{もんだい}では押{お}せないよ", sit_out: "途中{とちゅう}で戻{もど}ったので、この問題{もんだい}は答{こた}えられないよ（次{つぎ}の問題{もんだい}から）", not_your_turn: "今{いま}はあなたの番{ばん}じゃないよ", bad_answer: "その答{こた}えは選{えら}べないよ", empty: "答{こた}えを入力{にゅうりょく}してね", judging: "確認中{かくにんちゅう}だよ"
   };
 
   function create(ctx) {

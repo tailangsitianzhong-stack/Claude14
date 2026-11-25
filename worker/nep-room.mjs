@@ -54,6 +54,9 @@ export function setSettings(st, id, patch, now) {
  * 開始できる人数: vs(2対2)はちょうど4人、coop(みんなで1チーム)は2〜4人。
  * 席の順は部屋の席(slot)の順。vs は 赤青赤青 と交互になる(席0・2が赤、1・3が青)
  */
+/** 古い形式の状態(切れた人の記録がない)なら、空の記録を足す */
+function fix(st) { if (st.g && !st.g.away) Object.assign(st.g, { away: [], sit: [], frozenAt: 0 }); }
+
 export function canStart(settings, connected) {
   return settings.mode === "vs" ? connected === 4 : connected >= L.MIN_PLAYERS;
 }
@@ -85,6 +88,7 @@ function sync(st, events) {
 
 /** 持っている人の答え {word} */
 export function answer(st, id, m, now, rng) {
+  fix(st);
   if (st.phase !== "playing" || !st.g) return { ok: false, error: "bad_phase", events: [] };
   if (!m || typeof m.word !== "string" || m.word.length > MAX_WORD) return { ok: false, error: "bad_message", events: [] };
   const r = E().answer(st.g, id, m.word, now, rng || Math.random);
@@ -99,6 +103,7 @@ export function answer(st, id, m, now, rng) {
 
 /** ヒント(持っている人だけ・1ラウンドに1回・-5点)。頭文字と文字数が全員の画面に出る */
 export function hint(st, id, now, rng) {
+  fix(st);
   if (st.phase !== "playing" || !st.g) return { ok: false, error: "bad_phase", events: [] };
   const r = E().hint(st.g, id, now, rng || Math.random);
   if (!r.ok) return { ok: false, error: r.reason, reason: r.reason, events: [] };
@@ -108,9 +113,28 @@ export function hint(st, id, now, rng) {
 
 /** アラームから: 導火線が切れた / 次のラウンドの時間。まだなら ok:false */
 export function timeout(st, now, rng) {
+  fix(st);
   if (st.phase !== "playing" || !st.g) return { ok: false, events: [] };
   const ev = E().tick(st.g, now, rng || Math.random);
   if (!ev.length) return { ok: false, events: [] };
+  st.updatedAt = now;
+  return { ok: true, events: sync(st, ev) };
+}
+
+/** 通信が切れた(ゲーム中)。爆弾を持っていたら次の人へ渡し、待たない */
+export function left(st, id, now) {
+  fix(st);
+  if (st.phase !== "playing" || !st.g) return { ok: false, events: [] };
+  const ev = E().leave(st.g, id, now);
+  st.updatedAt = now;
+  return { ok: true, events: sync(st, ev) };
+}
+
+/** 戻った(ゲーム中)。いまの問題では爆弾を受けとれない */
+export function returned(st, id, now) {
+  fix(st);
+  if (st.phase !== "playing" || !st.g) return { ok: false, events: [] };
+  const ev = E().back(st.g, id, now);
   st.updatedAt = now;
   return { ok: true, events: sync(st, ev) };
 }

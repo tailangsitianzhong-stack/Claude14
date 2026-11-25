@@ -25,6 +25,10 @@ const MAX_MESSAGE = 2000;
 /** 次にアラームを鳴らす時刻。ミニネプリーグは導火線/次のラウンドの時刻、ほかは制限時間 */
 const nextAlarmOf = (st, now) => (st.game === "nep" ? N.nextAlarm(st, now) : st.game === "geo" ? G.nextAlarm(st, now) : L.nextAlarm(st, now));
 
+/** ゲーム中に通信が切れた / 戻ったときの進め方(待たずに進める。戻ってもその問題の解答権はない) */
+const onLeft = (st, id, now) => (st.game === "geo" ? G.left(st, id, now) : st.game === "nep" ? N.left(st, id, now) : st.game === "kanken" ? K.left(st, id, now) : L.left(st, id, now));
+const onReturned = (st, id, now) => (st.game === "geo" ? G.returned(st, id, now) : st.game === "nep" ? N.returned(st, id, now) : st.game === "kanken" ? K.returned(st, id, now) : L.returned(st, id, now));
+
 export class Room extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
@@ -81,8 +85,13 @@ export class Room extends DurableObject {
       server.close(1000, res.error);
       return new Response(null, { status: 101, webSocket: client });
     }
+    const events = res.events.slice();
+    if (events.some((e) => e.kind === "reconnected")) {            // ゲーム中に戻ってきた
+      const back = onReturned(st, cid, Date.now());
+      if (back.ok) events.push(...back.events);
+    }
     await this.save(st);
-    this.broadcast(st, res.events);
+    this.broadcast(st, events);
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -172,8 +181,11 @@ export class Room extends DurableObject {
     const st = await this.load();
     if (!st) return;
     const res = L.disconnect(st, id, Date.now());
+    const events = res.events.slice();
+    const gone = onLeft(st, id, Date.now());                       // 待たずに進める
+    if (gone.ok) events.push(...gone.events);
     await this.save(st);
-    this.broadcast(st, res.events);
+    this.broadcast(st, events);
   }
 
   /** 制限時間の判定と、使われなくなった部屋の片づけ */
@@ -184,7 +196,10 @@ export class Room extends DurableObject {
     if (st.phase === "playing") {
       const r = st.game === "kanken" ? K.timeout(st, now) : st.game === "nep" ? N.timeout(st, now) : st.game === "geo" ? G.timeout(st, now) : L.timeout(st, now);
       if (r.ok) { await this.save(st); this.broadcast(st, r.events); }
-      else await this.ctx.storage.setAlarm(nextAlarmOf(st, now));
+      else if (L.abandoned(st, now)) {                       // だれも戻らないまま長く経った部屋は片づける
+        for (const ws of this.ctx.getWebSockets()) { try { ws.close(1000, "expired"); } catch (_) {} }
+        await this.ctx.storage.deleteAll();
+      } else await this.ctx.storage.setAlarm(nextAlarmOf(st, now));
       return;
     }
     if (L.expired(st, now)) {

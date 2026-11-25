@@ -56,7 +56,12 @@
     const byId = (st, id) => st.players.find((p) => p.id === id);
     const idxOf = (st, id) => st.players.findIndex((p) => p.id === id);
     /** 席の次の人(席の順にぐるぐるまわる。人は脱落しない) */
-    const nextSeat = (st, fromIdx) => st.players[(fromIdx + 1) % st.players.length];
+    /** 次の席の人。skip に入っている人(通信が切れた人・この問題の解答権がない人)は飛ばす。全員が飛ばされるなら、ただの次の席 */
+    const nextSeat = (st, fromIdx, skip = []) => {
+      const n = st.players.length;
+      for (let k = 1; k <= n; k++) { const p = st.players[(fromIdx + k) % n]; if (!skip.includes(p.id)) return p; }
+      return st.players[(fromIdx + 1) % n];
+    };
     const teamOf = (st, pid) => st.teams[byId(st, pid).team];
 
     function newGame({ players, difficulty = "normal", mode = "vs", now, rng = Math.random }) {
@@ -84,6 +89,7 @@
         hintUsed: [],             // このラウンドでヒントを使った人
         outcome: null,            // 直前のラウンドの結果 { type:"defuse"|"explode", pid, team, ... }
         usedKeys: [], lastKind: null,
+        away: [], sit: [], frozenAt: 0,   // away=いま通信が切れている人 / sit=この問題で、爆弾を受けとれない人(切れた・途中で戻った) / frozenAt=全員いないので時計を止めている
         startedAt: now, endedAt: 0, result: null
       };
       st.starterId = st.players[Math.floor(rng() * st.players.length)].id;
@@ -105,6 +111,8 @@
       st.count = 0;
       st.used = [];
       st.last = null;
+      st.sit = st.away.slice();                                       // 出題の時にいない人は、この問題では爆弾を受けとれない
+      if (st.sit.includes(st.starterId)) st.starterId = nextSeat(st, idxOf(st, st.starterId), st.sit).id;
       st.holder = st.starterId;
       st.fuseEndsAt = now + FUSE_MS;
       st.phase = "play";
@@ -142,7 +150,7 @@
       const examples = T.candidates(st.topic, st.count, st.last, st.used).slice(0, 4);
       st.outcome = { type: "explode", pid: h.id, team: h.team, lives: t.lives, out: t.lives <= 0, count: st.count, need: st.need, examples };
       const ev = [{ type: "explode", pid: h.id, team: h.team, lives: t.lives, out: t.lives <= 0 }];
-      st.starterId = nextSeat(st, idxOf(st, h.id)).id;
+      st.starterId = nextSeat(st, idxOf(st, h.id), st.away).id;
       st.phase = "between";
       st.nextAt = now + BETWEEN_MS;
       st.holder = null;
@@ -153,6 +161,7 @@
 
     /** 時間が来ていれば進める。起きたことを返す */
     function tick(st, now, rng = Math.random) {
+      if (st.frozenAt) return [];                         // 全員の通信が切れている間は、時計を止める
       if (st.phase === "between" && now >= st.nextAt) return startRound(st, now, rng);
       if (st.phase === "play" && now > st.fuseEndsAt + GRACE_MS) return explode(st, now);
       return [];
@@ -161,6 +170,7 @@
     function answer(st, pid, text, now, rng = Math.random) {
       if (st.phase !== "play") return { ok: false, reason: "not_playing", events: [] };
       if (pid !== st.holder) return { ok: false, reason: "not_your_turn", events: [] };
+      if (st.sit.includes(pid)) return { ok: false, reason: "sit_out", events: [] };
       if (now > st.fuseEndsAt + GRACE_MS) return { ok: false, reason: "timeout", events: tick(st, now, rng) };
       const j = T.judge(st.topic, st.count, st.last, st.used, text);
       if (!j.ok) {
@@ -178,7 +188,7 @@
         p.score += BONUS; t.score += BONUS;
         st.defused += 1;
         st.outcome = { type: "defuse", pid, team: p.team, count: st.count, need: st.need, bonus: BONUS };
-        st.starterId = nextSeat(st, idxOf(st, pid)).id;
+        st.starterId = nextSeat(st, idxOf(st, pid), st.away).id;
         st.phase = "between";
         st.nextAt = now + BETWEEN_MS;
         st.holder = null;
@@ -187,7 +197,7 @@
         else if (st.mode === "vs" && st.round >= st.maxRounds) ev.push(finish(st, now, "rounds"));
         return { ok: true, word: j.word, events: ev };
       }
-      const nxt = nextSeat(st, idxOf(st, pid));
+      const nxt = nextSeat(st, idxOf(st, pid), st.sit);
       st.holder = nxt.id;
       setPrompt(st);
       return { ok: true, word: j.word, events: [{ type: "accept", pid, team: p.team, word: j.word, count: st.count, need: st.need, next: nxt.id }] };
@@ -214,7 +224,45 @@
     }
 
     /** 次に tick が必要な時刻(なければ 0)。部屋(サーバー)のアラームに使う */
+    /**
+     * 友達対戦: 通信が切れた人は待たない。爆弾を持っていたら、減点も爆発もなしで次の人へ渡す。
+     * 戻ってきても、その問題では爆弾を受けとれない。全員が切れたら、時計を止める。
+     */
+    function leave(st, pid, now) {
+      if (!byId(st, pid)) return [];
+      if (!st.away.includes(pid)) st.away.push(pid);
+      if (st.away.length >= st.players.length) { if (!st.frozenAt) st.frozenAt = now; return []; }
+      if (st.phase !== "play") return [];
+      if (!st.sit.includes(pid)) st.sit.push(pid);
+      const ev = [{ type: "left", pid }];
+      if (st.holder === pid) {
+        const nxt = nextSeat(st, idxOf(st, pid), st.sit);
+        st.holder = nxt.id;
+        setPrompt(st);
+        ev.push({ type: "pass", pid, next: nxt.id });
+      }
+      return ev;
+    }
+
+    /** 戻った。止めていた時計を進める。この問題では爆弾を受けとれない(次の問題から) */
+    function back(st, pid, now) {
+      const i = st.away.indexOf(pid);
+      if (i < 0) return [];
+      st.away.splice(i, 1);
+      if (st.frozenAt) {
+        shift(st, Math.max(0, now - st.frozenAt));
+        st.frozenAt = 0;
+        if (st.phase === "play") {                      // 全員が切れていた間は、問題は進んでいない。最初に戻った人から続ける
+          st.sit = st.away.slice();
+          if (st.sit.includes(st.holder)) st.holder = nextSeat(st, idxOf(st, st.holder), st.sit).id;
+          setPrompt(st);
+        }
+      }
+      return [{ type: "back", pid }];
+    }
+
     function nextDeadline(st) {
+      if (st.frozenAt) return 0;
       if (st.phase === "play") return st.fuseEndsAt + GRACE_MS + 1;
       if (st.phase === "between") return st.nextAt;
       return 0;
@@ -232,7 +280,7 @@
       return rest;
     }
 
-    return { newGame, tick, answer, hint, nextDeadline, shift, view, needFor, byId, teamOf };
+    return { newGame, tick, answer, hint, leave, back, nextDeadline, shift, view, needFor, byId, teamOf };
   }
 
   return { FUSE_MS, GRACE_MS, BETWEEN_MS, START_MS, TEAM_LIVES, COOP_GOAL, MAX_ROUNDS, POINT, BONUS, HINT_COST, NEED, DIFFICULTIES, MODES, TEAM_KEYS, needFor, create };

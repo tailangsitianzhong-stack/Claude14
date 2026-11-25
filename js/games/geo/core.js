@@ -11,6 +11,7 @@
  *   E.press(st, pid, now)                // 早押し: ボタンを押す(問題文が止まる)
  *   E.answer(st, pid, text, now)         // 早押し: 答えを送る → {verdict:"correct|wrong|unsure"}。unsure は AI 判定が必要
  *   E.judged(st, pid, ok, now)           // AI の判定結果を伝える
+ *   E.leave(st, pid, now) / E.back(st, pid, now)   // 友達対戦で、通信が切れた / 戻った(切れた人は待たない。戻ってもその問題は解答権なし)
  *   E.nextDeadline(st)                   // 次に tick が必要な時刻(アラーム用)
  *   E.view(st)                           // 他の人へ見せてよい形(答えは、ラウンドが終わるまで含めない)
  *
@@ -56,6 +57,7 @@
         round: 0, phase: "between", nextAt: now + START_MS,
         q: null, priv: null, startedAt: 0, endsAt: 0,
         answers: {}, buzz: null, reveal: null,
+        away: [], sit: [], frozenAt: 0,      // away=いま通信が切れている人 / sit=この問題の解答権がない人(切れた・途中で戻った) / frozenAt=全員いないので止めている
         usedIds: [], lastK: null,
         startedAtGame: now, result: null
       };
@@ -80,6 +82,7 @@
       st.usedIds.push(picked.pub.id);
       st.lastK = picked.pub.k || null;
       st.answers = {}; st.reveal = null;
+      st.sit = st.away.slice();                     // 出題の時にいない人は、この問題は答えられない
       st.phase = "play"; st.startedAt = now;
       st.buzz = null; st.endsAt = 0;
       if (st.rmode === "choice") st.endsAt = now + (st.grade === "exam" ? Math.max(25000, (CHOICE_MS[st.q.k] || 25000) * EXAM_X) : CHOICE_MS[st.q.k] || 25000);
@@ -145,6 +148,7 @@
     function buzzElapsed(st, now) { return now - st.startedAt - st.buzz.pauseMs; }
 
     function tick(st, now, rng = Math.random) {
+      if (st.frozenAt) return [];                    // 全員の通信が切れている間は、時計を止める
       if (st.phase === "between") {
         if (now < st.nextAt) return [];
         return st.round >= st.rounds ? [finish(st, now)] : startRound(st, now, rng);
@@ -161,11 +165,15 @@
     }
 
     /* ---------- 資料選択・地図 ---------- */
-    function allDone(st) { return st.players.every((p) => st.answers[p.id]); }
+    /** 解答権のある人(切れた人・途中で戻った人はふくまない)が全員答えたか。権利のある人がいなければ false */
+    const active = (st) => st.players.filter((p) => !st.sit.includes(p.id));
+    function allDone(st) { const a = active(st); return a.length > 0 && a.every((p) => st.answers[p.id]); }
+    const sitOut = (st, pid) => st.sit.includes(pid);
 
     function choose(st, pid, i, now) {
       if (st.phase !== "play" || st.rmode !== "choice") return { ok: false, reason: "not_playing", events: [] };
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
+      if (sitOut(st, pid)) return { ok: false, reason: "sit_out", events: [] };
       if (st.answers[pid]) return { ok: false, reason: "already", events: [] };
       if (now > st.endsAt) return { ok: false, reason: "timeout", events: [] };
       if (!Number.isInteger(i) || i < 0 || i > 3) return { ok: false, reason: "bad_answer", events: [] };
@@ -178,6 +186,7 @@
     function lock(st, pid, id, now) {
       if (st.phase !== "play" || st.rmode !== "map") return { ok: false, reason: "not_playing", events: [] };
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
+      if (sitOut(st, pid)) return { ok: false, reason: "sit_out", events: [] };
       if (st.answers[pid]) return { ok: false, reason: "already", events: [] };
       if (now > st.endsAt) return { ok: false, reason: "timeout", events: [] };
       if (typeof id !== "string" || !Q.isValidTarget(st.q.map, id)) return { ok: false, reason: "bad_answer", events: [] };
@@ -192,12 +201,16 @@
       if (st.phase !== "play" || st.rmode !== "buzz") return { ok: false, reason: "not_playing", events: [] };
       const b = st.buzz;
       if (!byId(st, pid)) return { ok: false, reason: "no_player", events: [] };
+      if (sitOut(st, pid)) return { ok: false, reason: "sit_out", events: [] };
       if (b.by) return { ok: false, reason: "taken", events: [] };
       if (b.lockedOut.includes(pid)) return { ok: false, reason: "locked_out", events: [] };
       const idx = Text.visible(st.q.at, buzzElapsed(st, now));
       Object.assign(b, { by: pid, at: now, idx, answerEndsAt: now + ANSWER_MS * (st.grade === "exam" ? EXAM_X : 1), judging: null });
       return { ok: true, events: [{ type: "press", pid, idx }] };
     }
+
+    /** 早押しで、まだ解答権がある人(切れていない・まちがえていない)がいないか。全員がいないときは別(止めている) */
+    const noneLeft = (st) => active(st).length > 0 && active(st).every((p) => st.buzz.lockedOut.includes(p.id));
 
     /** まちがい・時間切れ: -5点、そのラウンドは解答権なし。問題文はつづきから再開 */
     function wrong(st, pid, now, why) {
@@ -207,7 +220,7 @@
       b.pauseMs += now - b.at;                    // 止まっていた分だけ、文の進みをずらす(つづきから流れる)
       b.by = null; b.judging = null;
       const ev = [{ type: "wrong", pid, why }];
-      if (st.players.every((p) => b.lockedOut.includes(p.id))) ev.push(...endRound(st, now, "allwrong"));
+      if (noneLeft(st)) ev.push(...endRound(st, now, "allwrong"));
       return ev;
     }
 
@@ -241,8 +254,45 @@
       return { ok: true, events: ok ? correct(st, pid, now) : wrong(st, pid, now, "wrong") };
     }
 
+    /* ---------- 友達対戦: 通信が切れた / 戻った ---------- */
+    /**
+     * 通信が切れた人は待たない。いまの問題の解答権はなくなる(戻ってきても、その問題は答えられない)。
+     * 押した人が切れたら、減点なしで解答権だけなくして、問題文はつづきから流れる。全員が切れたら、時計を止める。
+     */
+    function leave(st, pid, now) {
+      if (!byId(st, pid)) return [];
+      if (!st.away.includes(pid)) st.away.push(pid);
+      if (st.away.length >= st.players.length) { if (!st.frozenAt) st.frozenAt = now; if (st.phase === "play" && !st.sit.includes(pid)) st.sit.push(pid); return []; }
+      if (st.phase !== "play") return [];
+      if (!st.sit.includes(pid)) st.sit.push(pid);
+      const ev = [{ type: "left", pid }];
+      if (st.rmode !== "buzz") { if (allDone(st)) ev.push(...endRound(st, now, "all")); return ev; }
+      const b = st.buzz;
+      if (b.by === pid) {                              // 答えている途中で切れた: 解答権だけなくす(減点なし)
+        b.lockedOut.push(pid);
+        b.pauseMs += now - b.at;
+        b.by = null; b.judging = null;
+      }
+      if (noneLeft(st)) ev.push(...endRound(st, now, "allwrong"));
+      return ev;
+    }
+
+    /** 戻った。止めていた時計を進めて、その間の時間は問題に数えない。この問題の解答権は、切れた人には戻らない */
+    function back(st, pid, now) {
+      const i = st.away.indexOf(pid);
+      if (i < 0) return [];
+      st.away.splice(i, 1);
+      if (st.frozenAt) {
+        shift(st, Math.max(0, now - st.frozenAt));
+        st.frozenAt = 0;
+        if (st.phase === "play") st.sit = st.away.slice();       // 全員が切れていた間は、問題は進んでいない。最初に戻った人から続ける
+      }
+      return [{ type: "back", pid }];
+    }
+
     /* ---------- そのほか ---------- */
     function nextDeadline(st) {
+      if (st.frozenAt) return 0;
       if (st.phase === "between") return st.nextAt;
       if (st.phase !== "play") return 0;
       if (st.rmode !== "buzz") return st.endsAt;
@@ -268,7 +318,7 @@
       return Object.assign(rest, { answers: st.phase === "play" ? publicAnswers(st) : {} });
     }
 
-    return { newGame, tick, choose, lock, press, answer, judged, nextDeadline, shift, view, byId };
+    return { newGame, tick, choose, lock, press, answer, judged, leave, back, nextDeadline, shift, view, byId };
   }
 
   return { START_MS, BETWEEN_MS, CHOICE_MS, MAP_MS, ANSWER_MS, AI_WAIT_MS, POINT, PENALTY, MODES, RMODES, ROUNDS, DIFFICULTIES, create };

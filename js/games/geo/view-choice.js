@@ -121,8 +121,9 @@
       u.v = v;
       if (!v.q) { stage.innerHTML = `<div class="geo-wait">${Ruby.html("よーい…")}</div>`; u.qid = ""; return; }
       if (u.qid !== v.q.id) build(v);
-      // 自分がすでに答えている(再接続など)
+      // 自分がすでに答えている(再接続など)。通信が切れて戻った人は、この問題は答えられない
       if (!u.locked && v.answers && v.answers[myId]) { u.locked = true; stage.querySelectorAll(".geo-choice").forEach((x) => { x.disabled = true; }); }
+      if (v.phase === "play" && Array.isArray(v.sit) && v.sit.includes(myId)) { u.locked = true; stage.querySelectorAll(".geo-choice").forEach((x) => { x.disabled = true; }); }
       if (v.phase === "between" && v.reveal) {
         const rv = v.reveal;
         stage.querySelectorAll(".geo-choice").forEach((b) => {
@@ -154,7 +155,7 @@
 
     /** 送れなかった/断られたとき: まだ答えが届いていなければ、選び直せるようにする */
     function unbusy() {
-      if (u.locked && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play") {
+      if (u.locked && !(u.v && u.v.answers && u.v.answers[myId]) && u.v && u.v.phase === "play" && !(Array.isArray(u.v.sit) && u.v.sit.includes(myId))) {
         u.locked = false;
         stage.querySelectorAll(".geo-choice").forEach((x) => { x.disabled = false; x.classList.remove("is-picked"); });
       }

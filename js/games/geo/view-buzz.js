@@ -63,7 +63,7 @@
     }
     function press() {
       const v = u.v;
-      if (!v || v.phase !== "play" || (v.buzz && (v.buzz.by || v.buzz.lockedOut.includes(myId)))) return;
+      if (!v || v.phase !== "play" || (v.buzz && (v.buzz.by || v.buzz.lockedOut.includes(myId))) || (Array.isArray(v.sit) && v.sit.includes(myId))) return;
       ctx.actions.press && ctx.actions.press();
     }
 
@@ -117,7 +117,8 @@
       if (!v.q) { stage.innerHTML = `<div class="geo-wait">${Ruby.html("よーい…")}</div>`; u.qid = ""; return; }
       if (u.qid !== v.q.id) build(v);
       const b = v.buzz || {};
-      const lockedMe = (b.lockedOut || []).includes(myId);
+      const sitMe = v.phase === "play" && Array.isArray(v.sit) && v.sit.includes(myId);       // 通信が切れて戻った人は、この問題は答えられない
+      const lockedMe = (b.lockedOut || []).includes(myId) || sitMe;
       const mineNow = v.phase === "play" && b.by === myId;
       const press$ = stage.querySelector("#geo-press");
       const status$ = stage.querySelector("#geo-bstatus");
@@ -127,6 +128,7 @@
       let st = "";
       if (v.phase === "play") {
         if (b.by) st = b.judging ? `🤖 AIが答{こた}えを確認{かくにん}中{ちゅう}…` : b.by === myId ? "✏️ あなたが押{お}した！答{こた}えを入力{にゅうりょく}してね" : `${esc(avatarOf(b.by))} が押{お}した！答{こた}え中{ちゅう}…`;
+        else if (sitMe) st = "途中{とちゅう}で戻{もど}ったので、この問題{もんだい}は答{こた}えられないよ（次{つぎ}の問題{もんだい}から参加{さんか}できるよ）";
         else if (lockedMe) st = "あなたはこの問題{もんだい}の解答権{かいとうけん}がないよ（ほかの人{ひと}を待{ま}とう）";
         else st = "わかったら押{お}してね！";
       }

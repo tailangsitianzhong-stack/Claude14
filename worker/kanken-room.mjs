@@ -89,7 +89,7 @@ function nextPlayer(st, fromId) {
   let i = order.findIndex((p) => p.id === fromId);
   for (let n = 0; n < order.length; n++) {
     i = (i + 1) % order.length;
-    if (order[i].alive) return order[i].id;
+    if (order[i].alive && order[i].connected) return order[i].id;      // 通信が切れている人の番は、待たずに飛ばす
   }
   return null;
 }
@@ -122,9 +122,37 @@ function settle(st, p, result, now, events, rng) {
   }
   const end = shouldEnd(st);
   if (end) { st.q = null; return finish(st, end, events); }
+  if (!alive(st).length) { st.q = null; return finish(st, "all_out", events); }
   const nxt = nextPlayer(st, p.id);
-  if (!nxt) { st.q = null; return finish(st, "all_out", events); }
+  if (!nxt) return wait(st, events);
   ask(st, nxt, now, events, rng);
+}
+
+/** 生きている人が全員、通信が切れている: だれかが戻るまで、番も時計も止める */
+function wait(st, events) {
+  st.q = null; st.turnId = null; st.turnEndsAt = null;
+  events.push({ kind: "waiting" });
+}
+
+/** 通信が切れた(ゲーム中)。その人の番なら、待たずに次の人へ(出題を1つ取り消す) */
+export function left(st, id, now, rng) {
+  if (st.phase !== "playing" || !st.q || st.turnId !== id) return { ok: false, events: [] };
+  const events = [{ kind: "skipped", playerId: id }];
+  st.asked = Math.max(0, st.asked - 1);
+  const nxt = nextPlayer(st, id);
+  if (!nxt) wait(st, events); else ask(st, nxt, now, events, rng);
+  st.updatedAt = now;
+  return { ok: true, events };
+}
+
+/** 戻った(ゲーム中)。みんなが切れていて止まっていたなら、その人から再開する */
+export function returned(st, id, now, rng) {
+  const p = player(st, id);
+  if (st.phase !== "playing" || st.q || st.turnId !== null || !p || !p.alive) return { ok: false, events: [] };
+  const events = [];
+  ask(st, id, now, events, rng);
+  st.updatedAt = now;
+  return { ok: true, events };
 }
 
 /** 順番の人の答え。{reading:"…"} か {choice:0〜3} */

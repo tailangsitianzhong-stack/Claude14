@@ -477,7 +477,9 @@
         case "n_out": return `${who} は「ん」で終{お}わった！`;
         case "out": return `${who} は脱落{だつらく}…`;
         case "joined": return `${who} が入{はい}ったよ`;
-        case "left": return `${who} が抜{ぬ}けたよ`;
+        case "left": return `${who} が抜{ぬ}けたよ（待{ま}たずに進{すす}めるよ）`;
+        case "skipped": return `${who} の番{ばん}は飛{と}ばしたよ`;
+        case "reconnected": return `${who} が戻{もど}ってきたよ`;
         default: return null;
       }
     }
@@ -498,7 +500,9 @@
         </div>`).join("");
       Ruby.apply($("#mp-players"));
 
-      $("#status").innerHTML = (myTurn
+      $("#status").innerHTML = (s.turnId === null
+        ? Ruby.html("みんなの通信{つうしん}が切{き}れているよ。戻{もど}るのを待{ま}っているよ…")
+        : myTurn
         ? Ruby.html("あなたの番{ばん}！「") + `<b>${esc(s.required)}</b>` + Ruby.html("」から始{はじ}まる言葉{ことば}")
         : Ruby.html(`${avatarOf(s.turnId)} の番{ばん}…「`) + `<b>${esc(s.required)}</b>` + Ruby.html("」から"));
 
@@ -509,7 +513,7 @@
       // 起きたことを、ふきだしに出す
       const texts = (events || []).map(eventText).filter(Boolean);
       if (texts.length) p.bubble(texts.join("　"));
-      else if (p.lastTurn === null) p.bubble(`🎮 ${avatarOf(s.turnId)} からスタート！「しりとり」→「り」`);
+      else if (p.lastTurn === null && s.turnId) p.bubble(`🎮 ${avatarOf(s.turnId)} からスタート！「しりとり」→「り」`);
       if ((events || []).some((e) => e.kind === "miss" && e.playerId === cid)) p.say("♥が1つ減{へ}ったよ", "ng");
       // 誰かがGeminiで確認している間は、時間が止まる(全員の画面で)
       $(".shiri-timer").classList.toggle("is-paused", !!s.pausedAt);

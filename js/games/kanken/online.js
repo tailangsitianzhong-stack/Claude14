@@ -152,6 +152,7 @@
             : { t: `${who} ${ev.timeout ? "⏰ 時間切{じかんぎ}れ。" : "❌"}　答{こた}え：${ans}`, k: "ng" };
         }
         if (ev.kind === "out") return { t: `${who} は脱落{だつらく}…`, k: "ng" };
+        if (ev.kind === "skipped") return { t: `${who} の通信{つうしん}が切{き}れたので、番{ばん}を飛{と}ばしたよ`, k: "" };
         return null;
       }
 
@@ -164,7 +165,7 @@
           </div>`).join("");
         Ruby.apply($("#mp-players"));
         $("#kk-progress").innerHTML = Ruby.html(st.settings.mode === "exam" ? `${st.asked} / 60問{もん}` : `${st.asked}問目{もんめ}`);
-        $("#kk-turn").innerHTML = Ruby.html(myTurn ? "あなたの番{ばん}！" : `${shell.avatarOf(st.turnId)} の番{ばん}…`);
+        $("#kk-turn").innerHTML = Ruby.html(st.turnId === null ? "みんなの通信{つうしん}が切{き}れているよ。戻{もど}るのを待{ま}っているよ…" : myTurn ? "あなたの番{ばん}！" : `${shell.avatarOf(st.turnId)} の番{ばん}…`);
         $("#kk-turn").classList.toggle("is-mine", myTurn);
 
         // 結果の表示と、自分の間違いの復習リストへの保存
