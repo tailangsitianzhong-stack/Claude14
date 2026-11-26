@@ -59,10 +59,10 @@
         <div class="panel shiri-menu">
           <h3 class="menu-title">⚙️ 英単語{えいたんご}トランスミッション</h3>
           <p class="note">スタートの単語{たんご}から、文字{もじ}を<b>1つずつ回{まわ}して</b>変{か}えて、ゴールの単語{たんご}までつなごう！途中{とちゅう}もぜんぶ意味{いみ}のある英単語{えいたんご}にするよ。</p>
-          <div class="lad-example" aria-label="れい"><span class="lad-tiles"><b class="lad-tile">R</b><b class="lad-tile">O</b><b class="lad-tile">C</b><b class="lad-tile">K</b></span> → <span class="lad-tiles"><b class="lad-tile is-new">J</b><b class="lad-tile">O</b><b class="lad-tile">C</b><b class="lad-tile">K</b></span> → <span class="lad-tiles"><b class="lad-tile">J</b><b class="lad-tile">O</b><b class="lad-tile is-new">K</b><b class="lad-tile is-new">E</b></span></div>
+          <div class="lad-example" aria-label="れい"><span class="lad-tiles"><b class="lad-tile">R</b><b class="lad-tile">O</b><b class="lad-tile">C</b><b class="lad-tile">K</b></span> → <span class="lad-tiles"><b class="lad-tile is-new">L</b><b class="lad-tile">O</b><b class="lad-tile">C</b><b class="lad-tile">K</b></span> → <span class="lad-tiles"><b class="lad-tile">L</b><b class="lad-tile">O</b><b class="lad-tile is-new">O</b><b class="lad-tile">K</b></span></div>
           <ul class="howto">
             <li>1回{かい}に変{か}えられるのは1文字{もじ}だけ。もう使{つか}った単語{たんご}は使{つか}えないよ</li>
-            <li>辞書{じしょ}にない単語{たんご}は、AI（エーアイ）が確認{かくにん}するよ。単語{たんご}の意味{いみ}も出{で}るよ</li>
+            <li>ふつうの英単語{えいたんご}ならすぐ通{とお}って、意味{いみ}も出{で}るよ。NIKE（ナイキ）のような有名{ゆうめい}な名前{なまえ}は、AI（エーアイ）が確認{かくにん}するよ</li>
             <li>単語{たんご}じゃなかったら、ギア⚙️が1つ減{へ}る。0になるとおしまい</li>
             <li>最短{さいたん}の手数{てかず}でつなげたら★3！友達{ともだち}（最大{さいだい}4人{にん}）と順番{じゅんばん}に協力{きょうりょく}もできるよ</li>
           </ul>
@@ -124,13 +124,25 @@
               let res = null;
               try { res = judgeFn ? await judgeFn.check(r.word) : null; } catch (_) { res = null; }
               if (st.judging && st.phase === "play") push(E.judged(st, res ? res.ok : null, res, Date.now()).events);
-            } else push(r.events);
+            } else {
+              push(r.events);
+              if (r.needMeaning) fetchMeaning(r.word);                             // 意味は、あとから AI に聞く(待たずに先へ進める)
+            }
           },
           hint() { const r = E.hint(st, "me", Date.now()); if (!r.ok) return board.rejected(Ruby.html(board.reasonText(r.reason))); push(r.events); },
           undo() { const r = E.undo(st, "me", Date.now()); if (!r.ok) return board.rejected(Ruby.html(board.reasonText(r.reason))); push(r.events); },
           quit: showMenu
         }
       });
+
+      /** 辞書に意味がない単語の意味を、AI に聞いて、わかったら画面に出す(進行は止めない) */
+      async function fetchMeaning(word) {
+        let res = null;
+        try { res = judgeFn ? await judgeFn.check(word) : null; } catch (_) { res = null; }
+        if (done || st.phase === "over" && !st.meanings[word]) return;
+        const r = E.setMeaning(st, word, res && res.ok ? res : null, Date.now());
+        if (r.ok) board.update(asView(), r.events);
+      }
 
       function finish() {
         if (done) return;

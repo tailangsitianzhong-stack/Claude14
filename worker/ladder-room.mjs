@@ -80,7 +80,16 @@ export function propose(st, id, m, now) {
   st.updatedAt = now;
   const out = { ok: true, events: sync(st, r.events) };
   if (r.verdict === "unsure") out.judge = { word: r.word, pid: id };
+  if (r.needMeaning) out.meaningFor = r.word;                                // 意味は、あとから AI に聞く(待たずに先へ進める)
   return out;
+}
+
+/** あとから分かった意味(AI の答え)を入れる。まだ意味待ちの単語だけ */
+export function meaning(st, word, info, now) {
+  if (!st.g || !st.g.meanings) return { ok: false, error: "bad_phase", events: [] };
+  const r = T().E.setMeaning(st.g, word, info, now);
+  if (!r.ok) return bad(r);
+  return { ok: true, events: sync(st, r.events) };
 }
 
 /** AI の判定結果(ok=true/false/null)。確認中でなければ無視する */

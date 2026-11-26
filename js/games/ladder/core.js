@@ -2,8 +2,9 @@
  * 英単語トランスミッションの進行ロジック(画面・通信・タイマーに依存しない純粋な関数)。ひとり用も友達対戦(サーバー)も共通。
  *
  * ルール: スタートの単語から、1文字ずつ(同じ位置の文字を1つだけ)変えて、ゴールの単語まで、意味のある英単語でつなぐ。
- *   例: ROCK → JOCK → JOKE。最大4人が順番に1語ずつ出す協力ゲーム。
- *  ・辞書(dict.js)にある単語は、その場で認めて意味を出す。辞書にない単語は、AI に確認する(確認中は時間が止まる)
+ *   例: ROCK → LOCK → LOOK。最大4人が順番に1語ずつ出す協力ゲーム。
+ *  ・辞書(dict.js)にある単語・ふつうの英単語の一覧にある単語は、その場で認める(意味は、辞書か、あとから AI がつける)。
+ *    どちらにもない単語(NIKE などの有名な固有名詞を含む)は、AI に確認する(確認中は時間が止まる)
  *  ・単語として認められない(AI が不可)とチームのギア(ライフ)が1つ減る。0 でおしまい。時間切れ(友達対戦)・「1手戻す」も 1つ減る
  *  ・使った単語・1文字以外が変わる語・文字数の合わない語は、ギアを減らさずに断る(やり直せる)
  *  ・ヒント(チームで3回): ゴールまでの文字のちがい・最短の手数 → 次に変える位置 → その位置の文字
@@ -11,7 +12,9 @@
  *
  *   const E = LadderCore.create(LadderDict.create(LADDER_DATA));
  *   const st = E.newGame({ players:[{id,avatar}], puzzle:{start,goal,par,level}, turnSec:null, now });
- *   E.propose(st, pid, "jock", now)   → { ok, verdict:"accepted|unsure|rejected", reason, events, judge? }   unsure のときは、AI に聞いて E.judged(st, ok, info, now)
+ *   E.propose(st, pid, "jock", now)   → { ok, verdict:"accepted|unsure|rejected", reason, events, needMeaning? }
+ *     accepted: 辞書・手書きの意味・ふつうの英単語の一覧にある語。その場で認める(意味がなければ needMeaning=true → あとで E.setMeaning(st, word, info, now))
+ *     unsure: どれにもない語(固有名詞など)。AI に聞いて E.judged(st, ok, info, now)
  *   E.tick / E.hint / E.undo / E.leave / E.back / E.nextDeadline / E.view / E.shift
  */
 (function (root, factory) {
@@ -43,7 +46,7 @@
 
   function create(Dict) {
     const byId = (st, id) => st.players.find((p) => p.id === id);
-    const meaningOf = (w) => { const e = Dict.lookup(w); return e ? { pos: e.pos, ja: e.ja, more: e.more, form: e.form, src: "dict" } : null; };
+    const meaningOf = (w) => { const e = Dict.lookup(w); return e ? { pos: e.pos, ja: e.ja, more: e.more, form: e.form, src: "dict", pending: !!e.pending } : null; };
 
     function newGame({ players, puzzle, turnSec = null, lives = LIVES, hints = HINTS, now }) {
       if (!puzzle || !puzzle.start || !puzzle.goal) throw new Error("bad puzzle");
@@ -122,12 +125,21 @@
       const v = validate(st, raw);
       if (!v.ok) return { ok: false, verdict: "rejected", reason: v.reason, word: v.word, events: [] };
       const m = meaningOf(v.word);
-      if (m) {
-        const e = Dict.lookup(v.word); if (e && e.form) m.form = e.form;
-        return { ok: true, verdict: "accepted", word: v.word, events: accept(st, pid, v.word, m, now) };
+      if (m) {                                                            // 辞書にある語・ふつうの英単語は、AI を待たずに、その場で認める
+        const ev = accept(st, pid, v.word, m, now);
+        return { ok: true, verdict: "accepted", word: v.word, needMeaning: !!m.pending && st.chain.includes(v.word), events: ev };
       }
       st.judging = { pid, word: v.word, since: now };
       return { ok: true, verdict: "unsure", word: v.word, events: [{ type: "judging", pid, word: v.word }], judge: { word: v.word, prev: st.chain[st.chain.length - 1], goal: st.goal } };
+    }
+
+    /** 意味があとから分かった(意味をつけにいった AI の答え)。info = { pos, ja, form } か null(見つからなかった) */
+    function setMeaning(st, word, info, now) {
+      const m = st.meanings[word];
+      if (!m || !m.pending) return { ok: false, reason: "no_pending", events: [] };
+      const ok = !!(info && info.ja);
+      st.meanings[word] = { pos: ok ? info.pos || "" : "", ja: ok ? info.ja : "", more: [], form: ok ? info.form || "" : "", src: ok ? "ai" : "dict", pending: false, none: !ok };
+      return { ok: true, events: [{ type: "meaning", word, meaning: st.meanings[word] }] };
     }
 
     /** AI の判定結果。info = { pos, ja }。ok=null は「確認できなかった」(ギアは減らさず、やり直せる) */
@@ -157,11 +169,13 @@
       if (st.judging) return { ok: false, reason: "judging", events: [] };
       if (st.hints <= 0) return { ok: false, reason: "no_hints", events: [] };
       const last = st.chain[st.chain.length - 1];
-      const way = Dict.path(last, st.goal, new Set(st.chain));
+      const used = new Set(st.chain);
+      const way = Dict.path(last, st.goal, used) || Dict.path(last, st.goal, used, { broad: true });      // ふつうの単語(意味つき辞書)を優先。なければ、めずらしい語まで広げる
+      const dictWay = Dict.path(last, st.goal, used), wide = Dict.path(last, st.goal, used, { broad: true });
       const d = diffs(last, st.goal);
       const level = Math.min(st.hintLevel, 2);
       let h;
-      if (level === 0 || !way) h = { kind: "distance", diff: d ? d.length : 0, steps: way ? way.length - 1 : null };
+      if (level === 0 || !way) h = { kind: "distance", diff: d ? d.length : 0, steps: dictWay ? dictWay.length - 1 : null, wideSteps: wide ? wide.length - 1 : null };
       else {
         const next = way[1], at = diffs(last, next)[0];
         h = level === 1 ? { kind: "position", index: at } : { kind: "letter", index: at, letter: next[at] };
@@ -211,7 +225,7 @@
 
     function view(st) { return JSON.parse(JSON.stringify(st)); }
 
-    return { newGame, validate, propose, judged, tick, hint, undo, leave, back, nextDeadline, shift, view, current, byId };
+    return { newGame, validate, propose, judged, setMeaning, tick, hint, undo, leave, back, nextDeadline, shift, view, current, byId };
   }
 
   return { LIVES, HINTS, MAX_STEPS, AI_WAIT_MS, TURN_SEC, LEVELS, diffs, pickPuzzle, create };

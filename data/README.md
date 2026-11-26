@@ -61,7 +61,8 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 ## ladder.js（英単語トランスミッション）
 `tools/build-ladder.mjs` が生成します（直接編集しないでください）。
 - 英単語ごとの日本語の意味・品詞は、JMdict を逆に引いたものです。データ元: JMdict (c) EDRDG, CC BY-SA 4.0（https://www.edrdg.org/edrdg/licence.html）。英単語の頻度順位は SUBTLEX-US（`nep.js` の語彙表）です。
-- 単語約1,900語・パズル450問。パズルは、辞書の単語だけで必ず解ける組（幅優先探索で最短の手数を記録）です。
+- 意味つきの単語約1,900語・手書きの意味約160語・パズル450問。パズルは、辞書の単語だけで必ず解ける組（幅優先探索で最短の手数を記録）です。
+- 「ふつうの英単語の一覧」（約8千語、`tools/ladder-source/english-words.txt`）は、an-array-of-english-words 2.0.0（MIT License, © 2014 Zeke Sikelianos）から、不適切語（@coffeeandfun/google-profanity-words, MIT）などを除いたものです。
 - 詳しくは `docs/ladder.md`。
 
 ## kanji.js（ミニ漢字検定）

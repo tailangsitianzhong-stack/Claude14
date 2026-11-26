@@ -189,6 +189,7 @@ export class Room extends DurableObject {
     }
     await this.save(st);
     this.broadcast(st, res.events);
+    if (res.meaningFor) await this.meaningLadder(res.meaningFor);        // 英単語トランスミッション: 辞書にない意味を、あとから AI に聞く
     if (res.judge) await (st.game === "ladder" ? this.judgeLadder(res.judge) : st.game === "chem" ? this.judgeChem(res.judge) : this.judgeGeo(res.judge));        // 早押しの答えを AI に確認する(確認中は時間が止まっている)
   }
 
@@ -202,6 +203,18 @@ export class Room extends DurableObject {
     if (!r.ok) return;
     await this.save(st);
     this.broadcast(st, r.events);
+  }
+
+  /** 英単語トランスミッション: その場で認めた単語の意味を、AI に聞いて、わかったら反映する(進行は止めない) */
+  async meaningLadder(word) {
+    let r = null;
+    try { r = await ladderJudge(this.env, { word }); } catch (_) { r = null; }
+    const st = await this.load();
+    if (!st || st.game !== "ladder") return;
+    const res = LD.meaning(st, word, r && r.ok === true ? r : null, Date.now());
+    if (!res.ok) return;
+    await this.save(st);
+    this.broadcast(st, res.events);
   }
 
   /** 英単語トランスミッション: 辞書にない単語を AI に聞き、結果(認める/認めない/確認できなかった)を反映する。確認できなかったときは、ギアを減らさない */

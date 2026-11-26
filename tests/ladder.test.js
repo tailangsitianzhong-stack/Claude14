@@ -16,7 +16,10 @@ test("辞書: 意味・規則変化・1文字ちがい・最短のつなぎか�
   const rock = Dict.lookup("rock");
   assert.equal(rock.pos, "名詞"); assert.match(rock.ja, /岩/); assert.ok(rock.rank > 0);
   assert.equal(Dict.lookup("rocks").form, "複数形・三単現"); assert.equal(Dict.lookup("rocks").stem, "rock");
-  assert.equal(Dict.lookup("jock"), null);                              // 辞書にない語は AI が確認する
+  assert.deepEqual(Dict.lookup("jock"), { pos: "", ja: "", more: [], rank: 0, form: "", pending: true });   // ふつうの英単語の一覧にある語: その場で認める(意味はあとから)
+  assert.equal(Dict.lookup("nike"), null);                               // どれにもない語(固有名詞など)は AI が確認する
+  assert.match(Dict.lookup("done").ja, /終えた/); assert.equal(Dict.lookup("done").form, "do の過去分詞");     // 手書きの意味
+  assert.equal(Dict.lookup("went").pos, "動詞");
   assert.equal(Dict.lookup("zzzz"), null); assert.equal(Dict.lookup("ab"), null); assert.equal(Dict.lookup("Rock").ja, rock.ja);
   assert.ok(Dict.neighbors("rock").includes("lock"));
   assert.ok(Dict.neighbors("rock").every((w) => w.length === 4 && [...w].filter((c, i) => c !== "rock"[i]).length === 1));
@@ -72,14 +75,14 @@ test("進行: 規則に合わない語は、ギアを減らさずに断る(使�
 });
 
 test("AI判定: 辞書にない語は確認中になり時間が止まる。認められればつながり、不可ならギアが減る。確認できなければやり直し", () => {
-  const st = game({ players: [{ id: "a" }, { id: "b" }], turnSec: 30 });
-  const r = E.propose(st, "a", "jock", T0 + 1000);                          // rock → jock (辞書にない)
-  assert.equal(r.verdict, "unsure"); assert.deepEqual(r.judge, { word: "jock", prev: "rock", goal: "joke" });
-  assert.equal(E.propose(st, "b", "lock", T0 + 1100).reason, "judging");      // 確認中は、ほかの操作ができない
+  const st = game({ players: [{ id: "a" }, { id: "b" }], turnSec: 30, puzzle: { start: "like", goal: "bike", par: 1, level: 1 } });
+  const r = E.propose(st, "a", "nike", T0 + 1000);                          // like → nike (固有名詞: どの一覧にもない)
+  assert.equal(r.verdict, "unsure"); assert.deepEqual(r.judge, { word: "nike", prev: "like", goal: "bike" });
+  assert.equal(E.propose(st, "b", "lime", T0 + 1100).reason, "judging");      // 確認中は、ほかの操作ができない
   assert.equal(E.nextDeadline(st), T0 + 1000 + Core.AI_WAIT_MS + 1);
   const endsBefore = st.turnEndsAt;
   const ok = E.judged(st, true, { pos: "名詞", ja: "運動選手（うんどうせんしゅ）" }, T0 + 3000);
-  assert.equal(ok.verdict, "accepted"); assert.equal(st.meanings.jock.src, "ai"); assert.equal(st.meanings.jock.ja, "運動選手（うんどうせんしゅ）");
+  assert.equal(ok.verdict, "accepted"); assert.equal(st.meanings.nike.src, "ai"); assert.equal(st.meanings.nike.ja, "運動選手（うんどうせんしゅ）");
   assert.ok(st.turnEndsAt > endsBefore - 1);
   assert.equal(st.judging, null);
   // 不可 → ギアが1つ減り、手番が移る
@@ -134,4 +137,31 @@ test("パズルの選び方", () => {
   const rng = seeded(5), used = [];
   for (let i = 0; i < 30; i++) { const p = Core.pickPuzzle(globalThis.LADDER_DATA, 2, rng, used); assert.equal(p.level, 2); assert.ok(!used.includes(p.id)); used.push(p.id); }
   assert.equal(Core.pickPuzzle(globalThis.LADDER_DATA, 9), null);
+});
+
+test("AIを待たない: ふつうの英単語は、その場で認める。意味がなければ、あとから AI がつける(進行は止まらない)", () => {
+  const st = E.newGame({ players: [{ id: "a" }, { id: "b" }], puzzle: { start: "rock", goal: "lock", par: 1, level: 2 }, now: T0 });
+  const r = E.propose(st, "a", "jock", T0 + 1);                             // rock → jock: 辞書にはないが、ふつうの英単語
+  assert.equal(r.verdict, "accepted"); assert.equal(r.needMeaning, true);
+  assert.equal(st.judging, null); assert.equal(E.current(st).id, "b");        // すぐ次の人の番(確認で待たない)
+  assert.equal(st.meanings.jock.pending, true);
+  const m = E.setMeaning(st, "jock", { pos: "名詞", ja: "運動選手（うんどうせんしゅ）" }, T0 + 500);
+  assert.ok(m.ok); assert.equal(st.meanings.jock.ja, "運動選手（うんどうせんしゅ）"); assert.equal(st.meanings.jock.pending, false); assert.equal(st.meanings.jock.src, "ai");
+  assert.equal(E.setMeaning(st, "jock", null, T0 + 600).ok, false);          // 意味待ちでなければ無視
+  const r2 = E.propose(st, "b", "lock", T0 + 700);                           // jock → lock (辞書)
+  assert.equal(r2.needMeaning, false); assert.equal(st.phase, "over"); assert.deepEqual(st.result.chain, ["rock", "jock", "lock"]); assert.equal(st.result.stars, 2);
+  // 意味が見つからなかったとき
+  const s2 = E.newGame({ players: [{ id: "a" }], puzzle: { start: "rock", goal: "lock", par: 1, level: 2 }, now: T0 });
+  E.propose(s2, "a", "jock", T0); assert.equal(s2.meanings.jock.pending, true);
+  E.setMeaning(s2, "jock", null, T0 + 1); assert.equal(s2.meanings.jock.none, true); assert.equal(s2.meanings.jock.pending, false);
+  // 手書きの意味の語(done)は、AIも意味待ちも要らない
+  const s3 = E.newGame({ players: [{ id: "a" }], puzzle: { start: "dine", goal: "gone", par: 2, level: 1 }, now: T0 });
+  const r3 = E.propose(s3, "a", "done", T0); assert.equal(r3.verdict, "accepted"); assert.equal(r3.needMeaning, false); assert.match(s3.meanings.done.ja, /終えた/);
+});
+
+test("ヒント: よく使う単語の道を優先し、めずらしい語まで使うと短い場合は、その手数も教える", () => {
+  const st = E.newGame({ players: [{ id: "a" }], puzzle: { start: "rock", goal: "joke", par: 7, level: 2 }, now: T0 });
+  const h = E.hint(st, "a", T0).hint;
+  assert.equal(h.kind, "distance"); assert.equal(h.steps, 7); assert.ok(h.wideSteps < h.steps);
+  assert.ok(Dict.path("rock", "joke", null, { broad: true }).length - 1 < Dict.path("rock", "joke").length - 1);
 });

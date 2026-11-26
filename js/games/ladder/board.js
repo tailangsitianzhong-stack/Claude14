@@ -25,7 +25,7 @@
   function tiles(word, prev, goal, cls) {
     return `<span class="lad-tiles ${cls || ""}">${Array.from(word).map((c, i) => `<b class="lad-tile${prev && prev[i] !== c ? " is-new" : ""}${goal && goal[i] === c ? " is-match" : ""}">${esc(c.toUpperCase())}</b>`).join("")}</span>`;
   }
-  const mean = (m) => (m && m.ja ? `<span class="lad-mean">${m.pos ? `<i>${esc(m.pos)}</i>` : ""}${esc(m.ja)}${m.form ? `<small>（${esc(m.form)}）</small>` : ""}${m.src === "ai" ? '<em class="lad-ai" title="AIが確認した単語">AI</em>' : ""}</span>` : '<span class="lad-mean lad-mean-none">（意味{いみ}は、ゲームのあとで）</span>');
+  const mean = (m) => (m && m.pending ? '<span class="lad-mean lad-mean-none lad-wait">意味{いみ}を調{しら}べ中{ちゅう}…</span>' : m && m.none ? '<span class="lad-mean lad-mean-none">（意味{いみ}は見{み}つからなかったよ）</span>' : m && m.ja ? `<span class="lad-mean">${m.pos ? `<i>${esc(m.pos)}</i>` : ""}${esc(m.ja)}${m.form ? `<small>（${esc(m.form)}）</small>` : ""}${m.src === "ai" ? '<em class="lad-ai" title="AIが確認した単語">AI</em>' : ""}</span>` : '<span class="lad-mean lad-mean-none">（意味{いみ}は、ゲームのあとで）</span>');
 
   function create(opts) {
     const el = opts.el, myId = opts.myId;
@@ -174,7 +174,7 @@
     }
 
     function hintText(h, v) {
-      if (h.kind === "distance") return `💡 ゴールまで、文字{もじ}があと ${h.diff} つちがうよ${h.steps != null ? `。辞書{じしょ}の単語{たんご}だけなら、最短{さいたん}あと ${h.steps} 手{て}` : "（辞書{じしょ}の中{なか}では道{みち}が見{み}つからないよ。AIが認{みと}める単語{たんご}で進{すす}めるかも）"}`;
+      if (h.kind === "distance") return `💡 ゴールまで、文字{もじ}があと ${h.diff} つちがうよ${h.steps != null ? `。よく使{つか}う単語{たんご}だけなら、最短{さいたん}あと ${h.steps} 手{て}` : "（よく使{つか}う単語{たんご}だけでは道{みち}が見{み}つからないよ）"}${h.wideSteps != null && (h.steps == null || h.wideSteps < h.steps) ? `。めずらしい単語{たんご}まで使{つか}うと あと ${h.wideSteps} 手{て}` : ""}`;
       if (h.kind === "position") return `💡 次{つぎ}は、${h.index + 1}文字目{もじめ}を変{か}えるといいよ`;
       return `💡 ${h.index + 1}文字目{もじめ}を「${esc(h.letter.toUpperCase())}」にしてみよう`;
     }

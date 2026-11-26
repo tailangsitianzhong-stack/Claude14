@@ -6,7 +6,10 @@
  *
  * 入力: JMdict を SQLite にしたもの(PyPI の jamdict-data 内の jamdict.db。tools/build-dict.mjs と同じ)
  *       英単語の頻度順位・不適切語の除外は、すでにある data/nep.js(SUBTLEX-US 由来の語彙表。不適切語を除いてある)を使う
- * 出力: words  … [単語, 頻度順位, "品詞:意味|品詞:意味"](3〜5文字の英単語。意味は日本語。「岩（いわ）」のように漢字と読みを並べる)
+ * 入力(手書き): tools/ladder-source/extra-words.txt(機能語・不規則動詞の意味) / english-words.txt(3〜5文字の英単語の一覧。不適切語を除いてある)
+ * 出力: extra  … [単語, "品詞:意味", 活用]  手で書いた意味(パズルには使わない)
+ *       valid  … 辞書にない、ふつうの英単語の一覧(スペース区切り)。AI を待たずに認める(意味はあとから AI がつける)
+ *       words  … [単語, 頻度順位, "品詞:意味|品詞:意味"](3〜5文字の英単語。意味は日本語。「岩（いわ）」のように漢字と読みを並べる)
  *       puzzles … [スタート, ゴール, 最短の手数, 難しさ(1〜3)]  すべて、辞書の単語だけで必ず解ける組
  *
  * 辞書にない単語(固有名詞・活用形・めずらしい語など)も、ゲームの中では AI が確認して認める。ここでは「確実に解ける問題」と
@@ -168,12 +171,35 @@ for (const sp of SPEC) {
   }
 }
 
+/* ---------- 手で書いた意味(機能語・不規則動詞の活用形)と、有効な単語の一覧 ---------- */
+const extra = [];
+const extraSet = new Set();
+for (const line of readFileSync(root + "tools/ladder-source/extra-words.txt", "utf8").split("\n")) {
+  if (!line.trim() || line.startsWith("#")) continue;
+  const [w, pos, ja, form] = line.split("|").map((x) => x.trim());
+  if (!/^[a-z]+$/.test(w) || !pos || !ja) { console.error("extra-words の形式: " + line); process.exit(1); }
+  if (w.length < 3 || w.length > 5) continue;                          // このゲームは 3〜5文字だけ
+  if (words.has(w) || extraSet.has(w)) continue;                       // JMdict 由来の意味がある語・重複は、そちらを使う
+  extraSet.add(w); extra.push([w, `${pos}:${ja}`, form || ""]);
+}
+// 辞書(意味つき)にない、ふつうの英単語。ここにある語は、AI を待たずにその場で認める(意味は、あとから AI がつける)。
+// 英語の単語表(Scrabble 系)には、めずらしい語が多いので、「JMdict の訳語に小文字で出てくる語」か「SUBTLEX の語彙表にある語」だけに絞る。
+// その語の規則変化(-s -es -ed -d -ing)も入れる
+const jmTokens = new Set();
+for (const r of all("SELECT text FROM SenseGloss WHERE lang='eng'")) for (const t of r.text.split(/[^A-Za-z']+/)) if (/^[a-z]{3,5}$/.test(t)) jmTokens.add(t);
+const vocabSet = new Set(vocab);
+const wordTable = readFileSync(root + "tools/ladder-source/english-words.txt", "utf8").split("\n").filter((w) => /^[a-z]{3,5}$/.test(w));
+const base = new Set(wordTable.filter((w) => jmTokens.has(w) || vocabSet.has(w)));
+const inflected = (w) => [["es", 2], ["s", 1], ["ed", 2], ["d", 1], ["ing", 3]].some(([suf, cut]) => w.length > suf.length + 2 && w.endsWith(suf) && (base.has(w.slice(0, -cut)) || base.has(w.slice(0, -cut) + "e")));
+const valid = wordTable.filter((w) => (base.has(w) || inflected(w)) && !words.has(w) && !extraSet.has(w));
+
 /* ---------- 出力 ---------- */
 const wordList = [...words].sort((a, b) => a[1].rank - b[1].rank).map(([w, v]) => [w, v.rank, v.meanings.map((m) => `${m[0]}:${m[1]}`).join("|")]);
-const data = { version: 1, source: "JMdict (c) EDRDG, CC BY-SA 4.0 https://www.edrdg.org/edrdg/licence.html / SUBTLEX-US", words: wordList, puzzles };
+const data = { version: 1, source: "JMdict (c) EDRDG, CC BY-SA 4.0 https://www.edrdg.org/edrdg/licence.html / SUBTLEX-US / an-array-of-english-words (MIT)", words: wordList, extra, valid: valid.join(" "), puzzles };
 const body = "/* 自動生成(tools/build-ladder.mjs)。直接編集しない */\nwindow.LADDER_DATA = " + JSON.stringify(data) + ";\n";
 writeFileSync(outPath, body);
 const cnt = (n) => wordList.filter((w) => w[0].length === n).length;
+console.log(`手書きの意味 ${extra.length}語 ・ 有効な単語(意味なし) ${valid.length}語`);
 console.log(`単語 ${wordList.length} (3文字 ${cnt(3)} / 4文字 ${cnt(4)} / 5文字 ${cnt(5)}) ・ パズル ${puzzles.length} ・ 出力 ${outPath} (${(body.length / 1024).toFixed(0)} KB)`);
 for (const lv of [1, 2, 3]) console.log(`  難しさ${lv}: ${puzzles.filter((p) => p[3] === lv).length}問 (手数 ${[...new Set(puzzles.filter((p) => p[3] === lv).map((p) => p[2]))].sort().join(",")})`);
 if (args.includes("--stats")) {

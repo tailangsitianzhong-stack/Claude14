@@ -12,7 +12,7 @@ test("入力の検証: 3〜5文字の英小文字だけ。大文字はそろえ�
   assert.deepEqual(J.cleanPayload({ word: "Jock" }), { word: "jock" });
   for (const w of ["ab", "toolong", "jo ck", "jock!", "", 5, null]) assert.equal(J.cleanPayload({ word: w }), null, String(w));
   assert.equal(J.cleanPayload(null), null);
-  assert.match(J.buildPrompt({ word: "jock" }), /Word \(lowercase\): jock/);
+  assert.match(J.buildPrompt({ word: "jock" }), /Word \(written in lowercase\): jock/);
 });
 
 test("返答の読みとり: 有効なら品詞・意味・活用。意味のない有効は不正。不可は valid=false", () => {
@@ -34,6 +34,7 @@ test("判定: AIの結果をキャッシュする。不可もキャッシュ。�
   assert.equal(r2.ok, true); assert.equal(r2.cached, true); assert.equal(calls, 1);
   const r3 = await J.judge(env, { word: "rork" }, ask('{"valid": false}'));
   assert.equal(r3.ok, false); assert.equal(r3.reason, "notword"); assert.equal(CACHE.puts.length, 2);
+  assert.ok(CACHE.puts.every((k) => k.startsWith("ladder2:")));
   const r4 = await J.judge(env, { word: "zork" }, reply("", 429));
   assert.equal(r4.ok, null); assert.equal(r4.reason, "unavailable"); assert.equal(CACHE.puts.length, 2);
   assert.equal((await J.judge({ CACHE: kv() }, { word: "zork" }, reply("{}"))).reason, "config");
