@@ -58,6 +58,12 @@ node tools/build-dict.mjs <jamdict.db> --freq <subtlex の index.json> \
 - 3D は Three.js r128（MIT License, © 2010-2021 Three.js Authors）を `js/vendor/three.min.js` に同梱しています。
 - 詳しくは `docs/duo.md`。
 
+## ladder.js（英単語トランスミッション）
+`tools/build-ladder.mjs` が生成します（直接編集しないでください）。
+- 英単語ごとの日本語の意味・品詞は、JMdict を逆に引いたものです。データ元: JMdict (c) EDRDG, CC BY-SA 4.0（https://www.edrdg.org/edrdg/licence.html）。英単語の頻度順位は SUBTLEX-US（`nep.js` の語彙表）です。
+- 単語約1,900語・パズル450問。パズルは、辞書の単語だけで必ず解ける組（幅優先探索で最短の手数を記録）です。
+- 詳しくは `docs/ladder.md`。
+
 ## kanji.js（ミニ漢字検定）
 `tools/build-kanji.mjs` が JMdict と KANJIDIC2（どちらも © EDRDG, CC BY-SA 4.0）から生成する、漢字検定の出題データです。詳細は `docs/kanken.md`。
 

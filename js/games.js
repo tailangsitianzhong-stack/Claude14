@@ -68,6 +68,15 @@ window.GAMES = [
     unmount() { window.DuoGame.unmount(); }
   },
   {
+    id: "ladder",
+    title: "英単語{えいたんご}トランスミッション",
+    icon: "⚙️",
+    desc: "文字{もじ}を1つずつ回{まわ}して、単語{たんご}から単語{たんご}へ！友達{ともだち}と協力{きょうりょく}もできるよ",
+    ready: true,
+    mount(root) { window.LadderGame.mount(root); },
+    unmount() { window.LadderGame.unmount(); }
+  },
+  {
     id: "coming-1",
     title: "次{つぎ}のゲーム",
     icon: "❓",
