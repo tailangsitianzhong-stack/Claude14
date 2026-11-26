@@ -185,9 +185,10 @@ for (const line of readFileSync(root + "tools/ladder-source/extra-words.txt", "u
 // 辞書(意味つき)にない、ふつうの英単語。ここにある語は、AI を待たずにその場で認める(意味は、あとから AI がつける)。
 // 英語の単語表(Scrabble 系)には、めずらしい語が多いので、「JMdict の訳語に小文字で出てくる語」か「SUBTLEX の語彙表にある語」だけに絞る。
 // その語の規則変化(-s -es -ed -d -ing)も入れる
+const VOCAB_TOP = 16000;
 const jmTokens = new Set();
-for (const r of all("SELECT text FROM SenseGloss WHERE lang='eng'")) for (const t of r.text.split(/[^A-Za-z']+/)) if (/^[a-z]{3,5}$/.test(t)) jmTokens.add(t);
-const vocabSet = new Set(vocab);
+for (const r of all("SELECT text FROM SenseGloss WHERE lang='eng'")) for (const t of r.text.replace(/\([^)]*\)/g, " ").split(/[^A-Za-z']+/)) if (/^[a-z]{3,5}$/.test(t)) jmTokens.add(t);   // ( ) の中は、学名・注記なので除く
+const vocabSet = new Set(vocab.slice(0, VOCAB_TOP));                      // 頻度表の後ろのほう(2万位あたり)は、lare などのめずらしい語・つづりまちがいが混じるので使わない
 const wordTable = readFileSync(root + "tools/ladder-source/english-words.txt", "utf8").split("\n").filter((w) => /^[a-z]{3,5}$/.test(w));
 const base = new Set(wordTable.filter((w) => jmTokens.has(w) || vocabSet.has(w)));
 const inflected = (w) => [["es", 2], ["s", 1], ["ed", 2], ["d", 1], ["ing", 3]].some(([suf, cut]) => w.length > suf.length + 2 && w.endsWith(suf) && (base.has(w.slice(0, -cut)) || base.has(w.slice(0, -cut) + "e")));

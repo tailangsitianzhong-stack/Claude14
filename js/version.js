@@ -1,2 +1,2 @@
 /* tools/stamp-version.mjs が書く。直接編集しない */
-window.APP_VERSION = "2026.11.26-58";
+window.APP_VERSION = "2026.11.26-59";
